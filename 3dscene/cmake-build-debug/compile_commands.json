@@ -1,0 +1,162 @@
+[
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -o CMakeFiles/imgui.dir/cmake_modules/imgui/imgui.cpp.o -c /home/biblbrox/3dscene/cmake_modules/imgui/imgui.cpp",
+  "file": "/home/biblbrox/3dscene/cmake_modules/imgui/imgui.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -o CMakeFiles/imgui.dir/cmake_modules/imgui/imgui_draw.cpp.o -c /home/biblbrox/3dscene/cmake_modules/imgui/imgui_draw.cpp",
+  "file": "/home/biblbrox/3dscene/cmake_modules/imgui/imgui_draw.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -o CMakeFiles/imgui.dir/cmake_modules/imgui/imgui_tables.cpp.o -c /home/biblbrox/3dscene/cmake_modules/imgui/imgui_tables.cpp",
+  "file": "/home/biblbrox/3dscene/cmake_modules/imgui/imgui_tables.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -o CMakeFiles/imgui.dir/cmake_modules/imgui/imgui_widgets.cpp.o -c /home/biblbrox/3dscene/cmake_modules/imgui/imgui_widgets.cpp",
+  "file": "/home/biblbrox/3dscene/cmake_modules/imgui/imgui_widgets.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -o CMakeFiles/imgui.dir/cmake_modules/imgui/backends/imgui_impl_sdl.cpp.o -c /home/biblbrox/3dscene/cmake_modules/imgui/backends/imgui_impl_sdl.cpp",
+  "file": "/home/biblbrox/3dscene/cmake_modules/imgui/backends/imgui_impl_sdl.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -o CMakeFiles/imgui.dir/cmake_modules/imgui/backends/imgui_impl_opengl3.cpp.o -c /home/biblbrox/3dscene/cmake_modules/imgui/backends/imgui_impl_opengl3.cpp",
+  "file": "/home/biblbrox/3dscene/cmake_modules/imgui/backends/imgui_impl_opengl3.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/config.cpp.o -c /home/biblbrox/3dscene/src/config.cpp",
+  "file": "/home/biblbrox/3dscene/src/config.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/exceptions/basegameexception.cpp.o -c /home/biblbrox/3dscene/src/exceptions/basegameexception.cpp",
+  "file": "/home/biblbrox/3dscene/src/exceptions/basegameexception.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/game.cpp.o -c /home/biblbrox/3dscene/src/game.cpp",
+  "file": "/home/biblbrox/3dscene/src/game.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/lifeprogram.cpp.o -c /home/biblbrox/3dscene/src/lifeprogram.cpp",
+  "file": "/home/biblbrox/3dscene/src/lifeprogram.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/main.cpp.o -c /home/biblbrox/3dscene/src/main.cpp",
+  "file": "/home/biblbrox/3dscene/src/main.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/render/render.cpp.o -c /home/biblbrox/3dscene/src/render/render.cpp",
+  "file": "/home/biblbrox/3dscene/src/render/render.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/render/shaderprogram.cpp.o -c /home/biblbrox/3dscene/src/render/shaderprogram.cpp",
+  "file": "/home/biblbrox/3dscene/src/render/shaderprogram.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/render/sprite.cpp.o -c /home/biblbrox/3dscene/src/render/sprite.cpp",
+  "file": "/home/biblbrox/3dscene/src/render/sprite.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/render/texttexture.cpp.o -c /home/biblbrox/3dscene/src/render/texttexture.cpp",
+  "file": "/home/biblbrox/3dscene/src/render/texttexture.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/render/texture.cpp.o -c /home/biblbrox/3dscene/src/render/texture.cpp",
+  "file": "/home/biblbrox/3dscene/src/render/texture.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/systems/animationsystem.cpp.o -c /home/biblbrox/3dscene/src/systems/animationsystem.cpp",
+  "file": "/home/biblbrox/3dscene/src/systems/animationsystem.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/systems/keyboardsystem.cpp.o -c /home/biblbrox/3dscene/src/systems/keyboardsystem.cpp",
+  "file": "/home/biblbrox/3dscene/src/systems/keyboardsystem.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/systems/particlerendersystem.cpp.o -c /home/biblbrox/3dscene/src/systems/particlerendersystem.cpp",
+  "file": "/home/biblbrox/3dscene/src/systems/particlerendersystem.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/systems/physicssystem.cpp.o -c /home/biblbrox/3dscene/src/systems/physicssystem.cpp",
+  "file": "/home/biblbrox/3dscene/src/systems/physicssystem.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/systems/renderersystem.cpp.o -c /home/biblbrox/3dscene/src/systems/renderersystem.cpp",
+  "file": "/home/biblbrox/3dscene/src/systems/renderersystem.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/utils/audio.cpp.o -c /home/biblbrox/3dscene/src/utils/audio.cpp",
+  "file": "/home/biblbrox/3dscene/src/utils/audio.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/utils/logger.cpp.o -c /home/biblbrox/3dscene/src/utils/logger.cpp",
+  "file": "/home/biblbrox/3dscene/src/utils/logger.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/utils/string.cpp.o -c /home/biblbrox/3dscene/src/utils/string.cpp",
+  "file": "/home/biblbrox/3dscene/src/utils/string.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/utils/texture.cpp.o -c /home/biblbrox/3dscene/src/utils/texture.cpp",
+  "file": "/home/biblbrox/3dscene/src/utils/texture.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/utils/threadpool.cpp.o -c /home/biblbrox/3dscene/src/utils/threadpool.cpp",
+  "file": "/home/biblbrox/3dscene/src/utils/threadpool.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/utils/timer.cpp.o -c /home/biblbrox/3dscene/src/utils/timer.cpp",
+  "file": "/home/biblbrox/3dscene/src/utils/timer.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/utils/utils.cpp.o -c /home/biblbrox/3dscene/src/utils/utils.cpp",
+  "file": "/home/biblbrox/3dscene/src/utils/utils.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/view/arcballcamera.cpp.o -c /home/biblbrox/3dscene/src/view/arcballcamera.cpp",
+  "file": "/home/biblbrox/3dscene/src/view/arcballcamera.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/view/fpscamera.cpp.o -c /home/biblbrox/3dscene/src/view/fpscamera.cpp",
+  "file": "/home/biblbrox/3dscene/src/view/fpscamera.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/view/lidar.cpp.o -c /home/biblbrox/3dscene/src/view/lidar.cpp",
+  "file": "/home/biblbrox/3dscene/src/view/lidar.cpp"
+},
+{
+  "directory": "/home/biblbrox/3dscene/cmake-build-debug",
+  "command": "/usr/bin/c++ -DGL_GLEXT_PROTOTYPES=1 -DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=\"<SDL_opengl.h>\" -I/usr/include/SDL2 -I/home/biblbrox/3dscene/include -I/home/biblbrox/3dscene/cmake_modules/imgui -I/home/biblbrox/3dscene/cmake_modules/imgui/backends -g -std=gnu++2a -o CMakeFiles/3DScene.dir/src/world.cpp.o -c /home/biblbrox/3dscene/src/world.cpp",
+  "file": "/home/biblbrox/3dscene/src/world.cpp"
+}
+]

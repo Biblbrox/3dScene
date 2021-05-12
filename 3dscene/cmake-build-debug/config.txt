@@ -1,0 +1,13 @@
+Theme:int:0
+CellBorderColor:vec4:1.000000,1.000000,1.000000,1.000000
+MSAASamples:int:4
+ColoredLife:bool:0
+MSAA:bool:0
+InverseRotation:bool:0
+CellColor:vec4:1.000000,0.200000,0.000000,1.000000
+BackgroundColor:vec4:0.000001,0.000000,0.000001,1.000000
+NeirCount:int:3
+StepTime:float:5.000000
+NeirCountDie:int:4
+FieldSize:int:6
+ConfigFile:const char*:config.txt
