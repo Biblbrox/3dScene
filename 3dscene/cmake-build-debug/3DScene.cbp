@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="3DScene"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;CMake Files\..\;CMake Files\..\..\;CMake Files\..\..\..\;CMake Files\..\..\..\usr\;CMake Files\..\..\..\usr\lib\;CMake Files\..\..\..\usr\lib\x86_64-linux-gnu\;CMake Files\..\..\..\usr\lib\x86_64-linux-gnu\cmake\;CMake Files\..\..\..\usr\lib\x86_64-linux-gnu\cmake\SDL2\;CMake Files\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Boost-1.71.0\;CMake Files\..\..\..\usr\lib\x86_64-linux-gnu\cmake\boost_headers-1.71.0\;CMake Files\cmake_modules\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/biblbrox/3dscene/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/home/biblbrox/3dscene/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/home/biblbrox/3dscene/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="3DScene">
+				<Option output="/home/biblbrox/3dscene/cmake-build-debug/3DScene" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/biblbrox/3dscene/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;SDL_opengl.h&gt;"/>
+					<Add option="-DGL_GLEXT_PROTOTYPES=1"/>
+					<Add directory="/usr/include/SDL2"/>
+					<Add directory="/home/biblbrox/3dscene/include"/>
+					<Add directory="/home/biblbrox/3dscene/cmake_modules/imgui"/>
+					<Add directory="/home/biblbrox/3dscene/cmake_modules/imgui/backends"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 3DScene"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="3DScene/fast">
+				<Option output="/home/biblbrox/3dscene/cmake-build-debug/3DScene" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/biblbrox/3dscene/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;SDL_opengl.h&gt;"/>
+					<Add option="-DGL_GLEXT_PROTOTYPES=1"/>
+					<Add directory="/usr/include/SDL2"/>
+					<Add directory="/home/biblbrox/3dscene/include"/>
+					<Add directory="/home/biblbrox/3dscene/cmake_modules/imgui"/>
+					<Add directory="/home/biblbrox/3dscene/cmake_modules/imgui/backends"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 3DScene/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="imgui">
+				<Option output="/home/biblbrox/3dscene/cmake-build-debug/libimgui.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/biblbrox/3dscene/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;SDL_opengl.h&gt;"/>
+					<Add option="-DGL_GLEXT_PROTOTYPES=1"/>
+					<Add directory="/usr/include/SDL2"/>
+					<Add directory="/home/biblbrox/3dscene/cmake_modules/imgui"/>
+					<Add directory="/home/biblbrox/3dscene/cmake_modules/imgui/backends"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 imgui"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="imgui/fast">
+				<Option output="/home/biblbrox/3dscene/cmake-build-debug/libimgui.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/biblbrox/3dscene/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DIMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;SDL_opengl.h&gt;"/>
+					<Add option="-DGL_GLEXT_PROTOTYPES=1"/>
+					<Add directory="/usr/include/SDL2"/>
+					<Add directory="/home/biblbrox/3dscene/cmake_modules/imgui"/>
+					<Add directory="/home/biblbrox/3dscene/cmake_modules/imgui/backends"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 imgui/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/biblbrox/3dscene/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/biblbrox/3dscene/cmake_modules/imgui/backends/imgui_impl_opengl3.cpp">
+			<Option target="imgui"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/cmake_modules/imgui/backends/imgui_impl_opengl3.h">
+			<Option target="imgui"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/cmake_modules/imgui/backends/imgui_impl_sdl.cpp">
+			<Option target="imgui"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/cmake_modules/imgui/backends/imgui_impl_sdl.h">
+			<Option target="imgui"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/cmake_modules/imgui/imgui.cpp">
+			<Option target="imgui"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/cmake_modules/imgui/imgui.h">
+			<Option target="imgui"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/cmake_modules/imgui/imgui_draw.cpp">
+			<Option target="imgui"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/cmake_modules/imgui/imgui_tables.cpp">
+			<Option target="imgui"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/cmake_modules/imgui/imgui_widgets.cpp">
+			<Option target="imgui"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/base.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/components/animationcomponent.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/components/cellcomponent.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/components/keyboardcomponent.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/components/positioncomponent.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/components/spritecomponent.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/components/textcomponent.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/config.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/constants.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/ecs/basesystem.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/ecs/component.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/ecs/ecsmanager.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/ecs/entity.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/ecs/robin_hood.h">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/ecs/system.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/ecs/typelist.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/exceptions/basegameexception.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/exceptions/fsexception.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/exceptions/glexception.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/exceptions/sdlexception.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/game.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/lifeprogram.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/render/render.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/render/shaderprogram.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/render/sprite.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/render/texttexture.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/render/texture.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/systems/animationsystem.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/systems/collisionsystem.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/systems/keyboardsystem.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/systems/movementsystem.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/systems/particlerendersystem.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/systems/physicssystem.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/systems/renderersystem.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/utils/audio.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/utils/collision.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/utils/datastructs.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/utils/fps.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/utils/logger.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/utils/math.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/utils/random.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/utils/string.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/utils/texture.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/utils/threadpool.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/utils/timer.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/utils/typelist.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/utils/utils.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/view/arcballcamera.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/view/fpscamera.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/view/lidar.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/include/world.hpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/config.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/exceptions/basegameexception.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/game.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/lifeprogram.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/main.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/render/render.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/render/shaderprogram.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/render/sprite.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/render/texttexture.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/render/texture.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/systems/animationsystem.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/systems/keyboardsystem.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/systems/particlerendersystem.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/systems/physicssystem.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/systems/renderersystem.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/utils/audio.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/utils/logger.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/utils/string.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/utils/texture.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/utils/threadpool.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/utils/timer.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/utils/utils.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/view/arcballcamera.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/view/fpscamera.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/view/lidar.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/world.cpp">
+			<Option target="3DScene"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/../../../usr/lib/x86_64-linux-gnu/cmake/SDL2/sdl2-config.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\x86_64-linux-gnu\cmake\SDL2\"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/../../../usr/lib/x86_64-linux-gnu/cmake/Boost-1.71.0/BoostConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Boost-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/../../../usr/lib/x86_64-linux-gnu/cmake/Boost-1.71.0/BoostConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\x86_64-linux-gnu\cmake\Boost-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/../../../usr/lib/x86_64-linux-gnu/cmake/boost_headers-1.71.0/boost_headers-config-version.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\x86_64-linux-gnu\cmake\boost_headers-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/../../../usr/lib/x86_64-linux-gnu/cmake/boost_headers-1.71.0/boost_headers-config.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\usr\lib\x86_64-linux-gnu\cmake\boost_headers-1.71.0\"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/cmake_modules/FindGLM.cmake">
+			<Option virtualFolder="CMake Files\cmake_modules\"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/cmake_modules/FindSDL2_image.cmake">
+			<Option virtualFolder="CMake Files\cmake_modules\"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/cmake_modules/FindSDL2_mixer.cmake">
+			<Option virtualFolder="CMake Files\cmake_modules\"/>
+		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/cmake_modules/FindSDL2_ttf.cmake">
+			<Option virtualFolder="CMake Files\cmake_modules\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
