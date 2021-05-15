@@ -18,20 +18,11 @@
 #include "utils/threadpool.hpp"
 #include "components/cellcomponent.hpp"
 
-/**
- * To avoid circular including
- */
-class Component;
-
 struct CellState
 {
     bool alive;
     glm::vec4 color;
 };
-
-typedef boost::multi_array<std::shared_ptr<CellComponent>, 3> Field;
-typedef boost::multi_array<CellState, 3> FieldState;
-typedef Field::index CellIndex;
 
 class World: public ecs::EcsManager
 {
@@ -53,10 +44,8 @@ private:
      */
     void filter_entities();
 
-    Field m_cells;
-    size_t m_fieldSize;
 
-    ThreadPool m_pool;
+//    ThreadPool m_pool;
 
     bool m_wasInit;
 };

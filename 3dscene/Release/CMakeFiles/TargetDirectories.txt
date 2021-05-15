@@ -1,0 +1,4 @@
+/home/biblbrox/3dscene/Release/CMakeFiles/rebuild_cache.dir
+/home/biblbrox/3dscene/Release/CMakeFiles/edit_cache.dir
+/home/biblbrox/3dscene/Release/CMakeFiles/3DScene.dir
+/home/biblbrox/3dscene/Release/CMakeFiles/imgui.dir

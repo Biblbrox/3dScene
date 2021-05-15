@@ -31,6 +31,7 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(GLM REQUIRED)
 find_package(Boost REQUIRED)
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 set(EXT_PATH "cmake_modules/")
 
@@ -63,6 +64,6 @@ set(SDL2_TTF_LIBRARIES SDL2_ttf)
 add_executable(${GAME_NAME} ${SOURCES})
 target_link_libraries(${GAME_NAME} ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES}
         ${SDL2_TTF_LIBRARIES} ${SDL2_MIXER_LIBRARIES} ${Boost_LIBRARIES} GLEW
-        libGLEW.so libGLU.so libGL.so imgui pthread)
+        libGLEW.so libGLU.so libGL.so imgui pthread Eigen3::Eigen)
 
 target_include_directories(${GAME_NAME} PRIVATE include)

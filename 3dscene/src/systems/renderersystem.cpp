@@ -10,6 +10,7 @@
 #include "systems/renderersystem.hpp"
 #include "components/spritecomponent.hpp"
 #include "components/cellcomponent.hpp"
+#include "components/bvhcomponent.hpp"
 #include "render/render.hpp"
 #include "utils/logger.hpp"
 #include "exceptions/glexception.hpp"
@@ -149,12 +150,6 @@ RendererSystem::RendererSystem() : m_frameBuffer(0), m_videoSettingsOpen(false),
     }
 
     CHECK_FRAMEBUFFER_COMPLETE();
-
-    auto camera = ArcballCamera::getInstance();
-    GLfloat cubSize = 20.f;
-    int fieldSize = Config::getVal<int>("FieldSize") * (cubSize + 10);
-    camera->setPos({fieldSize, fieldSize, fieldSize});
-    camera->updateView();
 }
 
 RendererSystem::~RendererSystem()
@@ -188,12 +183,27 @@ void RendererSystem::drawSprites()
     program->updateFloat("alpha");
     // Draw bounding boxes
     for (const auto& [key, en]: sprites) {
+        auto treeComp = en->getComponent<BVHComponent>();
+        if (!treeComp)
+            continue;
+
         auto posComp = en->getComponent<PositionComponent>();
-        auto spriteComp = en->getComponent<SpriteComponent>();
-        auto points = coll::buildBoundingPoints3d(spriteComp->sprite->getVertices()[0]);
-        render::drawBoundingBox(*program, points, *en->getComponent<SpriteComponent>()->sprite,
-                            {posComp->x, posComp->y, posComp->z}, posComp->angle,
-                            posComp->rot_axis);
+        auto sprite = en->getComponent<SpriteComponent>()->sprite;
+        auto points = coll::buildAABB(sprite->getVertices()[0]);
+
+        utils::data::mapBinaryTreeAtLevel(treeComp->vbh_tree, [program, sprite, posComp](std::shared_ptr<utils::RectPoints3D> bound_rect)
+        {
+            render::drawBoundingBox(*program, coll::buildVerticesFromRect3D(*bound_rect), *sprite,
+                                    {posComp->x, posComp->y, posComp->z}, posComp->angle,
+                                    posComp->rot_axis);
+        }, Config::getVal<int>("TreeLevelShow"));
+
+        /*utils::data::mapBinaryTree(treeComp->vbh_tree->m_right, [program, sprite, posComp](std::shared_ptr<std::vector<GLfloat>> vertices)
+        {
+            render::drawBoundingBox(*program, *vertices, *sprite,
+                                    {posComp->x, posComp->y, posComp->z}, posComp->angle,
+                                    posComp->rot_axis);
+        });*/
     }
 
     if (GLenum error = glGetError(); error != GL_NO_ERROR)
@@ -234,7 +244,8 @@ void RendererSystem::drawLidarIntersect()
 
 void RendererSystem::update_state(size_t delta)
 {
-    drawToFramebuffer();
+    if (getGameState() == GameStates::PLAY)
+        drawToFramebuffer();
     drawGui();
 }
 
@@ -316,21 +327,15 @@ void RendererSystem::drawGui()
             ImGui::Text("Settings");
             ImGui::Separator();
 
-            ImGui::Text("Field size: ");
-            ImGui::SameLine();
-            ImGui::InputInt("##field_size", &Config::getVal<int>("FieldSize"));
+            ImGui::Checkbox("DrawTextures", &Config::getVal<bool>("DrawTextures"));
 
-            ImGui::Text("Neighbours count to live");
-            ImGui::SameLine();
-            ImGui::InputInt("##neir_count", &Config::getVal<int>("NeirCount"));
+            ImGui::Text("Minimal rect fraction size");
+            ImGui::InputFloat3("##min_rect", glm::value_ptr(Config::getVal<glm::vec3>("MinRectSize")));
 
-            ImGui::Text("Neighbours count to die");
-            ImGui::SameLine();
-            ImGui::InputInt("##neir_count_die", &Config::getVal<int>("NeirCountDie"));
-
-            ImGui::Text("Step time");
-            ImGui::SameLine();
-            ImGui::InputFloat("##step_time", &Config::getVal<GLfloat>("StepTime"));
+            ImGui::Text("Tree level show");
+//            ImGui::SameLine();
+            ImGui::SliderInt("##tree_level", &Config::getVal<int>("TreeLevelShow"),
+                             0, 100);
 
             ImGui::Checkbox("Inverse rotation", &Config::getVal<bool>("InverseRotation"));
 

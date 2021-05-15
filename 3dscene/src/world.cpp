@@ -11,9 +11,12 @@
 #include "config.hpp"
 #include "game.hpp"
 #include "utils/math.hpp"
+#include "utils/datastructs.hpp"
+#include "utils/collision.hpp"
 #include "components/positioncomponent.hpp"
 #include "components/cellcomponent.hpp"
 #include "components/spritecomponent.hpp"
+#include "components/bvhcomponent.hpp"
 #include "systems/renderersystem.hpp"
 #include "components/textcomponent.hpp"
 #include "systems/keyboardsystem.hpp"
@@ -44,18 +47,14 @@ size_t unique_id()
     return idx++;
 }
 
-World::World() : m_wasInit(false),
-                 m_cells(boost::extents[6][6][6]),
-                 m_pool(get_thread_count())
+World::World() : m_wasInit(false)
 {
-    if (!Config::hasKey("FieldSize"))
-        Config::addVal("FieldSize", 6, "int");
-    if (!Config::hasKey("StepTime"))
-        Config::addVal("StepTime", 5.f, "float");
-    if (!Config::hasKey("NeirCount"))
-        Config::addVal("NeirCount", 3, "int");
-    if (!Config::hasKey("NeirCountDie"))
-        Config::addVal("NeirCountDie", 4, "int");
+    if (!Config::hasKey("DrawTextures"))
+        Config::addVal("DrawTextures", false, "bool");
+    if (!Config::hasKey("TreeLevelShow"))
+        Config::addVal("TreeLevelShow", 0, "int");
+    if (!Config::hasKey("MinRectSize"))
+        Config::addVal("MinRectSize", glm::vec3(0.001f), "vec3");
     if (!Config::hasKey("BackgroundColor"))
         Config::addVal("BackgroundColor", glm::vec4(0.2f, 0.f, 0.2f, 1.f), "vec4");
     if (!Config::hasKey("InverseRotation"))
@@ -151,48 +150,64 @@ void World::filter_entities()
 
 void World::init_sprites()
 {
+    m_entities.clear();
     utils::Random rand;
 
+    std::shared_ptr<Sprite> car_sprite, palm_sprite;
+    car_sprite = std::make_shared<Sprite>();
+    palm_sprite = std::make_shared<Sprite>();
+    car_sprite->addTexture(getResourcePath("ford_focus2.obj"), 40, 40, 40);
+    car_sprite->generateDataBuffer();
+    palm_sprite->addTexture(getResourcePath("lowpolypalm.obj"), 40, 40, 40);
+    palm_sprite->generateDataBuffer();
+    auto min_rect = Config::getVal<glm::vec3>("MinRectSize");
     for (size_t i = 0; i < 5; ++i) {
         auto en_left = createEntity(unique_id());
         en_left->activate();
         en_left->addComponent<SpriteComponent>();
         en_left->addComponent<PositionComponent>();
         auto sprite_left = en_left->getComponent<SpriteComponent>();
-        sprite_left->sprite = std::make_shared<Sprite>(Sprite());
-        sprite_left->sprite->addTexture(getResourcePath("lowpolypalm.obj"), 40, 40, 40);
-        sprite_left->sprite->generateDataBuffer();
+        sprite_left->sprite = palm_sprite;
         auto pos_left = en_left->getComponent<PositionComponent>();
         pos_left->x = i * 400;
         pos_left->y = 0;
         pos_left->z = 0;
+
+        auto tree = coll::buildBVH(sprite_left->sprite->getVertices()[0],
+                                   min_rect);
+        en_left->addComponent<BVHComponent>();
+        en_left->getComponent<BVHComponent>()->vbh_tree = tree;
 
         auto en_right = createEntity(unique_id());
         en_right->activate();
         en_right->addComponent<SpriteComponent>();
         en_right->addComponent<PositionComponent>();
         auto sprite_right = en_right->getComponent<SpriteComponent>();
-        sprite_right->sprite = std::make_shared<Sprite>(Sprite());
-        sprite_right->sprite->addTexture(getResourcePath("lowpolypalm.obj"), 40, 40, 40);
-        sprite_right->sprite->generateDataBuffer();
+        sprite_right->sprite = palm_sprite;
         auto pos_right = en_right->getComponent<PositionComponent>();
         pos_right->x = i * 400;
         pos_right->y = 0;
         pos_right->z = 1000;
+        tree = coll::buildBVH(sprite_right->sprite->getVertices()[0],
+                              min_rect);
+        en_right->addComponent<BVHComponent>();
+        en_right->getComponent<BVHComponent>()->vbh_tree = tree;
 
         auto car = createEntity(unique_id());
         car->activate();
         car->addComponent<SpriteComponent>();
         car->addComponent<PositionComponent>();
-        auto car_sprite = car->getComponent<SpriteComponent>();
-        car_sprite->sprite = std::make_shared<Sprite>(Sprite());
-        car_sprite->sprite->addTexture(getResourcePath("ford_focus2.obj"), 40, 40, 40);
-        car_sprite->sprite->generateDataBuffer();
+        auto car_sprite_comp = car->getComponent<SpriteComponent>();
+        car_sprite_comp->sprite = car_sprite;
         auto car_pos = car->getComponent<PositionComponent>();
         car_pos->x = i * 400;
         car_pos->y = 0;
         car_pos->z = rand.generateu(150, 350);
         car_pos->angle = -glm::half_pi<GLfloat>();
         car_pos->rot_axis = glm::vec3(0.f, 1.f, 0.f);
+        tree = coll::buildBVH(car_sprite_comp->sprite->getVertices()[0],
+                                   min_rect);
+        car->addComponent<BVHComponent>();
+        car->getComponent<BVHComponent>()->vbh_tree = tree;
     }
 }
