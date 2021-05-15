@@ -27,7 +27,7 @@ void KeyboardSystem::update_state(size_t delta)
                 setGameRunnable(false);
                 break;
             case SDL_MOUSEMOTION:
-                if (!stopped) {
+                if (!stopped && m_middlePressed) {
                     x_offset = e.motion.xrel;
                     y_offset = e.motion.yrel;
 
@@ -78,13 +78,6 @@ void KeyboardSystem::update_state(size_t delta)
                 break;
         }
 
-		if (m_middlePressed) {
-			std::cout << camera->getDirection().x << ", "
-					  << camera->getDirection().y << ", "
-					  << camera->getDirection().z << ";\n";
-		}
-		
-		
         if (!stopped) {
 //            camera->processKeyboard(x_offset, y_offset);
             program->setMat4(VIEW, camera->getView());

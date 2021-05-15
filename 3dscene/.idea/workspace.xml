@@ -11,7 +11,8 @@
   </component>
   <component name="CMakeSettings">
     <configurations>
-      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" ENABLED="true" />
+      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" GENERATION_OPTIONS="-DCMAKE_BUILD_TYPE=Debug" GENERATION_DIR="Debug" BUILD_OPTIONS="-- -j5" ENABLED="true" />
+      <configuration PROFILE_NAME="Release" CONFIG_NAME="Release" GENERATION_OPTIONS="-DCMAKE_BUILD_TYPE=Debug" GENERATION_DIR="Release" BUILD_OPTIONS="-- -j 5" ENABLED="true" />
     </configurations>
   </component>
   <component name="ChangeListManager">
@@ -26,7 +27,7 @@
   </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/cmake_modules/imgui" />
   </component>
   <component name="GitSEFilterConfiguration">
     <file-type-list>
@@ -52,7 +53,7 @@
     <property name="cmake.loaded.for.project" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_package_manager_path" value="npm" />
-    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
+    <property name="settings.editor.selected.configurable" value="CMakeSettings" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -62,6 +63,11 @@
     </key>
   </component>
   <component name="RunManager" selected="CMake Application.3DScene">
+    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="3DScene" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="3DScene" TARGET_NAME="3DScene" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="3DScene" RUN_TARGET_NAME="3DScene">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -106,7 +112,9 @@
       <workItem from="1619293573651" duration="19479000" />
       <workItem from="1620489959117" duration="16892000" />
       <workItem from="1620518803521" duration="15376000" />
-      <workItem from="1620817606613" duration="12759000" />
+      <workItem from="1620817606613" duration="25640000" />
+      <workItem from="1620916073440" duration="21503000" />
+      <workItem from="1621085615032" duration="6669000" />
     </task>
     <servers />
   </component>
@@ -114,25 +122,6 @@
     <option name="version" value="3" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/render/render.cpp</url>
-          <line>167</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/systems/renderersystem.cpp</url>
-          <line>194</line>
-          <option name="timeStamp" value="3" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/include/utils/collision.hpp</url>
-          <line>59</line>
-          <option name="timeStamp" value="6" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
     <watches-manager>
       <configuration name="CMakeRunConfiguration">
         <watch expression="vertices.size() * sizeof(float)" language="ObjectiveC" />
