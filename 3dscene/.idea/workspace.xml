@@ -27,7 +27,7 @@
   </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/cmake_modules/imgui" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/include/ecs" />
   </component>
   <component name="GitSEFilterConfiguration">
     <file-type-list>
@@ -63,12 +63,12 @@
     </key>
   </component>
   <component name="RunManager" selected="CMake Application.3DScene">
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
+    <configuration name="3DScene" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="3DScene" TARGET_NAME="3DScene" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="3DScene" RUN_TARGET_NAME="3DScene">
       <method v="2">
-        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="3DScene" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="3DScene" TARGET_NAME="3DScene" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="3DScene" RUN_TARGET_NAME="3DScene">
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -114,7 +114,10 @@
       <workItem from="1620518803521" duration="15376000" />
       <workItem from="1620817606613" duration="25640000" />
       <workItem from="1620916073440" duration="21503000" />
-      <workItem from="1621085615032" duration="6669000" />
+      <workItem from="1621085615032" duration="15360000" />
+      <workItem from="1621161886421" duration="4542000" />
+      <workItem from="1621255406185" duration="2842000" />
+      <workItem from="1621357019884" duration="26676000" />
     </task>
     <servers />
   </component>
@@ -126,6 +129,8 @@
       <configuration name="CMakeRunConfiguration">
         <watch expression="vertices.size() * sizeof(float)" language="ObjectiveC" />
         <watch expression="((GLenum)(glGetError()))" />
+        <watch expression="transform * vec4(rect.a, 1.f)" language="ObjectiveC" />
+        <watch expression="texture.getWidth()" language="ObjectiveC" />
       </configuration>
     </watches-manager>
   </component>

@@ -161,6 +161,7 @@ CMakeFiles/3DScene.dir/src/main.cpp.o: ../include/utils/threadpool.hpp
 CMakeFiles/3DScene.dir/src/main.cpp.o: ../include/utils/timer.hpp
 CMakeFiles/3DScene.dir/src/main.cpp.o: ../include/utils/utils.hpp
 CMakeFiles/3DScene.dir/src/main.cpp.o: ../include/view/arcballcamera.hpp
+CMakeFiles/3DScene.dir/src/main.cpp.o: ../include/view/fpscamera.hpp
 CMakeFiles/3DScene.dir/src/main.cpp.o: ../include/world.hpp
 CMakeFiles/3DScene.dir/src/main.cpp.o: ../src/main.cpp
 CMakeFiles/3DScene.dir/src/main.cpp.o: /usr/include/SDL2/SDL.h
@@ -189,6 +190,8 @@ CMakeFiles/3DScene.dir/src/main.cpp.o: /usr/include/SDL2/SDL_messagebox.h
 CMakeFiles/3DScene.dir/src/main.cpp.o: /usr/include/SDL2/SDL_mixer.h
 CMakeFiles/3DScene.dir/src/main.cpp.o: /usr/include/SDL2/SDL_mouse.h
 CMakeFiles/3DScene.dir/src/main.cpp.o: /usr/include/SDL2/SDL_mutex.h
+CMakeFiles/3DScene.dir/src/main.cpp.o: /usr/include/SDL2/SDL_opengl.h
+CMakeFiles/3DScene.dir/src/main.cpp.o: /usr/include/SDL2/SDL_opengl_glext.h
 CMakeFiles/3DScene.dir/src/main.cpp.o: /usr/include/SDL2/SDL_pixels.h
 CMakeFiles/3DScene.dir/src/main.cpp.o: /usr/include/SDL2/SDL_platform.h
 CMakeFiles/3DScene.dir/src/main.cpp.o: /usr/include/SDL2/SDL_power.h
@@ -325,6 +328,8 @@ CMakeFiles/3DScene.dir/src/render/shaderprogram.cpp.o: /usr/include/SDL2/close_c
 CMakeFiles/3DScene.dir/src/render/sprite.cpp.o: ../include/constants.hpp
 CMakeFiles/3DScene.dir/src/render/sprite.cpp.o: ../include/exceptions/basegameexception.hpp
 CMakeFiles/3DScene.dir/src/render/sprite.cpp.o: ../include/exceptions/sdlexception.hpp
+CMakeFiles/3DScene.dir/src/render/sprite.cpp.o: ../include/lifeprogram.hpp
+CMakeFiles/3DScene.dir/src/render/sprite.cpp.o: ../include/render/shaderprogram.hpp
 CMakeFiles/3DScene.dir/src/render/sprite.cpp.o: ../include/render/sprite.hpp
 CMakeFiles/3DScene.dir/src/render/sprite.cpp.o: ../include/render/texture.hpp
 CMakeFiles/3DScene.dir/src/render/sprite.cpp.o: ../include/utils/collision.hpp
@@ -736,7 +741,7 @@ CMakeFiles/3DScene.dir/src/systems/keyboardsystem.cpp.o: ../include/utils/thread
 CMakeFiles/3DScene.dir/src/systems/keyboardsystem.cpp.o: ../include/utils/timer.hpp
 CMakeFiles/3DScene.dir/src/systems/keyboardsystem.cpp.o: ../include/utils/utils.hpp
 CMakeFiles/3DScene.dir/src/systems/keyboardsystem.cpp.o: ../include/view/arcballcamera.hpp
-CMakeFiles/3DScene.dir/src/systems/keyboardsystem.cpp.o: ../include/view/lidar.hpp
+CMakeFiles/3DScene.dir/src/systems/keyboardsystem.cpp.o: ../include/view/fpscamera.hpp
 CMakeFiles/3DScene.dir/src/systems/keyboardsystem.cpp.o: ../include/world.hpp
 CMakeFiles/3DScene.dir/src/systems/keyboardsystem.cpp.o: ../src/systems/keyboardsystem.cpp
 CMakeFiles/3DScene.dir/src/systems/keyboardsystem.cpp.o: /usr/include/SDL2/SDL.h
@@ -901,7 +906,7 @@ CMakeFiles/3DScene.dir/src/systems/renderersystem.cpp.o: ../include/utils/thread
 CMakeFiles/3DScene.dir/src/systems/renderersystem.cpp.o: ../include/utils/timer.hpp
 CMakeFiles/3DScene.dir/src/systems/renderersystem.cpp.o: ../include/utils/utils.hpp
 CMakeFiles/3DScene.dir/src/systems/renderersystem.cpp.o: ../include/view/arcballcamera.hpp
-CMakeFiles/3DScene.dir/src/systems/renderersystem.cpp.o: ../include/view/lidar.hpp
+CMakeFiles/3DScene.dir/src/systems/renderersystem.cpp.o: ../include/view/fpscamera.hpp
 CMakeFiles/3DScene.dir/src/systems/renderersystem.cpp.o: ../include/world.hpp
 CMakeFiles/3DScene.dir/src/systems/renderersystem.cpp.o: ../src/systems/renderersystem.cpp
 CMakeFiles/3DScene.dir/src/systems/renderersystem.cpp.o: /usr/include/SDL2/SDL.h
@@ -1375,9 +1380,6 @@ CMakeFiles/3DScene.dir/src/view/fpscamera.cpp.o: /usr/include/SDL2/SDL_opengl_gl
 
 CMakeFiles/3DScene.dir/src/view/lidar.cpp.o: ../include/view/lidar.hpp
 CMakeFiles/3DScene.dir/src/view/lidar.cpp.o: ../src/view/lidar.cpp
-CMakeFiles/3DScene.dir/src/view/lidar.cpp.o: /usr/include/SDL2/SDL_config.h
-CMakeFiles/3DScene.dir/src/view/lidar.cpp.o: /usr/include/SDL2/SDL_opengl.h
-CMakeFiles/3DScene.dir/src/view/lidar.cpp.o: /usr/include/SDL2/SDL_opengl_glext.h
 
 CMakeFiles/3DScene.dir/src/world.cpp.o: ../cmake_modules/imgui/backends/imgui_impl_opengl3.h
 CMakeFiles/3DScene.dir/src/world.cpp.o: ../cmake_modules/imgui/backends/imgui_impl_sdl.h

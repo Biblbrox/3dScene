@@ -7,7 +7,7 @@ using glm::vec3;
 using utils::math::rotate_around;
 using utils::math::operator/;
 
-void render::drawLinen(const std::vector<vec2>& points, bool adjacency)
+void render::drawLinen(const std::vector<vec3>& points, bool adjacency)
 {
     if (adjacency)
         assert(points.size() % 2 == 0);
@@ -22,14 +22,40 @@ void render::drawLinen(const std::vector<vec2>& points, bool adjacency)
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, verticesID);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * points.size(), vertices,
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * points.size(), vertices,
                  GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnableVertexAttribArray(0);
 
     glDrawArrays(adjacency ? GL_LINE_STRIP_ADJACENCY : GL_LINES, 0, points.size());
 
+    glDisableVertexAttribArray(0);
+
+    glDeleteBuffers(1, &verticesID);
+    glDeleteVertexArrays(1, &VAO);
+}
+
+void render::drawTriangles(const std::vector<GLfloat>& points)
+{
+    assert(points.size() % 3 == 0);
+    auto vertices = points.data();
+
+    GLuint verticesID = 0;
+    GLuint VAO = 0;
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &verticesID);
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, verticesID);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * points.size(), vertices,
+                 GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glEnableVertexAttribArray(0);
+
+    glDrawArrays(GL_TRIANGLES, 0, points.size() * 3);
     glDisableVertexAttribArray(0);
 
     glDeleteBuffers(1, &verticesID);

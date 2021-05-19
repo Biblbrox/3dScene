@@ -18,8 +18,10 @@
 #include "game.hpp"
 #include "config.hpp"
 #include "utils/math.hpp"
-#include "view/lidar.hpp"
+#include "view/fpscamera.hpp"
 #include "utils/collision.hpp"
+
+const float RAY_LENGTH = 100.f;
 
 using utils::log::Logger;
 using boost::format;
@@ -160,10 +162,11 @@ RendererSystem::~RendererSystem()
 void RendererSystem::drawSprites()
 {
     auto program = LifeProgram::getInstance();
-    auto lidar = Lidar::getInstance();
+    auto camera = FpsCamera::getInstance();
 
     drawLidarIntersect();
 
+    program->useFramebufferProgram();
     program->setInt("isPrimitive", false);
     program->updateInt("isPrimitive");
     program->setFloat("alpha", 1.f);
@@ -177,6 +180,10 @@ void RendererSystem::drawSprites()
                             posComp->rot_axis);
     }
 
+
+    mat4 model = program->getMat4("ModelMatrix");
+    mat4 view = program->getMat4("ViewMatrix");
+    mat4 projection = program->getMat4("ProjectionMatrix");
     program->setInt("isPrimitive", true);
     program->updateInt("isPrimitive");
     program->setFloat("alpha", 0.6f);
@@ -193,18 +200,54 @@ void RendererSystem::drawSprites()
 
         utils::data::mapBinaryTreeAtLevel(treeComp->vbh_tree, [program, sprite, posComp](std::shared_ptr<utils::RectPoints3D> bound_rect)
         {
+            program->setVec3("primColor", {0.8f, 0.1f, 0.1f});
+            program->updateVec3("primColor");
             render::drawBoundingBox(*program, coll::buildVerticesFromRect3D(*bound_rect), *sprite,
                                     {posComp->x, posComp->y, posComp->z}, posComp->angle,
                                     posComp->rot_axis);
         }, Config::getVal<int>("TreeLevelShow"));
-
-        /*utils::data::mapBinaryTree(treeComp->vbh_tree->m_right, [program, sprite, posComp](std::shared_ptr<std::vector<GLfloat>> vertices)
-        {
-            render::drawBoundingBox(*program, *vertices, *sprite,
-                                    {posComp->x, posComp->y, posComp->z}, posComp->angle,
-                                    posComp->rot_axis);
-        });*/
     }
+
+
+
+//    program->useScreenProgram();
+//    // Draw bounding boxes with screen program for debug purposes
+//    for (const auto& [key, en]: sprites) {
+//        auto treeComp = en->getComponent<BVHComponent>();
+//        if (!treeComp)
+//            continue;
+//
+//        auto posComp = en->getComponent<PositionComponent>();
+//        auto sprite = en->getComponent<SpriteComponent>()->sprite;
+//        auto points = coll::buildAABB(sprite->getVertices()[0]);
+//
+//        utils::data::mapBinaryTreeAtLevel(treeComp->vbh_tree,
+//                                          [program, sprite, posComp, model, view, projection]
+//                                                  (std::shared_ptr<utils::RectPoints3D> bound_rect)
+//                                          {
+//                                              program->setVec3("primColor", {1.f, 0.8f, 0.8f});
+//                                              program->updateVec3("primColor");
+//                                              program->setFloat("alpha", 1.f);
+//                                              program->updateFloat("alpha");
+//                                              utils::RectPoints3D rect_world
+//                                                      = coll::AABBtoWorldSpace(*bound_rect,
+//                                                                               {posComp->x, posComp->y, posComp->z}, posComp->angle,
+//                                                                               posComp->rot_axis,
+//                                                                               *sprite,
+//                                                                               model, view, projection);
+//
+//
+//                                              std::vector<GLfloat> vertices
+//                                                      = coll::buildVerticesFromRect3D(rect_world);
+//
+//                                              render::drawTriangles(vertices);
+////            render::drawBoundingBox(*program, coll::buildVerticesFromRect3D(*bound_rect), *sprite,
+////                                    {posComp->x, posComp->y, posComp->z}, posComp->angle,
+////                                    posComp->rot_axis);
+//                                          }, Config::getVal<int>("TreeLevelShow"));
+//    }
+
+
 
     if (GLenum error = glGetError(); error != GL_NO_ERROR)
         throw GLException((format("\n\tRender while drawing sprites: %1%\n")
@@ -215,21 +258,29 @@ void RendererSystem::drawSprites()
 void RendererSystem::drawLidarIntersect()
 {
     auto program = LifeProgram::getInstance();
-    auto lidar = Lidar::getInstance();
+    program->useFramebufferProgram();
+    mat4 model = program->getMat4("ModelMatrix");
+    mat4 view = program->getMat4("ViewMatrix");
+    mat4 projection = program->getMat4("ProjectionMatrix");
+
+    static bool was_called = false;
+    auto camera = FpsCamera::getInstance();
 
     program->setInt("isPrimitive", true);
     program->updateInt("isPrimitive");
-    const GLfloat radius = 40.f;
-    glm::vec3 dir = lidar->getDirection();
-    const GLfloat length = lidar->getRayLength() + 1000;
+    const GLfloat radius = 100.f;
+    glm::vec3 dir = camera->getDirection();
+    const GLfloat length = RAY_LENGTH + 1000;
     dir *= length;
 
     GLfloat alpha = 0.f;
-    GLfloat step = glm::pi<GLfloat>() / 100.f;
+    GLfloat step = glm::pi<GLfloat>() / 1000.f;
     std::vector<glm::vec3> dots;
-    glm::vec3 pos = lidar->getPos() + dir;
+    glm::vec3 pos = camera->getPos() + dir;
+    program->setVec3("primColor", {0.1, 0.1, 0.8});
+    program->updateVec3("primColor");
     while (alpha <= 2 * glm::pi<GLfloat>()) {
-        glm::vec3 up = glm::normalize(lidar->getUp() + dir);
+        glm::vec3 up = glm::normalize(camera->getUp() + dir);
 
         glm::vec3 dir_on_plane = glm::normalize(glm::cross(up, glm::normalize(dir)));
         dir_on_plane = glm::rotate(dir_on_plane, alpha, glm::normalize(dir));
@@ -238,8 +289,58 @@ void RendererSystem::drawLidarIntersect()
         dots.emplace_back(circle_pos);
         alpha += step;
     }
+    alpha = -glm::pi<GLfloat>() / 6.f;
+    std::vector<glm::vec3> lines;
+    std::ofstream stream;
+    stream.open(getResourcePath("data"), std::ios_base::app);
+    std::vector<glm::vec3> coll_dots;
+    glm::vec3 pos_trans = camera->getPos();
+    while (alpha <= glm::pi<GLfloat>() / 6.f) {
+        dir = glm::normalize(glm::rotate(camera->getDirection(), alpha, camera->getUp()));
 
+        for (const auto& [key, en]: m_ecsManager->getEntities()) {
+            auto bvh_comp = en->getComponent<BVHComponent>();
+            if (!bvh_comp)
+                continue;
+            auto pos_comp = en->getComponent<PositionComponent>();
+            auto sprite_comp = en->getComponent<SpriteComponent>();
+
+            auto coll = coll::raycastAABB(dir,
+                                          pos_trans,
+                                          coll::AABBtoWorldSpace(
+                                                  *bvh_comp->vbh_tree->m_data,
+                                                  pos_comp->rot_axis, pos_comp->angle,
+                                                  {pos_comp->x, pos_comp->y, pos_comp->z},
+                                                  *sprite_comp->sprite,
+                                                  model, view, projection
+                                          ));
+            if (coll.first) {
+                std::cout << "collision occurred, pos: " << coll.second.x << ", "
+                          << coll.second.y << ", " << coll.second.z << std::endl;
+                stream << coll.second.x << ", "
+                       << coll.second.y << ", " << coll.second.z << std::endl;
+                coll_dots.emplace_back(coll.second);
+            }
+        }
+        stream.close();
+
+        dots.emplace_back(camera->getPos() + glm::normalize(dir) * length);
+        lines.push_back({camera->getPos()});
+        lines.push_back({camera->getPos() + dir * length});
+        alpha += step;
+    }
+
+//    render::drawLinen(lines);
+    dots.emplace_back(pos);
+    program->setInt("isPrimitive", true);
+    program->updateInt("isPrimitive");
     render::drawDots(dots);
+
+    program->setVec3("primColor", {0.1, 1.f, 0.1});
+    program->updateVec3("primColor");
+    render::drawDots(coll_dots);
+
+    was_called = true;
 }
 
 void RendererSystem::update_state(size_t delta)

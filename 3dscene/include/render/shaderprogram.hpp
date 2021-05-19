@@ -27,6 +27,13 @@ public:
     virtual void setMat3(const std::string &name, const glm::mat3& value);
     virtual void setMat4(const std::string &name, const glm::mat4& value);
 
+    virtual GLfloat getFloat(const std::string &name);
+    virtual int getInt(const std::string &name);
+    virtual glm::vec3 getVec3(const std::string &name);
+    virtual glm::vec4 getVec4(const std::string &name);
+    virtual glm::mat3 getMat3(const std::string &name);
+    virtual glm::mat4 getMat4(const std::string &name);
+
     virtual void leftMult(const std::string& name, const glm::mat4& matrix);
     virtual void mult(const std::string& name, const glm::vec4& vec);
 

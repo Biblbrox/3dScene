@@ -200,6 +200,7 @@ void Game::initGL()
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
     glLineWidth(1.0f);
+    glPointSize(2.f);
     glEnable(GL_BLEND);
 
     if (Config::getVal<bool>("MSAA"))

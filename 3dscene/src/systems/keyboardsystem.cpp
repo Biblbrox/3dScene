@@ -5,7 +5,7 @@
 #include "systems/keyboardsystem.hpp"
 #include "game.hpp"
 #include "lifeprogram.hpp"
-#include "view/lidar.hpp"
+#include "view/fpscamera.hpp"
 
 void KeyboardSystem::update_state(size_t delta)
 {
@@ -16,7 +16,7 @@ void KeyboardSystem::update_state(size_t delta)
     GLfloat y_offset = 0.f;
     SDL_Event e;
 	
-    auto camera = Lidar::getInstance();
+    auto camera = FpsCamera::getInstance();
     auto program = LifeProgram::getInstance();
     bool stopped = getGameState() == GameStates::STOP;
     while (SDL_PollEvent(&e)) {

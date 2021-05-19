@@ -9,11 +9,17 @@
 #include <GL/glew.h>
 #include <Eigen/Eigenvalues>
 
-
 #include "utils/math.hpp"
+#include "../render/texture.hpp"
+#include "lifeprogram.hpp"
 
-namespace coll
-{
+namespace coll {
+
+    using glm::mat4;
+    using glm::mat3;
+    using glm::vec3;
+    using glm::vec4;
+
     /**
  * Build 2d rectangle from rect with corrected coords by
  * rotation angle
@@ -22,8 +28,7 @@ namespace coll
  * @return
  */
     inline utils::RectPoints2D
-    buildRectPoints2d(const utils::Rect2D &rect, GLfloat alpha) noexcept
-    {
+    buildRectPoints2d(const utils::Rect2D &rect, GLfloat alpha) noexcept {
         GLfloat bx, by, cx, cy, dx, dy;
         const GLfloat x = rect.x;
         const GLfloat y = rect.y;
@@ -47,12 +52,15 @@ namespace coll
         cx = bx + height * alpha_sin;
         cy = by + height * alpha_cos;
 
-        return {{x,  y}, {bx, by}, {cx, cy}, {dx, dy}};
+        return {{x,  y},
+                {bx, by},
+                {cx, cy},
+                {dx, dy}};
     }
 
-    inline std::vector<GLfloat> buildVerticesFromRect3D(utils::RectPoints3D rect)
-    {
-        auto [a, b, c, d, e, f, g, k] = rect;
+    inline std::vector<GLfloat>
+    buildVerticesFromRect3D(utils::RectPoints3D rect) {
+        auto[a, b, c, d, e, f, g, k] = rect;
         return {
                 // Front plane
                 a.x, a.y, a.z,
@@ -99,8 +107,8 @@ namespace coll
         };
     }
 
-    inline std::array<GLfloat, 6> findMeshBound(const std::vector<GLfloat>& mesh_vertices)
-    {
+    inline std::array<GLfloat, 6>
+    findMeshBound(const std::vector<GLfloat> &mesh_vertices) {
         GLfloat min_x, max_x, min_y, max_y, min_z, max_z;
         min_x = max_x = mesh_vertices[0];
         min_y = max_y = mesh_vertices[1];
@@ -134,11 +142,44 @@ namespace coll
      * @return
      */
     inline utils::RectPoints3D
-    buildAABB(const std::vector<GLfloat>& mesh_vertices) noexcept
-    {
+    buildAABB(const std::vector<GLfloat> &mesh_vertices) noexcept {
         assert(mesh_vertices.size() % 3 == 0
                && "Vertices count must be power of 3");
-        auto [min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(mesh_vertices);
+        auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(
+                mesh_vertices);
+
+        // Front plane
+        glm::vec3 a = {min_x, min_y, min_z};
+        glm::vec3 b = {max_x, min_y, min_z};
+        glm::vec3 c = {max_x, max_y, min_z};
+        glm::vec3 d = {min_x, max_y, min_z};
+
+        // Right plane
+        glm::vec3 e = {max_x, min_y, max_z};
+        glm::vec3 f = {max_x, max_y, max_z};
+
+        // Back plane
+        glm::vec3 g = {min_x, max_y, max_z};
+        glm::vec3 k = {min_x, min_y, max_z};
+
+        return {a, b, c, d, e, f, g, k};
+    }
+
+
+    inline utils::RectPoints3D
+    rebuildAABBinWorldSpace(const utils::RectPoints3D& rect) noexcept {
+        GLfloat min_x = std::min({rect.a.x, rect.b.x, rect.c.x, rect.d.x,
+                                  rect.e.x, rect.f.x, rect.g.x, rect.k.x});
+        GLfloat max_x = std::max({rect.a.x, rect.b.x, rect.c.x, rect.d.x,
+                                  rect.e.x, rect.f.x, rect.g.x, rect.k.x});
+        GLfloat min_y = std::min({rect.a.y, rect.b.y, rect.c.y, rect.d.y,
+                                  rect.e.y, rect.f.y, rect.g.y, rect.k.y});
+        GLfloat max_y = std::max({rect.a.y, rect.b.y, rect.c.y, rect.d.y,
+                                  rect.e.y, rect.f.y, rect.g.y, rect.k.y});
+        GLfloat min_z = std::min({rect.a.z, rect.b.z, rect.c.z, rect.d.z,
+                                  rect.e.z, rect.f.z, rect.g.z, rect.k.z});
+        GLfloat max_z = std::max({rect.a.z, rect.b.z, rect.c.z, rect.d.z,
+                                  rect.e.z, rect.f.z, rect.g.z, rect.k.z});
 
         // Front plane
         glm::vec3 a = {min_x, min_y, min_z};
@@ -158,6 +199,52 @@ namespace coll
     }
 
     /**
+    * Return rectangular bounding box for given vertices
+    * Result contain vertices grouped to triangle primitives
+    * @param mesh_vertices
+    * @param angle
+    * @param rot_axis
+    * @return
+    */
+    inline utils::RectPoints3D
+    AABBtoWorldSpace(utils::RectPoints3D rect,
+                     const glm::vec3& rot_axis, GLfloat angle,
+                     const glm::vec3& position, const Texture& texture,
+                     const glm::mat4& model,
+                     const glm::mat4& view,
+                     const glm::mat4& projection) noexcept {
+
+        glm::vec3 pos = {2.f * position.x / texture.getWidth(),
+                         2.f * position.y / texture.getHeight(),
+                         2.f * position.z / texture.getDepth()};
+
+        const GLfloat half = 1.f;
+        const GLfloat centerX = pos.x + half;
+        const GLfloat centerY = pos.y + half;
+        const GLfloat centerZ = pos.z + half;
+
+        const glm::vec3 scale = glm::vec3(texture.getWidth(), texture.getHeight(),
+                                          texture.getDepth());
+
+        mat4 rotation = utils::math::rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
+                                                   rot_axis);
+        mat4 translation = translate(mat4(1.f), pos);
+        mat4 scaling = glm::scale(mat4(1.f), scale);
+        glm::mat4 transform = scaling * rotation * translation;
+
+        rect.a = transform * vec4(rect.a, 1.f);
+        rect.b = transform * vec4(rect.b, 1.f);
+        rect.c = transform * vec4(rect.c, 1.f);
+        rect.d = transform * vec4(rect.d, 1.f);
+        rect.e = transform * vec4(rect.e, 1.f);
+        rect.f = transform * vec4(rect.f, 1.f);
+        rect.g = transform * vec4(rect.g, 1.f);
+        rect.k = transform * vec4(rect.k, 1.f);
+
+        return rebuildAABBinWorldSpace(rect);
+    }
+
+    /**
      * Return rectangular oriented bounding box for given vertices
      * Result contain vertices grouped to triangle primitives
      * @param mesh_vertices
@@ -166,8 +253,7 @@ namespace coll
      * @return
      */
     inline utils::RectPoints3D
-    buildOBB(const std::vector<GLfloat>& mesh_vertices) noexcept
-    {
+    buildOBB(const std::vector<GLfloat> &mesh_vertices) noexcept {
         assert(mesh_vertices.size() % 3 == 0
                && "Vertices count must be power of 3");
         // Build covarience matrix
@@ -182,9 +268,10 @@ namespace coll
             // TODO: throw error
         }
         auto eigen_vectors = eigensolver.eigenvectors();
-        std::cout << eigen_vectors;
+        //std::cout << eigen_vectors;
 
-        auto [min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(mesh_vertices);
+        auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(
+                mesh_vertices);
 
         // Front plane
         glm::vec3 a = {min_x, min_y, min_z};
@@ -204,9 +291,9 @@ namespace coll
     }
 
     std::array<std::vector<GLfloat>, 2>
-    inline divideByLongestSize(std::vector<GLfloat> mesh_vertices)
-    {
-        auto [min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(mesh_vertices);
+    inline divideByLongestSize(std::vector<GLfloat> mesh_vertices) {
+        auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(
+                mesh_vertices);
 
         // Divide by longest side
         GLfloat x_length = std::abs(std::abs(max_x) - std::abs(min_x));
@@ -271,16 +358,17 @@ namespace coll
      * @return
      */
     inline NodePtr
-    buildBVH(const VertData& mesh_vertices, glm::vec3 min_rect) noexcept
-    {
+    buildBVH(const VertData &mesh_vertices, glm::vec3 min_rect) noexcept {
         buildOBB(mesh_vertices);
         NodePtr node = std::make_shared<Node>();
-        node->m_data = std::make_shared<NodeData>(coll::buildAABB(mesh_vertices));
+        node->m_data = std::make_shared<NodeData>(
+                coll::buildAABB(mesh_vertices));
 //        buildOBB(mesh_vertices);
 
-        auto [left_part, right_part] = divideByLongestSize(mesh_vertices);
+        auto[left_part, right_part] = divideByLongestSize(mesh_vertices);
 
-        auto [min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(mesh_vertices);
+        auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(
+                mesh_vertices);
 
         // Divide by longest side
         GLfloat x_length = std::abs(std::abs(max_x) - std::abs(min_x));
@@ -305,8 +393,7 @@ namespace coll
      * @return
      */
     constexpr bool lineLine(const vec2 &p11, const vec2 &p12,
-                            const vec2 &p21, const vec2 &p22) noexcept
-    {
+                            const vec2 &p21, const vec2 &p22) noexcept {
         GLfloat x1 = p11.x;
         GLfloat x2 = p12.x;
         GLfloat x3 = p21.x;
@@ -335,24 +422,29 @@ namespace coll
      * @param rect
      * @return
      */
-	constexpr glm::vec3 raycastAABB(glm::vec3 ray_dir, glm::vec3 ray_origin,
-                               utils::RectPoints3D rect) noexcept
-	{
-        GLfloat min_x, max_x, min_y, max_y, min_z, max_z;
-        min_x = std::min({rect.a.x, rect.b.x, rect.c.x, rect.d.x, rect.e.x,
-                          rect.f.x, rect.g.x});
-        max_x = std::max({rect.a.x, rect.b.x, rect.c.x, rect.d.x, rect.e.x,
-                          rect.f.x, rect.g.x});
+    constexpr std::pair<bool, glm::vec3>
+    raycastAABB(glm::vec3 ray_dir, glm::vec3 ray_origin,
+                utils::RectPoints3D rect) noexcept {
+        GLfloat min_x = std::min(
+                {rect.a.x, rect.b.x, rect.c.x, rect.d.x, rect.e.x,
+                 rect.f.x, rect.g.x, rect.k.x});
+        GLfloat max_x = std::max(
+                {rect.a.x, rect.b.x, rect.c.x, rect.d.x, rect.e.x,
+                 rect.f.x, rect.g.x, rect.k.x});
 
-        min_y = std::min({rect.a.y, rect.b.y, rect.c.y, rect.d.y, rect.e.y,
-                          rect.f.y, rect.g.y});
-        max_y = std::max({rect.a.y, rect.b.y, rect.c.y, rect.d.y, rect.e.y,
-                          rect.f.y, rect.g.y});
+        GLfloat min_y = std::min(
+                {rect.a.y, rect.b.y, rect.c.y, rect.d.y, rect.e.y,
+                 rect.f.y, rect.g.y, rect.k.y});
+        GLfloat max_y = std::max(
+                {rect.a.y, rect.b.y, rect.c.y, rect.d.y, rect.e.y,
+                 rect.f.y, rect.g.y, rect.k.y});
 
-        min_z = std::min({rect.a.z, rect.b.z, rect.c.z, rect.d.z, rect.e.z,
-                          rect.f.z, rect.g.z});
-        max_z = std::max({rect.a.z, rect.b.z, rect.c.z, rect.d.z, rect.e.z,
-                          rect.f.z, rect.g.z});
+        GLfloat min_z = std::min(
+                {rect.a.z, rect.b.z, rect.c.z, rect.d.z, rect.e.z,
+                 rect.f.z, rect.g.z, rect.k.z});
+        GLfloat max_z = std::max(
+                {rect.a.z, rect.b.z, rect.c.z, rect.d.z, rect.e.z,
+                 rect.f.z, rect.g.z, rect.k.z});
 
         GLfloat tMinX = (min_x - ray_origin.x) / ray_dir.x;
         GLfloat tMaxX = (max_x - ray_origin.x) / ray_dir.x;
@@ -364,21 +456,41 @@ namespace coll
         GLfloat tMaxZ = (max_z - ray_origin.z) / ray_dir.z;
 
         GLfloat tmin = std::max(
-                std::max(std::min(tMinX, tMaxX), std::min(tMinY, tMaxY)), std::min(tMinZ, tMaxZ));
+                std::max(std::min(tMinX, tMaxX), std::min(tMinY, tMaxY)),
+                std::min(tMinZ, tMaxZ));
         GLfloat tmax = std::min(
-                std::min(std::max(tMinX, tMaxX), std::max(tMinY, tMaxY)), std::max(tMinZ, tMaxZ));
+                std::min(std::max(tMinX, tMaxX), std::max(tMinY, tMaxY)),
+                std::max(tMinZ, tMaxZ));
 
         if (tmax < 0)
-            return glm::vec3(-1.f);
+            return {false, glm::vec3(-1.f)};
 
         if (tmin > tmax)
-            return glm::vec3(-1.f);
+            return {false, glm::vec3(-1.f)};
 
         if (tmin < 0)
-            return ray_origin + ray_dir * tmax;
+            return {true, ray_origin + ray_dir * tmax};
 
-        return ray_origin + ray_dir * tmin;
-	}
+        return {true, ray_origin + ray_dir * tmin};
+    }
+
+
+    utils::RectPoints3D
+    inline apply_transform(utils::RectPoints3D rect, LifeProgram &program) {
+
+
+        return {
+                 program.getMat4("ModelMatrix") * program.getMat4("ViewMatrix") * glm::vec4(rect.a, 1.f) ,
+                 program.getMat4("ModelMatrix") * program.getMat4("ViewMatrix") * glm::vec4(rect.b, 1.f) ,
+                 program.getMat4("ModelMatrix") * program.getMat4("ViewMatrix") * glm::vec4(rect.c, 1.f) ,
+                 program.getMat4("ModelMatrix") * program.getMat4("ViewMatrix") * glm::vec4(rect.d, 1.f) ,
+                 program.getMat4("ModelMatrix") * program.getMat4("ViewMatrix") * glm::vec4(rect.e, 1.f) ,
+                 program.getMat4("ModelMatrix") * program.getMat4("ViewMatrix") * glm::vec4(rect.f, 1.f) ,
+                 program.getMat4("ModelMatrix") * program.getMat4("ViewMatrix") * glm::vec4(rect.g, 1.f) ,
+                 program.getMat4("ModelMatrix") * program.getMat4("ViewMatrix") * glm::vec4(rect.k, 1.f) ,
+
+        };
+    }
 }
 
 #endif //COLLISION_HPP

@@ -289,3 +289,33 @@ void ShaderProgram::mult(const std::string& name, const glm::vec4 &vec)
 {
     m_mat4Uniforms[m_programID][name] *= vec;
 }
+
+GLfloat ShaderProgram::getFloat(const std::string &name)
+{
+    return m_flUniforms[m_programID][name];
+}
+
+int ShaderProgram::getInt(const std::string &name)
+{
+    return m_intUniforms[m_programID][name];
+}
+
+glm::vec3 ShaderProgram::getVec3(const std::string &name)
+{
+    return m_vec3Uniforms[m_programID][name];
+}
+
+glm::vec4 ShaderProgram::getVec4(const std::string &name)
+{
+    return m_vec4Uniforms[m_programID][name];
+}
+
+glm::mat3 ShaderProgram::getMat3(const std::string &name)
+{
+    return m_mat3Uniforms[m_programID][name];
+}
+
+glm::mat4 ShaderProgram::getMat4(const std::string &name)
+{
+    return m_mat4Uniforms[m_programID][name];
+}
