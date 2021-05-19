@@ -315,6 +315,10 @@ Eigen/Eigenvalues
 -
 utils/math.hpp
 ../include/utils/utils/math.hpp
+../render/texture.hpp
+../include/render/texture.hpp
+lifeprogram.hpp
+../include/utils/lifeprogram.hpp
 
 ../include/utils/datastructs.hpp
 GL/glew.h
@@ -416,7 +420,7 @@ glm/mat4x4.hpp
 memory
 -
 
-../include/view/lidar.hpp
+../include/view/fpscamera.hpp
 glm/glm.hpp
 -
 glm/gtc/matrix_transform.hpp
@@ -515,8 +519,8 @@ config.hpp
 /home/biblbrox/3dscene/src/systems/config.hpp
 utils/math.hpp
 /home/biblbrox/3dscene/src/systems/utils/math.hpp
-view/lidar.hpp
-/home/biblbrox/3dscene/src/systems/view/lidar.hpp
+view/fpscamera.hpp
+/home/biblbrox/3dscene/src/systems/view/fpscamera.hpp
 utils/collision.hpp
 /home/biblbrox/3dscene/src/systems/utils/collision.hpp
 

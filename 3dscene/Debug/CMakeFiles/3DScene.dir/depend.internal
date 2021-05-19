@@ -162,6 +162,7 @@ CMakeFiles/3DScene.dir/src/main.cpp.o
  ../include/utils/timer.hpp
  ../include/utils/utils.hpp
  ../include/view/arcballcamera.hpp
+ ../include/view/fpscamera.hpp
  ../include/world.hpp
  /home/biblbrox/3dscene/src/main.cpp
  /usr/include/SDL2/SDL.h
@@ -190,6 +191,8 @@ CMakeFiles/3DScene.dir/src/main.cpp.o
  /usr/include/SDL2/SDL_mixer.h
  /usr/include/SDL2/SDL_mouse.h
  /usr/include/SDL2/SDL_mutex.h
+ /usr/include/SDL2/SDL_opengl.h
+ /usr/include/SDL2/SDL_opengl_glext.h
  /usr/include/SDL2/SDL_pixels.h
  /usr/include/SDL2/SDL_platform.h
  /usr/include/SDL2/SDL_power.h
@@ -326,6 +329,8 @@ CMakeFiles/3DScene.dir/src/render/sprite.cpp.o
  ../include/constants.hpp
  ../include/exceptions/basegameexception.hpp
  ../include/exceptions/sdlexception.hpp
+ ../include/lifeprogram.hpp
+ ../include/render/shaderprogram.hpp
  ../include/render/sprite.hpp
  ../include/render/texture.hpp
  ../include/utils/collision.hpp
@@ -737,7 +742,7 @@ CMakeFiles/3DScene.dir/src/systems/keyboardsystem.cpp.o
  ../include/utils/timer.hpp
  ../include/utils/utils.hpp
  ../include/view/arcballcamera.hpp
- ../include/view/lidar.hpp
+ ../include/view/fpscamera.hpp
  ../include/world.hpp
  /home/biblbrox/3dscene/src/systems/keyboardsystem.cpp
  /usr/include/SDL2/SDL.h
@@ -902,7 +907,7 @@ CMakeFiles/3DScene.dir/src/systems/renderersystem.cpp.o
  ../include/utils/timer.hpp
  ../include/utils/utils.hpp
  ../include/view/arcballcamera.hpp
- ../include/view/lidar.hpp
+ ../include/view/fpscamera.hpp
  ../include/world.hpp
  /home/biblbrox/3dscene/src/systems/renderersystem.cpp
  /usr/include/SDL2/SDL.h
@@ -1376,9 +1381,6 @@ CMakeFiles/3DScene.dir/src/view/fpscamera.cpp.o
 CMakeFiles/3DScene.dir/src/view/lidar.cpp.o
  ../include/view/lidar.hpp
  /home/biblbrox/3dscene/src/view/lidar.cpp
- /usr/include/SDL2/SDL_config.h
- /usr/include/SDL2/SDL_opengl.h
- /usr/include/SDL2/SDL_opengl_glext.h
 CMakeFiles/3DScene.dir/src/world.cpp.o
  ../cmake_modules/imgui/backends/imgui_impl_opengl3.h
  ../cmake_modules/imgui/backends/imgui_impl_sdl.h

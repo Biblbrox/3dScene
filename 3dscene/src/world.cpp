@@ -173,8 +173,7 @@ void World::init_sprites()
         pos_left->y = 0;
         pos_left->z = 0;
 
-        auto tree = coll::buildBVH(sprite_left->sprite->getVertices()[0],
-                                   min_rect);
+        auto tree = coll::buildBVH(sprite_left->sprite->getVertices()[0], min_rect);
         en_left->addComponent<BVHComponent>();
         en_left->getComponent<BVHComponent>()->vbh_tree = tree;
 
@@ -188,26 +187,24 @@ void World::init_sprites()
         pos_right->x = i * 400;
         pos_right->y = 0;
         pos_right->z = 1000;
-        tree = coll::buildBVH(sprite_right->sprite->getVertices()[0],
-                              min_rect);
+        tree = coll::buildBVH(sprite_right->sprite->getVertices()[0], min_rect);
         en_right->addComponent<BVHComponent>();
         en_right->getComponent<BVHComponent>()->vbh_tree = tree;
 
-        auto car = createEntity(unique_id());
-        car->activate();
-        car->addComponent<SpriteComponent>();
-        car->addComponent<PositionComponent>();
-        auto car_sprite_comp = car->getComponent<SpriteComponent>();
-        car_sprite_comp->sprite = car_sprite;
-        auto car_pos = car->getComponent<PositionComponent>();
-        car_pos->x = i * 400;
-        car_pos->y = 0;
-        car_pos->z = rand.generateu(150, 350);
-        car_pos->angle = -glm::half_pi<GLfloat>();
-        car_pos->rot_axis = glm::vec3(0.f, 1.f, 0.f);
-        tree = coll::buildBVH(car_sprite_comp->sprite->getVertices()[0],
-                                   min_rect);
-        car->addComponent<BVHComponent>();
-        car->getComponent<BVHComponent>()->vbh_tree = tree;
+//        auto car = createEntity(unique_id());
+//        car->activate();
+//        car->addComponent<SpriteComponent>();
+//        car->addComponent<PositionComponent>();
+//        auto car_sprite_comp = car->getComponent<SpriteComponent>();
+//        car_sprite_comp->sprite = car_sprite;
+//        auto car_pos = car->getComponent<PositionComponent>();
+//        car_pos->x = i * 400;
+//        car_pos->y = 0;
+//        car_pos->z = rand.generateu(150, 350);
+//        car_pos->angle = -glm::half_pi<GLfloat>();
+//        car_pos->rot_axis = glm::vec3(0.f, 1.f, 0.f);
+//        tree = coll::buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect);
+//        car->addComponent<BVHComponent>();
+//        car->getComponent<BVHComponent>()->vbh_tree = tree;
     }
 }

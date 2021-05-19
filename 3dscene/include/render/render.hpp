@@ -23,7 +23,7 @@ namespace render
                      const glm::vec3& pos, GLfloat angle = 0,
                      glm::vec3 rot_axis = {1.f, 0, 0});
     
-    void drawLinen(const std::vector<vec2>& points, bool adjacency = false);
+    void drawLinen(const std::vector<vec3>& points, bool adjacency = false);
 
     void drawDots(const std::vector<vec3>& dots);
 
