@@ -749,6 +749,33 @@ src/utils/audio.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/3DScene.dir/build.make CMakeFiles/3DScene.dir/src/utils/audio.cpp.s
 .PHONY : src/utils/audio.cpp.s
 
+src/utils/collision.o: src/utils/collision.cpp.o
+
+.PHONY : src/utils/collision.o
+
+# target to build an object file
+src/utils/collision.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/3DScene.dir/build.make CMakeFiles/3DScene.dir/src/utils/collision.cpp.o
+.PHONY : src/utils/collision.cpp.o
+
+src/utils/collision.i: src/utils/collision.cpp.i
+
+.PHONY : src/utils/collision.i
+
+# target to preprocess a source file
+src/utils/collision.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/3DScene.dir/build.make CMakeFiles/3DScene.dir/src/utils/collision.cpp.i
+.PHONY : src/utils/collision.cpp.i
+
+src/utils/collision.s: src/utils/collision.cpp.s
+
+.PHONY : src/utils/collision.s
+
+# target to generate assembly for a file
+src/utils/collision.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/3DScene.dir/build.make CMakeFiles/3DScene.dir/src/utils/collision.cpp.s
+.PHONY : src/utils/collision.cpp.s
+
 src/utils/datastructs.o: src/utils/datastructs.cpp.o
 
 .PHONY : src/utils/datastructs.o
@@ -1122,6 +1149,9 @@ help:
 	@echo "... src/utils/audio.o"
 	@echo "... src/utils/audio.i"
 	@echo "... src/utils/audio.s"
+	@echo "... src/utils/collision.o"
+	@echo "... src/utils/collision.i"
+	@echo "... src/utils/collision.s"
 	@echo "... src/utils/datastructs.o"
 	@echo "... src/utils/datastructs.i"
 	@echo "... src/utils/datastructs.s"

@@ -51,10 +51,16 @@ World::World() : m_wasInit(false)
 {
     if (!Config::hasKey("DrawTextures"))
         Config::addVal("DrawTextures", false, "bool");
+    if (!Config::hasKey("DrawBoundingBoxes"))
+        Config::addVal("DrawBoundingBoxes", false, "bool");
+    if (!Config::hasKey("CheckCollision"))
+        Config::addVal("CheckCollision", false, "bool");
     if (!Config::hasKey("TreeLevelShow"))
         Config::addVal("TreeLevelShow", 0, "int");
     if (!Config::hasKey("MinRectSize"))
         Config::addVal("MinRectSize", glm::vec3(0.001f), "vec3");
+    if (!Config::hasKey("DrawLeafs"))
+        Config::addVal("DrawLeafs", false, "bool");
     if (!Config::hasKey("BackgroundColor"))
         Config::addVal("BackgroundColor", glm::vec4(0.2f, 0.f, 0.2f, 1.f), "vec4");
     if (!Config::hasKey("InverseRotation"))
@@ -153,13 +159,16 @@ void World::init_sprites()
     m_entities.clear();
     utils::Random rand;
 
-    std::shared_ptr<Sprite> car_sprite, palm_sprite;
+    std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite;
     car_sprite = std::make_shared<Sprite>();
     palm_sprite = std::make_shared<Sprite>();
+    house_sprite = std::make_shared<Sprite>();
     car_sprite->addTexture(getResourcePath("ford_focus2.obj"), 40, 40, 40);
     car_sprite->generateDataBuffer();
     palm_sprite->addTexture(getResourcePath("lowpolypalm.obj"), 40, 40, 40);
     palm_sprite->generateDataBuffer();
+//    house_sprite->addTexture(getResourcePath("house8.obj"), 40, 40, 40);
+//    house_sprite->generateDataBuffer();
     auto min_rect = Config::getVal<glm::vec3>("MinRectSize");
     for (size_t i = 0; i < 5; ++i) {
         auto en_left = createEntity(unique_id());
@@ -172,10 +181,19 @@ void World::init_sprites()
         pos_left->x = i * 400;
         pos_left->y = 0;
         pos_left->z = 0;
-
         auto tree = coll::buildBVH(sprite_left->sprite->getVertices()[0], min_rect);
         en_left->addComponent<BVHComponent>();
         en_left->getComponent<BVHComponent>()->vbh_tree = tree;
+        en_left->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVH(sprite_left->sprite->getVertices()[0], min_rect);
+        utils::data::mapBinaryTree(en_left->getComponent<BVHComponent>()->vbh_tree, [pos_left, sprite_left](std::shared_ptr<utils::RectPoints3D> bound_rect)
+        {
+            *bound_rect = coll::AABBtoWorldSpace(
+                    *bound_rect,
+                    pos_left->rot_axis, pos_left->angle,
+                    {pos_left->x, pos_left->y, pos_left->z},
+                    *sprite_left->sprite
+            );
+        });
 
         auto en_right = createEntity(unique_id());
         en_right->activate();
@@ -190,21 +208,57 @@ void World::init_sprites()
         tree = coll::buildBVH(sprite_right->sprite->getVertices()[0], min_rect);
         en_right->addComponent<BVHComponent>();
         en_right->getComponent<BVHComponent>()->vbh_tree = tree;
+        en_right->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVH(sprite_right->sprite->getVertices()[0], min_rect);
+        utils::data::mapBinaryTree(en_right->getComponent<BVHComponent>()->vbh_tree, [pos_right, sprite_right](std::shared_ptr<utils::RectPoints3D> bound_rect)
+        {
+            *bound_rect = coll::AABBtoWorldSpace(
+                    *bound_rect,
+                    pos_right->rot_axis, pos_right->angle,
+                    {pos_right->x, pos_right->y, pos_right->z},
+                    *sprite_right->sprite
+            );
+        });
 
-//        auto car = createEntity(unique_id());
-//        car->activate();
-//        car->addComponent<SpriteComponent>();
-//        car->addComponent<PositionComponent>();
-//        auto car_sprite_comp = car->getComponent<SpriteComponent>();
-//        car_sprite_comp->sprite = car_sprite;
-//        auto car_pos = car->getComponent<PositionComponent>();
-//        car_pos->x = i * 400;
-//        car_pos->y = 0;
-//        car_pos->z = rand.generateu(150, 350);
-//        car_pos->angle = -glm::half_pi<GLfloat>();
-//        car_pos->rot_axis = glm::vec3(0.f, 1.f, 0.f);
-//        tree = coll::buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect);
-//        car->addComponent<BVHComponent>();
-//        car->getComponent<BVHComponent>()->vbh_tree = tree;
+        auto car = createEntity(unique_id());
+        car->activate();
+        car->addComponent<SpriteComponent>();
+        car->addComponent<PositionComponent>();
+        auto car_sprite_comp = car->getComponent<SpriteComponent>();
+        car_sprite_comp->sprite = car_sprite;
+        auto car_pos = car->getComponent<PositionComponent>();
+        car_pos->x = i * 400;
+        car_pos->y = 0;
+        car_pos->z = rand.generateu(150, 350);
+        car_pos->angle = -glm::half_pi<GLfloat>();
+        car_pos->rot_axis = glm::vec3(0.f, 1.f, 0.f);
+        tree = coll::buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect);
+        car->addComponent<BVHComponent>();
+        car->getComponent<BVHComponent>()->vbh_tree = tree;
+        car->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect);
+        utils::data::mapBinaryTree(car->getComponent<BVHComponent>()->vbh_tree, [car_pos, car_sprite_comp](std::shared_ptr<utils::RectPoints3D> bound_rect)
+        {
+            *bound_rect = coll::AABBtoWorldSpace(
+                    *bound_rect,
+                    car_pos->rot_axis, car_pos->angle,
+                    {car_pos->x, car_pos->y, car_pos->z},
+                    *car_sprite_comp->sprite
+            );
+        });
+
+        /*auto house = createEntity(unique_id());
+        house->activate();
+        house->addComponent<SpriteComponent>();
+        house->addComponent<PositionComponent>();
+        auto house_sprite_comp = house->getComponent<SpriteComponent>();
+        house_sprite_comp->sprite = house_sprite;
+        auto house_pos = house->getComponent<PositionComponent>();
+        house_pos->x = (i + 6) * 400;
+        house_pos->y = 0;
+        house_pos->z = rand.generateu(150, 350);
+        house_pos->angle = -glm::half_pi<GLfloat>();
+        house_pos->rot_axis = glm::vec3(0.f, 1.f, 0.f);
+        tree = coll::buildBVH(house_sprite_comp->sprite->getVertices()[0], min_rect);
+        house->addComponent<BVHComponent>();
+        house->getComponent<BVHComponent>()->vbh_tree = tree;*/
     }
 }

@@ -378,6 +378,9 @@
 		<Unit filename="/home/biblbrox/3dscene/src/utils/audio.cpp">
 			<Option target="3DScene"/>
 		</Unit>
+		<Unit filename="/home/biblbrox/3dscene/src/utils/collision.cpp">
+			<Option target="3DScene"/>
+		</Unit>
 		<Unit filename="/home/biblbrox/3dscene/src/utils/datastructs.cpp">
 			<Option target="3DScene"/>
 		</Unit>

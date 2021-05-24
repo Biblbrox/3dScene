@@ -17,6 +17,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/3DScene.dir/src/systems/physicssystem.cpp.o"
   "CMakeFiles/3DScene.dir/src/systems/renderersystem.cpp.o"
   "CMakeFiles/3DScene.dir/src/utils/audio.cpp.o"
+  "CMakeFiles/3DScene.dir/src/utils/collision.cpp.o"
   "CMakeFiles/3DScene.dir/src/utils/datastructs.cpp.o"
   "CMakeFiles/3DScene.dir/src/utils/logger.cpp.o"
   "CMakeFiles/3DScene.dir/src/utils/string.cpp.o"

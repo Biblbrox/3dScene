@@ -284,9 +284,22 @@ CMakeFiles/3DScene.dir/src/utils/audio.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/3DScene.dir/src/utils/audio.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/biblbrox/3dscene/src/utils/audio.cpp -o CMakeFiles/3DScene.dir/src/utils/audio.cpp.s
 
+CMakeFiles/3DScene.dir/src/utils/collision.cpp.o: CMakeFiles/3DScene.dir/flags.make
+CMakeFiles/3DScene.dir/src/utils/collision.cpp.o: ../src/utils/collision.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/3DScene.dir/src/utils/collision.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/3DScene.dir/src/utils/collision.cpp.o -c /home/biblbrox/3dscene/src/utils/collision.cpp
+
+CMakeFiles/3DScene.dir/src/utils/collision.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/3DScene.dir/src/utils/collision.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/biblbrox/3dscene/src/utils/collision.cpp > CMakeFiles/3DScene.dir/src/utils/collision.cpp.i
+
+CMakeFiles/3DScene.dir/src/utils/collision.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/3DScene.dir/src/utils/collision.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/biblbrox/3dscene/src/utils/collision.cpp -o CMakeFiles/3DScene.dir/src/utils/collision.cpp.s
+
 CMakeFiles/3DScene.dir/src/utils/datastructs.cpp.o: CMakeFiles/3DScene.dir/flags.make
 CMakeFiles/3DScene.dir/src/utils/datastructs.cpp.o: ../src/utils/datastructs.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/3DScene.dir/src/utils/datastructs.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/3DScene.dir/src/utils/datastructs.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/3DScene.dir/src/utils/datastructs.cpp.o -c /home/biblbrox/3dscene/src/utils/datastructs.cpp
 
 CMakeFiles/3DScene.dir/src/utils/datastructs.cpp.i: cmake_force
@@ -299,7 +312,7 @@ CMakeFiles/3DScene.dir/src/utils/datastructs.cpp.s: cmake_force
 
 CMakeFiles/3DScene.dir/src/utils/logger.cpp.o: CMakeFiles/3DScene.dir/flags.make
 CMakeFiles/3DScene.dir/src/utils/logger.cpp.o: ../src/utils/logger.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/3DScene.dir/src/utils/logger.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/3DScene.dir/src/utils/logger.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/3DScene.dir/src/utils/logger.cpp.o -c /home/biblbrox/3dscene/src/utils/logger.cpp
 
 CMakeFiles/3DScene.dir/src/utils/logger.cpp.i: cmake_force
@@ -312,7 +325,7 @@ CMakeFiles/3DScene.dir/src/utils/logger.cpp.s: cmake_force
 
 CMakeFiles/3DScene.dir/src/utils/string.cpp.o: CMakeFiles/3DScene.dir/flags.make
 CMakeFiles/3DScene.dir/src/utils/string.cpp.o: ../src/utils/string.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/3DScene.dir/src/utils/string.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/3DScene.dir/src/utils/string.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/3DScene.dir/src/utils/string.cpp.o -c /home/biblbrox/3dscene/src/utils/string.cpp
 
 CMakeFiles/3DScene.dir/src/utils/string.cpp.i: cmake_force
@@ -325,7 +338,7 @@ CMakeFiles/3DScene.dir/src/utils/string.cpp.s: cmake_force
 
 CMakeFiles/3DScene.dir/src/utils/texture.cpp.o: CMakeFiles/3DScene.dir/flags.make
 CMakeFiles/3DScene.dir/src/utils/texture.cpp.o: ../src/utils/texture.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/3DScene.dir/src/utils/texture.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/3DScene.dir/src/utils/texture.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/3DScene.dir/src/utils/texture.cpp.o -c /home/biblbrox/3dscene/src/utils/texture.cpp
 
 CMakeFiles/3DScene.dir/src/utils/texture.cpp.i: cmake_force
@@ -338,7 +351,7 @@ CMakeFiles/3DScene.dir/src/utils/texture.cpp.s: cmake_force
 
 CMakeFiles/3DScene.dir/src/utils/threadpool.cpp.o: CMakeFiles/3DScene.dir/flags.make
 CMakeFiles/3DScene.dir/src/utils/threadpool.cpp.o: ../src/utils/threadpool.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/3DScene.dir/src/utils/threadpool.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object CMakeFiles/3DScene.dir/src/utils/threadpool.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/3DScene.dir/src/utils/threadpool.cpp.o -c /home/biblbrox/3dscene/src/utils/threadpool.cpp
 
 CMakeFiles/3DScene.dir/src/utils/threadpool.cpp.i: cmake_force
@@ -351,7 +364,7 @@ CMakeFiles/3DScene.dir/src/utils/threadpool.cpp.s: cmake_force
 
 CMakeFiles/3DScene.dir/src/utils/timer.cpp.o: CMakeFiles/3DScene.dir/flags.make
 CMakeFiles/3DScene.dir/src/utils/timer.cpp.o: ../src/utils/timer.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object CMakeFiles/3DScene.dir/src/utils/timer.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object CMakeFiles/3DScene.dir/src/utils/timer.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/3DScene.dir/src/utils/timer.cpp.o -c /home/biblbrox/3dscene/src/utils/timer.cpp
 
 CMakeFiles/3DScene.dir/src/utils/timer.cpp.i: cmake_force
@@ -364,7 +377,7 @@ CMakeFiles/3DScene.dir/src/utils/timer.cpp.s: cmake_force
 
 CMakeFiles/3DScene.dir/src/utils/utils.cpp.o: CMakeFiles/3DScene.dir/flags.make
 CMakeFiles/3DScene.dir/src/utils/utils.cpp.o: ../src/utils/utils.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object CMakeFiles/3DScene.dir/src/utils/utils.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building CXX object CMakeFiles/3DScene.dir/src/utils/utils.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/3DScene.dir/src/utils/utils.cpp.o -c /home/biblbrox/3dscene/src/utils/utils.cpp
 
 CMakeFiles/3DScene.dir/src/utils/utils.cpp.i: cmake_force
@@ -377,7 +390,7 @@ CMakeFiles/3DScene.dir/src/utils/utils.cpp.s: cmake_force
 
 CMakeFiles/3DScene.dir/src/view/arcballcamera.cpp.o: CMakeFiles/3DScene.dir/flags.make
 CMakeFiles/3DScene.dir/src/view/arcballcamera.cpp.o: ../src/view/arcballcamera.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building CXX object CMakeFiles/3DScene.dir/src/view/arcballcamera.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building CXX object CMakeFiles/3DScene.dir/src/view/arcballcamera.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/3DScene.dir/src/view/arcballcamera.cpp.o -c /home/biblbrox/3dscene/src/view/arcballcamera.cpp
 
 CMakeFiles/3DScene.dir/src/view/arcballcamera.cpp.i: cmake_force
@@ -390,7 +403,7 @@ CMakeFiles/3DScene.dir/src/view/arcballcamera.cpp.s: cmake_force
 
 CMakeFiles/3DScene.dir/src/view/fpscamera.cpp.o: CMakeFiles/3DScene.dir/flags.make
 CMakeFiles/3DScene.dir/src/view/fpscamera.cpp.o: ../src/view/fpscamera.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building CXX object CMakeFiles/3DScene.dir/src/view/fpscamera.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building CXX object CMakeFiles/3DScene.dir/src/view/fpscamera.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/3DScene.dir/src/view/fpscamera.cpp.o -c /home/biblbrox/3dscene/src/view/fpscamera.cpp
 
 CMakeFiles/3DScene.dir/src/view/fpscamera.cpp.i: cmake_force
@@ -403,7 +416,7 @@ CMakeFiles/3DScene.dir/src/view/fpscamera.cpp.s: cmake_force
 
 CMakeFiles/3DScene.dir/src/view/lidar.cpp.o: CMakeFiles/3DScene.dir/flags.make
 CMakeFiles/3DScene.dir/src/view/lidar.cpp.o: ../src/view/lidar.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building CXX object CMakeFiles/3DScene.dir/src/view/lidar.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building CXX object CMakeFiles/3DScene.dir/src/view/lidar.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/3DScene.dir/src/view/lidar.cpp.o -c /home/biblbrox/3dscene/src/view/lidar.cpp
 
 CMakeFiles/3DScene.dir/src/view/lidar.cpp.i: cmake_force
@@ -416,7 +429,7 @@ CMakeFiles/3DScene.dir/src/view/lidar.cpp.s: cmake_force
 
 CMakeFiles/3DScene.dir/src/world.cpp.o: CMakeFiles/3DScene.dir/flags.make
 CMakeFiles/3DScene.dir/src/world.cpp.o: ../src/world.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building CXX object CMakeFiles/3DScene.dir/src/world.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building CXX object CMakeFiles/3DScene.dir/src/world.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/3DScene.dir/src/world.cpp.o -c /home/biblbrox/3dscene/src/world.cpp
 
 CMakeFiles/3DScene.dir/src/world.cpp.i: cmake_force
@@ -445,6 +458,7 @@ CMakeFiles/3DScene.dir/src/world.cpp.s: cmake_force
 "CMakeFiles/3DScene.dir/src/systems/physicssystem.cpp.o" \
 "CMakeFiles/3DScene.dir/src/systems/renderersystem.cpp.o" \
 "CMakeFiles/3DScene.dir/src/utils/audio.cpp.o" \
+"CMakeFiles/3DScene.dir/src/utils/collision.cpp.o" \
 "CMakeFiles/3DScene.dir/src/utils/datastructs.cpp.o" \
 "CMakeFiles/3DScene.dir/src/utils/logger.cpp.o" \
 "CMakeFiles/3DScene.dir/src/utils/string.cpp.o" \
@@ -476,6 +490,7 @@ CMakeFiles/3DScene.dir/src/world.cpp.s: cmake_force
 3DScene: CMakeFiles/3DScene.dir/src/systems/physicssystem.cpp.o
 3DScene: CMakeFiles/3DScene.dir/src/systems/renderersystem.cpp.o
 3DScene: CMakeFiles/3DScene.dir/src/utils/audio.cpp.o
+3DScene: CMakeFiles/3DScene.dir/src/utils/collision.cpp.o
 3DScene: CMakeFiles/3DScene.dir/src/utils/datastructs.cpp.o
 3DScene: CMakeFiles/3DScene.dir/src/utils/logger.cpp.o
 3DScene: CMakeFiles/3DScene.dir/src/utils/string.cpp.o
@@ -492,7 +507,7 @@ CMakeFiles/3DScene.dir/src/world.cpp.s: cmake_force
 3DScene: /usr/lib/x86_64-linux-gnu/libSDL2_mixer.so
 3DScene: libimgui.a
 3DScene: CMakeFiles/3DScene.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Linking CXX executable 3DScene"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/biblbrox/3dscene/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Linking CXX executable 3DScene"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/3DScene.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

@@ -9,6 +9,7 @@ using Tree = std::shared_ptr<utils::data::Node<size_t, utils::RectPoints3D>>;
 struct BVHComponent: ecs::Component
 {
     Tree vbh_tree;
+    Tree vbh_tree_model;
 };
 
 #endif //BVHCOMPONENT_HPP

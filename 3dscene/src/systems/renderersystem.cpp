@@ -33,8 +33,7 @@ using glm::scale;
 using utils::math::operator/;
 
 static GLuint genTexture(GLuint width, GLuint height,
-                         bool msaa = false, size_t samples = 4)
-{
+                         bool msaa = false, size_t samples = 4) {
     GLuint texture;
     glGenTextures(1, &texture);
 
@@ -65,8 +64,7 @@ static GLuint genTexture(GLuint width, GLuint height,
 }
 
 static GLuint genRbo(GLuint width, GLuint height, bool msaa = false,
-                     size_t samples = 4)
-{
+                     size_t samples = 4) {
     GLuint rbo;
     glGenRenderbuffers(1, &rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, rbo);
@@ -74,7 +72,8 @@ static GLuint genRbo(GLuint width, GLuint height, bool msaa = false,
         glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples,
                                          GL_DEPTH24_STENCIL8, width, height);
     else
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width,
+                              height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     return rbo;
@@ -88,20 +87,23 @@ throw GLException((boost::format( \
         utils::log::program_log_file_name(), \
         utils::log::Category::INITIALIZATION_ERROR); \
 
+
 RendererSystem::RendererSystem() : m_frameBuffer(0), m_videoSettingsOpen(false),
                                    m_colorSettingsOpen(false),
-                                   m_isMsaa(Config::getVal<bool>("MSAA"))
-{
+                                   m_isMsaa(Config::getVal<bool>("MSAA")),
+                                   col_stream(getResourcePath("data.txt"),
+                                              std::ios_base::app) {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGuiIO &io = ImGui::GetIO();
+    (void) io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     io.WantCaptureMouse = true;
     io.WantCaptureKeyboard = true;
 
-    ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiStyle &style = ImGui::GetStyle();
     style.WindowRounding = 8.f;
     style.Alpha = 1.0f;
     style.AntiAliasedLines = false;
@@ -154,29 +156,37 @@ RendererSystem::RendererSystem() : m_frameBuffer(0), m_videoSettingsOpen(false),
     CHECK_FRAMEBUFFER_COMPLETE();
 }
 
-RendererSystem::~RendererSystem()
-{
+RendererSystem::~RendererSystem() {
     glDeleteFramebuffers(1, &m_frameBuffer);
+    col_stream.flush();
+    col_stream.close();
 }
 
-void RendererSystem::drawSprites()
-{
+void RendererSystem::drawSprites() {
+    using utils::data::mapBinaryTreeLeafs;
+    using utils::data::mapBinaryTreeAtLevel;
+    using utils::data::mapBinaryTree;
+    using NodeDataPtr = std::shared_ptr<utils::RectPoints3D>;
+
     auto program = LifeProgram::getInstance();
     auto camera = FpsCamera::getInstance();
 
-    drawLidarIntersect();
+    if (Config::getVal<bool>("CheckCollision"))
+        drawLidarIntersect();
 
     program->useFramebufferProgram();
     program->setInt("isPrimitive", false);
     program->updateInt("isPrimitive");
     program->setFloat("alpha", 1.f);
     program->updateFloat("alpha");
-    const auto& sprites = m_ecsManager->getEntities();
+    const auto &sprites = m_ecsManager->getEntities();
 
-    for (const auto& [key, en]: sprites) {
+    for (const auto&[key, en]: sprites) {
         auto posComp = en->getComponent<PositionComponent>();
-        render::drawTexture(*program, *en->getComponent<SpriteComponent>()->sprite,
-                            {posComp->x, posComp->y, posComp->z}, posComp->angle,
+        render::drawTexture(*program,
+                            *en->getComponent<SpriteComponent>()->sprite,
+                            {posComp->x, posComp->y, posComp->z},
+                            posComp->angle,
                             posComp->rot_axis);
     }
 
@@ -189,7 +199,7 @@ void RendererSystem::drawSprites()
     program->setFloat("alpha", 0.6f);
     program->updateFloat("alpha");
     // Draw bounding boxes
-    for (const auto& [key, en]: sprites) {
+    for (const auto&[key, en]: sprites) {
         auto treeComp = en->getComponent<BVHComponent>();
         if (!treeComp)
             continue;
@@ -198,56 +208,26 @@ void RendererSystem::drawSprites()
         auto sprite = en->getComponent<SpriteComponent>()->sprite;
         auto points = coll::buildAABB(sprite->getVertices()[0]);
 
-        utils::data::mapBinaryTreeAtLevel(treeComp->vbh_tree, [program, sprite, posComp](std::shared_ptr<utils::RectPoints3D> bound_rect)
-        {
-            program->setVec3("primColor", {0.8f, 0.1f, 0.1f});
-            program->updateVec3("primColor");
-            render::drawBoundingBox(*program, coll::buildVerticesFromRect3D(*bound_rect), *sprite,
-                                    {posComp->x, posComp->y, posComp->z}, posComp->angle,
-                                    posComp->rot_axis);
-        }, Config::getVal<int>("TreeLevelShow"));
+        if (Config::getVal<bool>("DrawBoundingBoxes")) {
+            auto draw_fun = [program, sprite, posComp](NodeDataPtr bound_rect) {
+                program->setVec3("primColor", {0.8f, 0.1f, 0.1f});
+                program->updateVec3( "primColor");
+                render::drawBoundingBox(*program,
+                                        coll::buildVerticesFromRect3D(*bound_rect),
+                                        *sprite,
+                                        {posComp->x, posComp->y, posComp->z},
+                                        posComp->angle,
+                                        posComp->rot_axis);
+            };
+
+            if (Config::getVal<bool>("DrawLeafs")) {
+                mapBinaryTreeLeafs(treeComp->vbh_tree_model, draw_fun);
+            } else {
+                mapBinaryTreeAtLevel(treeComp->vbh_tree_model, draw_fun,
+                                     Config::getVal<int>("TreeLevelShow"));
+            }
+        }
     }
-
-
-
-//    program->useScreenProgram();
-//    // Draw bounding boxes with screen program for debug purposes
-//    for (const auto& [key, en]: sprites) {
-//        auto treeComp = en->getComponent<BVHComponent>();
-//        if (!treeComp)
-//            continue;
-//
-//        auto posComp = en->getComponent<PositionComponent>();
-//        auto sprite = en->getComponent<SpriteComponent>()->sprite;
-//        auto points = coll::buildAABB(sprite->getVertices()[0]);
-//
-//        utils::data::mapBinaryTreeAtLevel(treeComp->vbh_tree,
-//                                          [program, sprite, posComp, model, view, projection]
-//                                                  (std::shared_ptr<utils::RectPoints3D> bound_rect)
-//                                          {
-//                                              program->setVec3("primColor", {1.f, 0.8f, 0.8f});
-//                                              program->updateVec3("primColor");
-//                                              program->setFloat("alpha", 1.f);
-//                                              program->updateFloat("alpha");
-//                                              utils::RectPoints3D rect_world
-//                                                      = coll::AABBtoWorldSpace(*bound_rect,
-//                                                                               {posComp->x, posComp->y, posComp->z}, posComp->angle,
-//                                                                               posComp->rot_axis,
-//                                                                               *sprite,
-//                                                                               model, view, projection);
-//
-//
-//                                              std::vector<GLfloat> vertices
-//                                                      = coll::buildVerticesFromRect3D(rect_world);
-//
-//                                              render::drawTriangles(vertices);
-////            render::drawBoundingBox(*program, coll::buildVerticesFromRect3D(*bound_rect), *sprite,
-////                                    {posComp->x, posComp->y, posComp->z}, posComp->angle,
-////                                    posComp->rot_axis);
-//                                          }, Config::getVal<int>("TreeLevelShow"));
-//    }
-
-
 
     if (GLenum error = glGetError(); error != GL_NO_ERROR)
         throw GLException((format("\n\tRender while drawing sprites: %1%\n")
@@ -255,8 +235,7 @@ void RendererSystem::drawSprites()
                           program_log_file_name(), Category::INTERNAL_ERROR);
 }
 
-void RendererSystem::drawLidarIntersect()
-{
+void RendererSystem::drawLidarIntersect() {
     auto program = LifeProgram::getInstance();
     program->useFramebufferProgram();
     mat4 model = program->getMat4("ModelMatrix");
@@ -282,7 +261,8 @@ void RendererSystem::drawLidarIntersect()
     while (alpha <= 2 * glm::pi<GLfloat>()) {
         glm::vec3 up = glm::normalize(camera->getUp() + dir);
 
-        glm::vec3 dir_on_plane = glm::normalize(glm::cross(up, glm::normalize(dir)));
+        glm::vec3 dir_on_plane = glm::normalize(
+                glm::cross(up, glm::normalize(dir)));
         dir_on_plane = glm::rotate(dir_on_plane, alpha, glm::normalize(dir));
 
         glm::vec3 circle_pos = pos + dir_on_plane * radius;
@@ -290,47 +270,57 @@ void RendererSystem::drawLidarIntersect()
         alpha += step;
     }
     alpha = -glm::pi<GLfloat>() / 6.f;
-    std::vector<glm::vec3> lines;
-    std::ofstream stream;
-    stream.open(getResourcePath("data"), std::ios_base::app);
     std::vector<glm::vec3> coll_dots;
     glm::vec3 pos_trans = camera->getPos();
     while (alpha <= glm::pi<GLfloat>() / 6.f) {
-        dir = glm::normalize(glm::rotate(camera->getDirection(), alpha, camera->getUp()));
+        dir = glm::normalize(
+                glm::rotate(camera->getDirection(), alpha, camera->getUp()));
 
-        for (const auto& [key, en]: m_ecsManager->getEntities()) {
+        for (const auto&[key, en]: m_ecsManager->getEntities()) {
             auto bvh_comp = en->getComponent<BVHComponent>();
             if (!bvh_comp)
                 continue;
             auto pos_comp = en->getComponent<PositionComponent>();
             auto sprite_comp = en->getComponent<SpriteComponent>();
 
-            auto coll = coll::raycastAABB(dir,
+            /* utils::data::mapBinaryTree(bvh_comp->vbh_tree, [program, pos_comp, sprite_comp](std::shared_ptr<utils::RectPoints3D> bound_rect)
+            {
+                *bound_rect = coll::AABBtoWorldSpace(
+                        *bound_rect,
+                        pos_comp->rot_axis, pos_comp->angle,
+                        {pos_comp->x, pos_comp->y, pos_comp->z},
+                        *sprite_comp->sprite
+                );
+            });
+            auto coll = coll::BVHAABBTraversal(bvh_comp->vbh_tree, dir, pos_trans); */
+            auto coll = coll::BVHAABBTraversal(bvh_comp->vbh_tree, dir,
+                                               pos_trans);
+
+            /*auto coll = coll::raycastAABB(dir,
                                           pos_trans,
                                           coll::AABBtoWorldSpace(
                                                   *bvh_comp->vbh_tree->m_data,
                                                   pos_comp->rot_axis, pos_comp->angle,
                                                   {pos_comp->x, pos_comp->y, pos_comp->z},
-                                                  *sprite_comp->sprite,
-                                                  model, view, projection
-                                          ));
+                                                  *sprite_comp->sprite
+                                          ));*/
+            /*auto coll = coll::raycastAABB(dir, pos_trans,
+                                          *bvh_comp->vbh_tree->m_data);*/
             if (coll.first) {
-                std::cout << "collision occurred, pos: " << coll.second.x << ", "
-                          << coll.second.y << ", " << coll.second.z << std::endl;
-                stream << coll.second.x << ", "
-                       << coll.second.y << ", " << coll.second.z << std::endl;
+                std::cout << "collision occurred, pos: " << coll.second.x
+                          << ", "
+                          << coll.second.y << ", " << coll.second.z
+                          << std::endl;
+                col_stream << coll.second.x << ", "
+                           << coll.second.y << ", " << coll.second.z << "\n";
                 coll_dots.emplace_back(coll.second);
             }
         }
-        stream.close();
 
         dots.emplace_back(camera->getPos() + glm::normalize(dir) * length);
-        lines.push_back({camera->getPos()});
-        lines.push_back({camera->getPos() + dir * length});
         alpha += step;
     }
 
-//    render::drawLinen(lines);
     dots.emplace_back(pos);
     program->setInt("isPrimitive", true);
     program->updateInt("isPrimitive");
@@ -343,15 +333,13 @@ void RendererSystem::drawLidarIntersect()
     was_called = true;
 }
 
-void RendererSystem::update_state(size_t delta)
-{
+void RendererSystem::update_state(size_t delta) {
     if (getGameState() == GameStates::PLAY)
         drawToFramebuffer();
     drawGui();
 }
 
-void RendererSystem::drawToFramebuffer()
-{
+void RendererSystem::drawToFramebuffer() {
     auto program = LifeProgram::getInstance();
     program->useFramebufferProgram();
 
@@ -369,8 +357,7 @@ void RendererSystem::drawToFramebuffer()
     drawSprites();
 }
 
-void RendererSystem::drawGui()
-{
+void RendererSystem::drawGui() {
     auto screen_width = utils::getWindowWidth<GLfloat>(*Game::getWindow());
     auto screen_height = utils::getWindowHeight<GLfloat>(*Game::getWindow());
 
@@ -421,24 +408,35 @@ void RendererSystem::drawGui()
         ImGui::BeginTable("table1", 2, ImGuiTableFlags_Borders
                                        | ImGuiTableFlags_Resizable
                                        | ImGuiTableFlags_NoHostExtendX
-                                       | ImGuiTableFlags_NoHostExtendY, {0, -1});
+                                       | ImGuiTableFlags_NoHostExtendY,
+                          {0, -1});
         {
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Settings");
             ImGui::Separator();
 
-            ImGui::Checkbox("DrawTextures", &Config::getVal<bool>("DrawTextures"));
+            ImGui::Checkbox("Draw Textures",
+                            &Config::getVal<bool>("DrawTextures"));
+            ImGui::Checkbox("Draw Leafs",
+                            &Config::getVal<bool>("DrawLeafs"));
+            ImGui::Checkbox("Draw bounding boxes",
+                            &Config::getVal<bool>("DrawBoundingBoxes"));
+            ImGui::Checkbox("Check collision",
+                            &Config::getVal<bool>("CheckCollision"));
 
             ImGui::Text("Minimal rect fraction size");
-            ImGui::InputFloat3("##min_rect", glm::value_ptr(Config::getVal<glm::vec3>("MinRectSize")));
+            ImGui::InputFloat3("##min_rect", glm::value_ptr(
+                    Config::getVal<glm::vec3>("MinRectSize")));
 
             ImGui::Text("Tree level show");
 //            ImGui::SameLine();
-            ImGui::SliderInt("##tree_level", &Config::getVal<int>("TreeLevelShow"),
+            ImGui::SliderInt("##tree_level",
+                             &Config::getVal<int>("TreeLevelShow"),
                              0, 100);
 
-            ImGui::Checkbox("Inverse rotation", &Config::getVal<bool>("InverseRotation"));
+            ImGui::Checkbox("Inverse rotation",
+                            &Config::getVal<bool>("InverseRotation"));
 
             if (ImGui::Button("Start simulation"))
                 setGameState(GameStates::PLAY);
@@ -450,16 +448,14 @@ void RendererSystem::drawGui()
                 setGameState(GameStates::STOP);
 
             if (ImGui::Button("Save config"))
-                Config::save(Config::getVal<const char*>("ConfigFile"));
+                Config::save(Config::getVal<const char *>("ConfigFile"));
 
             if (ImGui::Button("Load config"))
-                Config::load(Config::getVal<const char*>("ConfigFile"));
+                Config::load(Config::getVal<const char *>("ConfigFile"));
 
-            if (ImGui::Button("Save simulation"))
-                ;
+            if (ImGui::Button("Save simulation"));
 
-            if (ImGui::Button("Load simulation"))
-                ;
+            if (ImGui::Button("Load simulation"));
 
             if (ImGui::Button("Color Settings"))
                 m_colorSettingsOpen = true;
@@ -488,12 +484,12 @@ void RendererSystem::drawGui()
                 m_videoSettingsOpen = true;
 
             if (m_videoSettingsOpen) {
-                const char* items[] = { "Light", "Classic", "Dark" };
+                const char *items[] = {"Light", "Classic", "Dark"};
                 ImGui::Begin("Video settings", &m_videoSettingsOpen);
                 bool msaaEnabled = Config::getVal<bool>("MSAA");
-                if(ImGui::Checkbox("Enable antialiasing(Need game restart)",
-                                   &Config::getVal<bool>("MSAA"))
-                   || msaaEnabled) {
+                if (ImGui::Checkbox("Enable antialiasing(Need game restart)",
+                                    &Config::getVal<bool>("MSAA"))
+                    || msaaEnabled) {
                     ImGui::Text("MSAA Samples");
                     ImGui::SameLine();
                     ImGui::InputInt("##msaa_samples",
