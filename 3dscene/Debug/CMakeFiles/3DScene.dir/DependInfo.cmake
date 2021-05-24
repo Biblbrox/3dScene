@@ -20,6 +20,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/home/biblbrox/3dscene/src/systems/physicssystem.cpp" "/home/biblbrox/3dscene/Debug/CMakeFiles/3DScene.dir/src/systems/physicssystem.cpp.o"
   "/home/biblbrox/3dscene/src/systems/renderersystem.cpp" "/home/biblbrox/3dscene/Debug/CMakeFiles/3DScene.dir/src/systems/renderersystem.cpp.o"
   "/home/biblbrox/3dscene/src/utils/audio.cpp" "/home/biblbrox/3dscene/Debug/CMakeFiles/3DScene.dir/src/utils/audio.cpp.o"
+  "/home/biblbrox/3dscene/src/utils/collision.cpp" "/home/biblbrox/3dscene/Debug/CMakeFiles/3DScene.dir/src/utils/collision.cpp.o"
   "/home/biblbrox/3dscene/src/utils/datastructs.cpp" "/home/biblbrox/3dscene/Debug/CMakeFiles/3DScene.dir/src/utils/datastructs.cpp.o"
   "/home/biblbrox/3dscene/src/utils/logger.cpp" "/home/biblbrox/3dscene/Debug/CMakeFiles/3DScene.dir/src/utils/logger.cpp.o"
   "/home/biblbrox/3dscene/src/utils/string.cpp" "/home/biblbrox/3dscene/Debug/CMakeFiles/3DScene.dir/src/utils/string.cpp.o"

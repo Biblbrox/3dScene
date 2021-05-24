@@ -1,13 +1,16 @@
+DrawLeafs:bool:1
 MinRectSize:vec3:
-ConfigFile:const char*:config.txt
+TreeLevelShow:int:0
 NeirCountDie:int:4
 DrawTextures:bool:0
-StepTime:float:5.000000
-BackgroundColor:vec4:0.082902,0.082901,0.082902,1.000000
 CellColor:vec4:1.000000,0.200000,0.000000,1.000000
+ConfigFile:const char*:config.txt
 InverseRotation:bool:0
 MSAA:bool:0
 ColoredLife:bool:0
+StepTime:float:5.000000
 MSAASamples:int:4
 CellBorderColor:vec4:1.000000,1.000000,1.000000,1.000000
 Theme:int:2
+BackgroundColor:vec4:0.082902,0.082901,0.082902,1.000000
+DrawBoundingBoxes:bool:1

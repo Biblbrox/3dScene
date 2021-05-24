@@ -2,6 +2,7 @@
 #define RENDERERSYSTEM_HPP
 
 #include <GL/glew.h>
+#include <fstream>
 
 #include "view/arcballcamera.hpp"
 #include "components/textcomponent.hpp"
@@ -33,6 +34,8 @@ private:
 
     bool m_videoSettingsOpen;
     bool m_colorSettingsOpen;
+
+    std::ofstream col_stream;
 
     bool m_isMsaa;
 
