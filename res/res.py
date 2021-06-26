@@ -30,7 +30,6 @@ def vpscatter(xdata, ydata, zdata):
     color_data = np.interp(color_data, (color_data.min(), color_data.max()), (0, 1))
     colors = color.get_colormap("hsl").map(color_data).reshape(color_data.shape + (-1,))
 
-
     # plot
     p1 = Scatter3D(parent=view.scene)
     p1.set_gl_state('translucent', blend=True, depth_test=True)
