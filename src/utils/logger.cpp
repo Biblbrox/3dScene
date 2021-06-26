@@ -10,40 +10,7 @@ using utils::log::shader_log_file_name;
 using utils::log::Category;
 using boost::format;
 
-void
-utils::log::Logger::write(const std::string &file_name, Category category,
-                          const std::string &msg)
-{
-    std::ofstream file(file_name);
-    std::string category_str;
-    switch (category) {
-        case Category::INTERNAL_ERROR:
-            category_str = "Internal error: ";
-            break;
-        case Category::FILE_ERROR:
-            category_str = "File IO error: ";
-            break;
-        case Category::UNEXPECTED_ERROR:
-            category_str = "Unexpected error: ";
-            break;
-        case Category::INFO:
-            category_str = "Info: ";
-            break;
-        case Category::SHADER_COMPILE_ERROR:
-            category_str = "Shader compile error";
-            break;
-        default:
-            category_str = "Internal error: ";
-            break;
-    }
-    std::string message = category_str + msg;
-    file.write(message.c_str(), message.size());
-    file.close();
-    if (category == Category::INFO)
-        std::cout << message << "\n";
-    else
-        std::cerr << message << "\n";
-}
+std::unordered_map<std::string, std::shared_ptr<std::ofstream>> Logger::m_logFiles;
 
 void utils::log::printShaderLog(GLuint shader)
 {
@@ -58,8 +25,7 @@ void utils::log::printShaderLog(GLuint shader)
         if (infoLength > 0)
             Logger::write(shader_log_file_name(),
                           Category::SHADER_COMPILE_ERROR,
-                          (format("Shader log:\n\n%s")
-                           % log_str).str());
+                          "Shader log:\n\n%s", log_str);
 
         delete[] log_str;
     } else {
@@ -81,8 +47,7 @@ void utils::log::printProgramLog(GLuint program)
         if (infoLength > 0)
             Logger::write(shader_log_file_name(),
                           Category::INTERNAL_ERROR,
-                          (format("Shader program log:\n\n%s")
-                           % log_str).str());
+                          (format("Shader program log:\n\n%s") % log_str).str());
 
         delete[] log_str;
     } else {

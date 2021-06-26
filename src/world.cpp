@@ -26,7 +26,7 @@
 #include "utils/random.hpp"
 #include "exceptions/sdlexception.hpp"
 #include "exceptions/glexception.hpp"
-#include "lifeprogram.hpp"
+#include "sceneprogram.hpp"
 
 using utils::log::Logger;
 using utils::log::program_log_file_name;

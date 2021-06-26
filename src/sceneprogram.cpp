@@ -3,9 +3,8 @@
 
 #include "utils/utils.hpp"
 #include "boost/format.hpp"
-#include "exceptions/glexception.hpp"
 #include "utils/logger.hpp"
-#include "lifeprogram.hpp"
+#include "sceneprogram.hpp"
 
 using utils::loadShaderFromFile;
 using glm::mat4;
@@ -21,7 +20,7 @@ const int gl_bool_size = 4;
 const int gl_int_size = 4;
 const int gl_float_size = 4;
 
-std::shared_ptr<LifeProgram> LifeProgram::instance = nullptr;
+std::shared_ptr<SceneProgram> SceneProgram::instance = nullptr;
 
 constexpr int next_offset(int cur_offset, int base_alignment)
 {
@@ -33,11 +32,11 @@ constexpr int next_offset(int cur_offset, int base_alignment)
 
 const char* textureNumberGL = "TextureNum";
 
-LifeProgram::LifeProgram()
+SceneProgram::SceneProgram()
 {
 }
 
-void LifeProgram::initPrograms()
+void SceneProgram::initPrograms()
 {
     // Create framebuffer program
     addProgram("framebuffer", "framebuffer/LifeGame.glvs",
@@ -50,12 +49,12 @@ void LifeProgram::initPrograms()
     useFramebufferProgram();
 }
 
-LifeProgram::~LifeProgram()
+SceneProgram::~SceneProgram()
 {
     free_buffers();
 }
 
-void LifeProgram::free_buffers()
+void SceneProgram::free_buffers()
 {
     glDeleteBuffers(1, &m_matricesUBO);
     glDeleteBuffers(1, &m_textureDataUBO);
@@ -63,7 +62,7 @@ void LifeProgram::free_buffers()
     m_matricesUBO = m_textureDataUBO = 0;
 }
 
-void LifeProgram::useScreenProgram()
+void SceneProgram::useScreenProgram()
 {
     if (m_programID != m_programs["screen"]) {
         glUseProgram(m_programs["screen"]);
@@ -71,7 +70,7 @@ void LifeProgram::useScreenProgram()
     }
 }
 
-void LifeProgram::useFramebufferProgram()
+void SceneProgram::useFramebufferProgram()
 {
     if (m_programID != m_programs["framebuffer"]) {
         glUseProgram(m_programs["framebuffer"]);

@@ -14,7 +14,7 @@
 #include "render/render.hpp"
 #include "utils/logger.hpp"
 #include "exceptions/glexception.hpp"
-#include "lifeprogram.hpp"
+#include "sceneprogram.hpp"
 #include "game.hpp"
 #include "config.hpp"
 #include "utils/math.hpp"
@@ -168,7 +168,7 @@ void RendererSystem::drawSprites() {
     using utils::data::mapBinaryTree;
     using NodeDataPtr = std::shared_ptr<utils::RectPoints3D>;
 
-    auto program = LifeProgram::getInstance();
+    auto program = SceneProgram::getInstance();
     auto camera = FpsCamera::getInstance();
 
     if (Config::getVal<bool>("CheckCollision"))
@@ -236,7 +236,7 @@ void RendererSystem::drawSprites() {
 }
 
 void RendererSystem::drawLidarIntersect() {
-    auto program = LifeProgram::getInstance();
+    auto program = SceneProgram::getInstance();
     program->useFramebufferProgram();
     mat4 model = program->getMat4("ModelMatrix");
     mat4 view = program->getMat4("ViewMatrix");
@@ -283,34 +283,13 @@ void RendererSystem::drawLidarIntersect() {
             auto pos_comp = en->getComponent<PositionComponent>();
             auto sprite_comp = en->getComponent<SpriteComponent>();
 
-            /* utils::data::mapBinaryTree(bvh_comp->vbh_tree, [program, pos_comp, sprite_comp](std::shared_ptr<utils::RectPoints3D> bound_rect)
-            {
-                *bound_rect = coll::AABBtoWorldSpace(
-                        *bound_rect,
-                        pos_comp->rot_axis, pos_comp->angle,
-                        {pos_comp->x, pos_comp->y, pos_comp->z},
-                        *sprite_comp->sprite
-                );
-            });
-            auto coll = coll::BVHAABBTraversal(bvh_comp->vbh_tree, dir, pos_trans); */
             auto coll = coll::BVHAABBTraversal(bvh_comp->vbh_tree, dir,
                                                pos_trans);
 
-            /*auto coll = coll::raycastAABB(dir,
-                                          pos_trans,
-                                          coll::AABBtoWorldSpace(
-                                                  *bvh_comp->vbh_tree->m_data,
-                                                  pos_comp->rot_axis, pos_comp->angle,
-                                                  {pos_comp->x, pos_comp->y, pos_comp->z},
-                                                  *sprite_comp->sprite
-                                          ));*/
-            /*auto coll = coll::raycastAABB(dir, pos_trans,
-                                          *bvh_comp->vbh_tree->m_data);*/
             if (coll.first) {
-                std::cout << "collision occurred, pos: " << coll.second.x
-                          << ", "
-                          << coll.second.y << ", " << coll.second.z
-                          << std::endl;
+                Logger::info("collision occurred, pos: %1$.3f, %2$.3f, %3$.3f",
+                             coll.second.x, coll.second.y, coll.second.z);
+
                 col_stream << coll.second.x << ", "
                            << coll.second.y << ", " << coll.second.z << "\n";
                 coll_dots.emplace_back(coll.second);
@@ -340,7 +319,7 @@ void RendererSystem::update_state(size_t delta) {
 }
 
 void RendererSystem::drawToFramebuffer() {
-    auto program = LifeProgram::getInstance();
+    auto program = SceneProgram::getInstance();
     program->useFramebufferProgram();
 
     // Render to texture
@@ -361,7 +340,7 @@ void RendererSystem::drawGui() {
     auto screen_width = utils::getWindowWidth<GLfloat>(*Game::getWindow());
     auto screen_height = utils::getWindowHeight<GLfloat>(*Game::getWindow());
 
-    auto program = LifeProgram::getInstance();
+    auto program = SceneProgram::getInstance();
     if (m_isMsaa) {
         // Render texture to window
         glBindFramebuffer(GL_READ_FRAMEBUFFER, m_frameBufferMSAA);

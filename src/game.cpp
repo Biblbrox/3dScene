@@ -134,7 +134,7 @@ void Game::initOnceSDL2()
                             Config::getVal<int>("MSAASamples"));
     }
 
-    SDL_SetHint(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0");
+    //SDL_SetHint(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0");
 
     SDL_ShowCursor(SDL_ENABLE);
     if (SDL_ShowCursor(SDL_QUERY) != SDL_ENABLE)

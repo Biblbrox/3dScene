@@ -1,30 +1,47 @@
 #ifndef TIMER_HPP
 #define TIMER_HPP
 
+#include <ctime>
+#include <string>
+
 namespace utils
 {
-    class Timer
+    namespace time
     {
-    public:
-        Timer() noexcept;
+        class Timer
+        {
+        public:
+            Timer() noexcept;
 
-        void start() noexcept;
-        void stop() noexcept;
-        void pause() noexcept;
-        void unpause() noexcept;
+            void start() noexcept;
 
-        uint32_t getTicks() const noexcept;
+            void stop() noexcept;
 
-        bool isStarted() const noexcept;
-        bool isPaused() const noexcept;
+            void pause() noexcept;
 
-    private:
-        uint32_t m_startTicks;
-        uint32_t m_pausedTicks;
+            void unpause() noexcept;
 
-        bool m_paused;
-        bool m_started;
-    };
+            uint32_t getTicks() const noexcept;
+
+            bool isStarted() const noexcept;
+
+            bool isPaused() const noexcept;
+
+        private:
+            uint32_t m_startTicks;
+            uint32_t m_pausedTicks;
+
+            bool m_paused;
+            bool m_started;
+        };
+
+
+        /**
+         * Return format representation of current date
+         * @return
+         */
+        std::string get_current_date();
+    }
 }
 
 

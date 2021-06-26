@@ -11,7 +11,7 @@
 
 #include "utils/math.hpp"
 #include "../render/texture.hpp"
-#include "lifeprogram.hpp"
+#include "sceneprogram.hpp"
 #include "utils/datastructs.hpp"
 
 namespace coll {

@@ -5,7 +5,7 @@
 #include "game.hpp"
 #include "utils/logger.hpp"
 #include "exceptions/basegameexception.hpp"
-#include "lifeprogram.hpp"
+#include "sceneprogram.hpp"
 #include "config.hpp"
 #include "view/fpscamera.hpp"
 
@@ -30,7 +30,7 @@ int main(int argc, char *args[])
         Game game;
         game.initOnceSDL2();
         game.initGL();
-        auto program = LifeProgram::getInstance();
+        auto program = SceneProgram::getInstance();
         program->initPrograms();
         game.initGame();
         auto camera = FpsCamera::getInstance();
