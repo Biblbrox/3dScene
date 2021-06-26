@@ -18,6 +18,8 @@
 #include "utils/threadpool.hpp"
 #include "components/cellcomponent.hpp"
 
+using utils::time::Timer;
+
 struct CellState
 {
     bool alive;
@@ -34,7 +36,7 @@ public:
     void update(size_t delta) override;
 
 private:
-    utils::Timer m_timer;
+    Timer m_timer;
     utils::Fps m_fps;
 
     void init_sprites();
@@ -44,8 +46,6 @@ private:
      */
     void filter_entities();
 
-
-//    ThreadPool m_pool;
 
     bool m_wasInit;
 };

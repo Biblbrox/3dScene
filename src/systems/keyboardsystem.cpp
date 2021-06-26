@@ -4,7 +4,7 @@
 #include "base.hpp"
 #include "systems/keyboardsystem.hpp"
 #include "game.hpp"
-#include "lifeprogram.hpp"
+#include "sceneprogram.hpp"
 #include "view/fpscamera.hpp"
 
 void KeyboardSystem::update_state(size_t delta)
@@ -17,7 +17,7 @@ void KeyboardSystem::update_state(size_t delta)
     SDL_Event e;
 	
     auto camera = FpsCamera::getInstance();
-    auto program = LifeProgram::getInstance();
+    auto program = SceneProgram::getInstance();
     bool stopped = getGameState() == GameStates::STOP;
     while (SDL_PollEvent(&e)) {
         program->useFramebufferProgram();

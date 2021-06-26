@@ -2,13 +2,14 @@
 
 #include "utils/timer.hpp"
 
-utils::Timer::Timer() noexcept : m_startTicks(0), m_pausedTicks(0),
+
+utils::time::Timer::Timer() noexcept : m_startTicks(0), m_pausedTicks(0),
                         m_paused(false), m_started(false)
 {
 
 }
 
-void utils::Timer::start() noexcept
+void utils::time::Timer::start() noexcept
 {
     m_started = true;
     m_paused = false;
@@ -17,7 +18,7 @@ void utils::Timer::start() noexcept
     m_pausedTicks = 0;
 }
 
-void utils::Timer::stop() noexcept
+void utils::time::Timer::stop() noexcept
 {
     m_started = false;
     m_paused = false;
@@ -26,7 +27,7 @@ void utils::Timer::stop() noexcept
     m_pausedTicks = 0;
 }
 
-void utils::Timer::pause() noexcept
+void utils::time::Timer::pause() noexcept
 {
     if (m_started && !m_paused) {
         m_paused = true;
@@ -36,7 +37,7 @@ void utils::Timer::pause() noexcept
     }
 }
 
-void utils::Timer::unpause() noexcept
+void utils::time::Timer::unpause() noexcept
 {
     if (m_started && m_paused) {
         m_paused = false;
@@ -45,7 +46,7 @@ void utils::Timer::unpause() noexcept
     }
 }
 
-uint32_t utils::Timer::getTicks() const noexcept
+uint32_t utils::time::Timer::getTicks() const noexcept
 {
     Uint32 time = 0;
 
@@ -55,12 +56,29 @@ uint32_t utils::Timer::getTicks() const noexcept
     return time;
 }
 
-bool utils::Timer::isStarted() const noexcept
+bool utils::time::Timer::isStarted() const noexcept
 {
     return m_started;
 }
 
-bool utils::Timer::isPaused() const noexcept
+bool utils::time::Timer::isPaused() const noexcept
 {
     return m_paused && m_started;
+}
+
+
+std::string utils::time::get_current_date()
+{
+    const int date_length = 80;
+
+    time_t raw_time;
+    struct tm* time_info;
+    char time_buffer[date_length];
+
+    std::time(&raw_time);
+    time_info = std::localtime(&raw_time);
+
+    std::strftime(time_buffer, date_length, "%c", time_info);
+
+    return std::string(time_buffer);
 }

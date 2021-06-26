@@ -31,7 +31,7 @@ GLuint utils::loadShaderFromFile(const std::string &path, GLenum shaderType)
     if (!sourceFile.is_open())
         throw FSException((format("Can't open shader source file %1%\n")
                            % path).str(), program_log_file_name(),
-                          utils::log::Category::FILE_ERROR);
+                          utils::log::Category::FS_ERROR);
 
     shaderString.assign(std::istreambuf_iterator<char>(sourceFile),
                         std::istreambuf_iterator<char>());

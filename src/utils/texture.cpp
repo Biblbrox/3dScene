@@ -28,7 +28,7 @@ utils::texture::loadObj(const std::string& file, std::string& textureFile,
     if (!std::filesystem::exists(file))
         throw FSException((format("File %s doesn't exists") % file).str(),
                           program_log_file_name(),
-                          utils::log::Category::FILE_ERROR);
+                          utils::log::Category::FS_ERROR);
 
     std::ifstream obj(file);
     std::string line;
@@ -94,7 +94,7 @@ utils::texture::loadObj(const std::string& file, std::string& textureFile,
     if (!std::filesystem::exists(getResourcePath(mtlPath)))
         throw FSException((format("File: %s doesn't exists") % mtlPath).str(),
                           program_log_file_name(),
-                          utils::log::Category::FILE_ERROR);
+                          utils::log::Category::FS_ERROR);
 
     std::ifstream mtl(getResourcePath(mtlPath));
     while (std::getline(mtl, line)) {

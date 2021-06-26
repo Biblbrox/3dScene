@@ -6,24 +6,24 @@
 
 #include "render/shaderprogram.hpp"
 
-class LifeProgram: public ShaderProgram
+class SceneProgram: public ShaderProgram
 {
 protected:
-    static std::shared_ptr<LifeProgram> instance;
+    static std::shared_ptr<SceneProgram> instance;
 public:
-    LifeProgram();
+    SceneProgram();
 
     //TODO: fix public constructor and make_shared problem
     //TODO: fix ugly design
-    static std::shared_ptr<LifeProgram> getInstance()
+    static std::shared_ptr<SceneProgram> getInstance()
     {
         if (!instance)
-            instance = std::make_shared<LifeProgram>();
+            instance = std::make_shared<SceneProgram>();
 
         return instance;
     }
 
-    ~LifeProgram() override;
+    ~SceneProgram() override;
 
     void useScreenProgram();
     void useFramebufferProgram();
