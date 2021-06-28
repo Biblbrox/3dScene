@@ -16,7 +16,6 @@
 #include "utils/audio.hpp"
 #include "ecs/ecsmanager.hpp"
 #include "utils/threadpool.hpp"
-#include "components/cellcomponent.hpp"
 
 using utils::time::Timer;
 
@@ -40,6 +39,9 @@ private:
     utils::Fps m_fps;
 
     void init_sprites();
+
+    void init_scene();
+    void deallocate_scene();
 
     /**
      * Remove all entities that not alive

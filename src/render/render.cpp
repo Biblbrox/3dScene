@@ -1,11 +1,15 @@
 #include "render/render.hpp"
 #include "utils/math.hpp"
+#include "utils/logger.hpp"
 
 using glm::vec2;
 using glm::mat4;
 using glm::vec3;
 using utils::math::rotate_around;
 using utils::math::operator/;
+using utils::log::program_log_file_name;
+using utils::log::Category;
+using boost::format;
 
 void render::drawLinen(const std::vector<vec3>& points, bool adjacency)
 {

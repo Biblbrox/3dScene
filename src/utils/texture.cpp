@@ -178,3 +178,52 @@ utils::texture::loadTextureFromPixels32(const GLuint *pixels, GLuint width, GLui
 
     return textureID;
 }
+
+GLuint utils::texture::genTexture(GLuint width, GLuint height,
+                                  bool msaa, size_t samples)
+{
+    GLuint texture;
+    glGenTextures(1, &texture);
+
+    if (msaa) {
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples,
+                                GL_RGB, width, height, GL_TRUE);
+    } else {
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+                     GL_UNSIGNED_BYTE, nullptr);
+    }
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    if (msaa)
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+    else
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+    if (GLuint error = glGetError(); error != GL_NO_ERROR)
+        throw GLException((format("Unable to generate texture! %1%\n")
+                           % gluErrorString(error)).str(),
+                          program_log_file_name(), Category::INTERNAL_ERROR);
+
+    return texture;
+}
+
+GLuint utils::texture::genRbo(GLuint width, GLuint height,
+                              bool msaa, size_t samples)
+{
+    GLuint rbo;
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    if (msaa)
+        glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples,
+                                         GL_DEPTH24_STENCIL8, width, height);
+    else
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width,
+                              height);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    return rbo;
+}

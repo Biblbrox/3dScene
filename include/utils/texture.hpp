@@ -1,20 +1,31 @@
 #ifndef UTILS_TEXTURE_HPP
 #define UTILS_TEXTURE_HPP
 
-namespace utils::texture {
-        /**
-     * Load opengl texture from pixels to GPU with specific format.
-     * Result texture has RGBA format.
-     * If function can't load texture exception will be thrown.
-     * @param pixels
-     * @param width
-     * @param height
-     * @param texture_format
-     * @return textureID
-     */
-        GLuint
-        loadTextureFromPixels32(const GLuint *pixels, GLuint width, GLuint height,
-                                GLenum textureType = GL_RGBA);
+#include "exceptions/glexception.hpp"
+
+#define CHECK_FRAMEBUFFER_COMPLETE() \
+if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) \
+throw GLException((boost::format( \
+        "Warning: Unable to generate framebuffer. " \
+        "GL Error: %s\n") % gluErrorString(glGetError())).str(), \
+        utils::log::program_log_file_name(), \
+        utils::log::Category::INITIALIZATION_ERROR); \
+
+namespace utils::texture
+{
+    /**
+ * Load opengl texture from pixels to GPU with specific format.
+ * Result texture has RGBA format.
+ * If function can't load texture exception will be thrown.
+ * @param pixels
+ * @param width
+ * @param height
+ * @param texture_format
+ * @return textureID
+ */
+    GLuint
+    loadTextureFromPixels32(const GLuint *pixels, GLuint width, GLuint height,
+                            GLenum textureType = GL_RGBA);
 
     /**
      * Parse obj file
@@ -24,7 +35,8 @@ namespace utils::texture {
      * @return
      */
     std::vector<GLfloat>
-    loadObj(const std::string &file, std::string &textureFile, bool storeNormals = false);
+    loadObj(const std::string &file, std::string &textureFile,
+            bool storeNormals = false);
 
     /**
      * Load texture from file
@@ -68,7 +80,7 @@ namespace utils::texture {
     * @param sfc
     * @return
     */
-    inline SDL_Surface* flipVertically(const SDL_Surface* const sfc)
+    inline SDL_Surface *flipVertically(const SDL_Surface *const sfc)
     {
         assert(sfc);
         SDL_Surface *result =
@@ -93,5 +105,12 @@ namespace utils::texture {
 
         return result;
     }
+
+
+    GLuint genTexture(GLuint width, GLuint height, bool msaa = false,
+                      size_t samples = 4);
+
+    GLuint genRbo(GLuint width, GLuint height, bool msaa = false,
+                  size_t samples = 4);
 }
 #endif //UTILS_TEXTURE_HPP
