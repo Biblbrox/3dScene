@@ -30,8 +30,6 @@ constexpr int next_offset(int cur_offset, int base_alignment)
     return cur_offset + base_alignment - cur_offset % base_alignment;
 }
 
-const char* textureNumberGL = "TextureNum";
-
 SceneProgram::SceneProgram()
 {
 }
@@ -39,12 +37,12 @@ SceneProgram::SceneProgram()
 void SceneProgram::initPrograms()
 {
     // Create framebuffer program
-    addProgram("framebuffer", "framebuffer/LifeGame.glvs",
-               "framebuffer/LifeGame.glfs");
+    addProgram("framebuffer", "framebuffer/Scene.glvs",
+               "framebuffer/Scene.glfs");
 
     // Create screen program
-    addProgram("screen", "screen/LifeGame.glvs",
-               "screen/LifeGame.glfs");
+    addProgram("screen", "screen/Scene.glvs",
+               "screen/Scene.glfs");
 
     useFramebufferProgram();
 }

@@ -4,7 +4,6 @@
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
 #include <iostream>
-#include <thread>
 
 #include "base.hpp"
 #include "world.hpp"
@@ -13,20 +12,20 @@
 #include "utils/math.hpp"
 #include "utils/datastructs.hpp"
 #include "utils/collision.hpp"
+#include "utils/texture.hpp"
 #include "components/positioncomponent.hpp"
-#include "components/cellcomponent.hpp"
 #include "components/spritecomponent.hpp"
+#include "components/scenecomponent.hpp"
 #include "components/bvhcomponent.hpp"
-#include "systems/renderersystem.hpp"
-#include "components/textcomponent.hpp"
+#include "systems/renderscenesystem.hpp"
+#include "systems/renderguisystem.hpp"
 #include "systems/keyboardsystem.hpp"
 #include "systems/animationsystem.hpp"
 #include "systems/physicssystem.hpp"
 #include "systems/particlerendersystem.hpp"
 #include "utils/random.hpp"
 #include "exceptions/sdlexception.hpp"
-#include "exceptions/glexception.hpp"
-#include "sceneprogram.hpp"
+
 
 using utils::log::Logger;
 using utils::log::program_log_file_name;
@@ -38,8 +37,8 @@ using std::sin;
 using std::cos;
 using std::find_if;
 using utils::fix_coords;
-
-const GLfloat cubeSize = 20.f;
+using utils::texture::genRbo;
+using utils::texture::genTexture;
 
 size_t unique_id()
 {
@@ -138,12 +137,15 @@ void World::init()
 {
     m_systems.clear();
     createSystem<KeyboardSystem>();
-    createSystem<RendererSystem>();
+    createSystem<RenderSceneSystem>();
     createSystem<AnimationSystem>();
     createSystem<PhysicsSystem>();
     createSystem<ParticleRenderSystem>();
+    createSystem<RenderGuiSystem>();
 
+    m_entities.clear();
     init_sprites();
+    init_scene();
 
     m_wasInit = true;
 }
@@ -154,9 +156,63 @@ void World::filter_entities()
         it = !it->second->isActivate() ? m_entities.erase(it) : ++it;
 }
 
+void World::init_scene()
+{
+    auto scene = createEntity(unique_id());
+    scene->activate();
+//    auto scene_comp = std::dynamic_pointer_cast<SceneComponent>
+//            (scene->addComponent<SceneComponent>());
+    scene->addComponent<SceneComponent>();
+    auto scene_comp = scene->getComponent<SceneComponent>();
+
+    GLuint* scene_fb = &scene_comp->sceneBuffer;
+    GLuint* scene_fbmsaa = &scene_comp->sceneBufferMSAA;
+    GLuint* textureMSAA = &scene_comp->textureMSAA;
+    GLuint* texture = &scene_comp->texture;
+
+    int screen_width = utils::getWindowWidth<GLuint>(*Game::getWindow());
+    int screen_height = utils::getWindowHeight<GLuint>(*Game::getWindow());
+
+    bool msaa = Config::getVal<bool>("MSAA");
+    if (msaa) {
+        // Generate multisampled framebuffer
+        glGenFramebuffers(1, scene_fbmsaa);
+        glBindFramebuffer(GL_FRAMEBUFFER, *scene_fbmsaa);
+        // Create multisampled texture attachment
+        *textureMSAA = genTexture(screen_width, screen_height, true);
+        GLuint rbo = genRbo(screen_width, screen_height, true);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D_MULTISAMPLE, *textureMSAA, 0);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                  GL_RENDERBUFFER, rbo);
+        CHECK_FRAMEBUFFER_COMPLETE();
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // Generate intermediate framebuffer
+        glGenFramebuffers(1, scene_fb);
+        glBindFramebuffer(GL_FRAMEBUFFER, *scene_fb);
+        // Create color attachment texture
+        *texture = genTexture(screen_width, screen_height);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, *texture, 0);
+    } else {
+        // Generate not multisampled buffer
+        glGenFramebuffers(1, scene_fb);
+        glBindFramebuffer(GL_FRAMEBUFFER, *scene_fb);
+        // Create color texture attachment
+        *texture = genTexture(screen_width, screen_height);
+        GLuint rbo = genRbo(screen_width, screen_height);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, *texture, 0);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                  GL_RENDERBUFFER, rbo);
+    }
+
+    CHECK_FRAMEBUFFER_COMPLETE();
+}
+
 void World::init_sprites()
 {
-    m_entities.clear();
     utils::Random rand;
 
     std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite;
@@ -261,4 +317,9 @@ void World::init_sprites()
         house->addComponent<BVHComponent>();
         house->getComponent<BVHComponent>()->vbh_tree = tree;*/
     }
+}
+
+void World::deallocate_scene()
+{
+
 }

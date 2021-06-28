@@ -49,6 +49,14 @@ namespace utils::log {
     class Logger
     {
     public:
+        /**
+         * Write formatted string to file or/and standard output
+         * @tparam Args
+         * @param file_name
+         * @param category
+         * @param format
+         * @param args
+         */
         template<typename ...Args>
         static void write(const std::string &file_name, Category category,
                           const std::string &format, Args &&... args) {
