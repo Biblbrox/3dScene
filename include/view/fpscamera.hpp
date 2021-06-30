@@ -1,7 +1,6 @@
 #ifndef FPS_CAMERA_HPP
 #define FPS_CAMERA_HPP
 
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
@@ -40,10 +39,11 @@ public:
         return instance;
     }
 
-    // constructor with vectors
+    virtual ~FpsCamera(){};
+
     FpsCamera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
-          glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
-          float yaw = YAW, float pitch = PITCH) :
+              glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
+              float yaw = YAW, float pitch = PITCH) :
             m_front(glm::vec3(0.0f, 0.0f, -1.0f)),
             m_movSpeed(SPEED), m_mouseSens(SENSITIVITY), m_zoom(ZOOM)
     {
@@ -53,9 +53,10 @@ public:
         m_pitch = pitch;
         updateCameraVectors();
     }
-    // constructor with scalar values
+
+
     FpsCamera(float posX, float posY, float posZ, float upX, float upY, float upZ,
-          float yaw, float pitch) :
+              float yaw, float pitch) :
             m_front(glm::vec3(0.0f, 0.0f, -1.0f)), m_movSpeed(SPEED),
             m_mouseSens(SENSITIVITY), m_zoom(ZOOM)
     {
@@ -137,9 +138,9 @@ public:
     }
 
 
-private:
+protected:
     // calculates the front vector from the Camera's (updated) Euler Angles
-    void updateCameraVectors()
+    virtual void updateCameraVectors()
     {
         // calculate the new Front vector
         glm::vec3 front;

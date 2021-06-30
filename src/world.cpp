@@ -20,6 +20,7 @@
 #include "systems/renderscenesystem.hpp"
 #include "systems/renderguisystem.hpp"
 #include "systems/keyboardsystem.hpp"
+#include "systems/lidarsystem.hpp"
 #include "systems/animationsystem.hpp"
 #include "systems/physicssystem.hpp"
 #include "systems/particlerendersystem.hpp"
@@ -52,6 +53,8 @@ World::World() : m_wasInit(false)
         Config::addVal("DrawTextures", false, "bool");
     if (!Config::hasKey("DrawBoundingBoxes"))
         Config::addVal("DrawBoundingBoxes", false, "bool");
+    if (!Config::hasKey("DrawRays"))
+        Config::addVal("DrawRays", false, "bool");
     if (!Config::hasKey("CheckCollision"))
         Config::addVal("CheckCollision", false, "bool");
     if (!Config::hasKey("TreeLevelShow"))
@@ -142,6 +145,7 @@ void World::init()
     createSystem<PhysicsSystem>();
     createSystem<ParticleRenderSystem>();
     createSystem<RenderGuiSystem>();
+    createSystem<LidarSystem>();
 
     m_entities.clear();
     init_sprites();
