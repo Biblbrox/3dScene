@@ -131,6 +131,8 @@ void RenderGuiSystem::update_state(size_t delta)
                             &Config::getVal<bool>("DrawTextures"));
             ImGui::Checkbox("Draw Leafs",
                             &Config::getVal<bool>("DrawLeafs"));
+            ImGui::Checkbox("Draw Rays",
+                            &Config::getVal<bool>("DrawRays"));
             ImGui::Checkbox("Draw bounding boxes",
                             &Config::getVal<bool>("DrawBoundingBoxes"));
             ImGui::Checkbox("Check collision",

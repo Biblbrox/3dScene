@@ -18,14 +18,11 @@ public:
     explicit RenderSceneSystem();
     ~RenderSceneSystem();
 
-	void drawLidarIntersect();
 private:
     void drawSprites();
     void drawBoundingBoxes();
     void drawToFramebuffer();
     void update_state(size_t delta) override;
-
-    std::ofstream col_stream;
 };
 
 #endif //RENDERSCENESYSTEM_HPP
