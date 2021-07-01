@@ -3,7 +3,6 @@
 #include <imgui.h>
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
-#include <iostream>
 
 #include "base.hpp"
 #include "world.hpp"
@@ -63,8 +62,16 @@ World::World() : m_wasInit(false)
         Config::addVal("TreeLevelShow", 0, "int");
     if (!Config::hasKey("MinRectSize"))
         Config::addVal("MinRectSize", glm::vec3(0.001f), "vec3");
+    if (!Config::hasKey("PrismFreq"))
+        Config::addVal("PrismFreq", glm::vec2(90.f, 45.f), "vec2");
+    if (!Config::hasKey("PrismStartAngle"))
+        Config::addVal("PrismStartAngle", glm::vec2(0.f, 0.f), "vec2");
+    if (!Config::hasKey("LaserPos"))
+        Config::addVal("LaserPos", glm::vec3(0.f), "vec3");
     if (!Config::hasKey("DrawLeafs"))
         Config::addVal("DrawLeafs", false, "bool");
+    if (!Config::hasKey("EditMode"))
+        Config::addVal("EditMode", false, "bool");
     if (!Config::hasKey("BackgroundColor"))
         Config::addVal("BackgroundColor", glm::vec4(0.2f, 0.f, 0.2f, 1.f), "vec4");
     if (!Config::hasKey("InverseRotation"))
@@ -73,6 +80,8 @@ World::World() : m_wasInit(false)
         Config::addVal("MSAA", false, "bool");
     if (!Config::hasKey("MSAASamples"))
         Config::addVal("MSAASamples", 4, "int");
+    if (!Config::hasKey("MouseSens"))
+        Config::addVal("MouseSens", 1.f, "float");
     if (!Config::hasKey("Theme"))
         Config::addVal("Theme", 0, "int");
     if (!Config::hasKey("CellColor"))
@@ -149,7 +158,6 @@ void World::init_terrain()
     terrain->addComponent<TerrainComponent>();
     auto terrainComp = terrain->getComponent<TerrainComponent>();
 
-
     terrainComp->terrain = std::make_shared<Terrain>
             (1000, 1000, 30, getResourcePath("heightmap.png"),
              getResourcePath("terrain.png"), 2500.f, glm::vec3(0.f));
@@ -160,8 +168,6 @@ void World::init_scene()
 {
     auto scene = createEntity(unique_id());
     scene->activate();
-//    auto scene_comp = std::dynamic_pointer_cast<SceneComponent>
-//            (scene->addComponent<SceneComponent>());
     scene->addComponent<SceneComponent>();
     auto scene_comp = scene->getComponent<SceneComponent>();
 
@@ -237,9 +243,9 @@ void World::init_sprites()
         auto sprite_left = en_left->getComponent<SpriteComponent>();
         sprite_left->sprite = palm_sprite;
         auto pos_left = en_left->getComponent<PositionComponent>();
-        pos_left->x = i * 400;
-        pos_left->z = 0;
-        pos_left->y = terrain->getAltitude({pos_left->x, pos_left->z});
+        pos_left->pos.x = i * 400;
+        pos_left->pos.z = 0;
+        pos_left->pos.y = terrain->getAltitude({pos_left->pos.x, pos_left->pos.z});
         auto tree = coll::buildBVH(sprite_left->sprite->getVertices()[0], min_rect);
         en_left->addComponent<BVHComponent>();
         en_left->getComponent<BVHComponent>()->vbh_tree = tree;
@@ -247,10 +253,8 @@ void World::init_sprites()
         utils::data::mapBinaryTree(en_left->getComponent<BVHComponent>()->vbh_tree, [pos_left, sprite_left](std::shared_ptr<utils::RectPoints3D> bound_rect)
         {
             *bound_rect = coll::AABBtoWorldSpace(
-                    *bound_rect,
-                    pos_left->rot_axis, pos_left->angle,
-                    {pos_left->x, pos_left->y, pos_left->z},
-                    *sprite_left->sprite
+                    *bound_rect, pos_left->rot_axis, pos_left->angle,
+                    pos_left->pos, *sprite_left->sprite
             );
         });
 
@@ -261,9 +265,9 @@ void World::init_sprites()
         auto sprite_right = en_right->getComponent<SpriteComponent>();
         sprite_right->sprite = palm_sprite;
         auto pos_right = en_right->getComponent<PositionComponent>();
-        pos_right->x = i * 400;
-        pos_right->z = 1000;
-        pos_right->y = terrain->getAltitude({pos_right->x, pos_right->z});
+        pos_right->pos.x = i * 400;
+        pos_right->pos.z = 1000;
+        pos_right->pos.y = terrain->getAltitude({pos_right->pos.x, pos_right->pos.z});
         tree = coll::buildBVH(sprite_right->sprite->getVertices()[0], min_rect);
         en_right->addComponent<BVHComponent>();
         en_right->getComponent<BVHComponent>()->vbh_tree = tree;
@@ -271,10 +275,8 @@ void World::init_sprites()
         utils::data::mapBinaryTree(en_right->getComponent<BVHComponent>()->vbh_tree, [pos_right, sprite_right](std::shared_ptr<utils::RectPoints3D> bound_rect)
         {
             *bound_rect = coll::AABBtoWorldSpace(
-                    *bound_rect,
-                    pos_right->rot_axis, pos_right->angle,
-                    {pos_right->x, pos_right->y, pos_right->z},
-                    *sprite_right->sprite
+                    *bound_rect, pos_right->rot_axis, pos_right->angle,
+                    pos_right->pos, *sprite_right->sprite
             );
         });
 
@@ -285,9 +287,9 @@ void World::init_sprites()
         auto car_sprite_comp = car->getComponent<SpriteComponent>();
         car_sprite_comp->sprite = car_sprite;
         auto car_pos = car->getComponent<PositionComponent>();
-        car_pos->x = i * 400;
-        car_pos->z = rand.generateu(150, 350);
-        car_pos->y = terrain->getAltitude({car_pos->x, car_pos->z});
+        car_pos->pos.x = i * 400;
+        car_pos->pos.z = rand.generateu(150, 350);
+        car_pos->pos.y = terrain->getAltitude({car_pos->pos.x, car_pos->pos.z});
         car_pos->angle = -glm::half_pi<GLfloat>();
         car_pos->rot_axis = glm::vec3(0.f, 1.f, 0.f);
         tree = coll::buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect);
@@ -297,10 +299,8 @@ void World::init_sprites()
         utils::data::mapBinaryTree(car->getComponent<BVHComponent>()->vbh_tree, [car_pos, car_sprite_comp](std::shared_ptr<utils::RectPoints3D> bound_rect)
         {
             *bound_rect = coll::AABBtoWorldSpace(
-                    *bound_rect,
-                    car_pos->rot_axis, car_pos->angle,
-                    {car_pos->x, car_pos->y, car_pos->z},
-                    *car_sprite_comp->sprite
+                    *bound_rect, car_pos->rot_axis, car_pos->angle,
+                    car_pos->pos, *car_sprite_comp->sprite
             );
         });
 

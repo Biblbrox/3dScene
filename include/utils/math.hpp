@@ -12,7 +12,38 @@ using glm::vec2;
 
 namespace utils::math {
 
-//    inline
+    /**
+     * Transform viewport coordinates to world space
+     * @param pos
+     * @return
+     */
+    inline glm::vec3 viewportToWorld(const glm::vec2& pos, const glm::vec2& clip,
+                                     const glm::mat4& projection,
+                                     const glm::mat4& view)
+    {
+        GLfloat width = clip.x;
+        GLfloat height = clip.y;
+        GLfloat x = pos.x;
+        GLfloat y = pos.y;
+
+        // To NDC space
+        x = 2.f * x / width - 1.f;
+        y = 1.f - 2.f * y / height;
+        GLfloat z = 1;
+
+        // To 4-d homogenus space
+        glm::vec4 ray = {x, y, -1.f, 1.f};
+
+        // To eye space
+        ray = glm::inverse(projection) * ray;
+        ray = glm::vec4(ray.x, ray.y, -1.f, 0.f);
+
+        // To world space
+        glm::vec3 ray_world = glm::inverse(view) * ray;
+        ray_world = glm::normalize(ray_world);
+
+        return ray_world;
+    }
 
     /**
      * Build covariance matrix from set of points

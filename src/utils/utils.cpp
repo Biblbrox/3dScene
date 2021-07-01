@@ -56,4 +56,3 @@ GLuint utils::loadShaderFromFile(const std::string &path, GLenum shaderType)
     sourceFile.close();
     return shaderID;
 }
-

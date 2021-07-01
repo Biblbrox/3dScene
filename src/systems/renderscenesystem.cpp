@@ -60,7 +60,7 @@ void RenderSceneSystem::drawSprites()
         auto posComp = en->getComponent<PositionComponent>();
         render::drawTexture(*program,
                             *en->getComponent<SpriteComponent>()->sprite,
-                            {posComp->x, posComp->y, posComp->z},
+                            posComp->pos,
                             posComp->angle,
                             posComp->rot_axis);
     }
@@ -96,11 +96,8 @@ void RenderSceneSystem::drawBoundingBoxes()
             program->setVec3("primColor", {0.8f, 0.1f, 0.1f});
             program->updateVec3("primColor");
             render::drawBoundingBox(*program,
-                                    coll::buildVerticesFromRect3D(
-                                            *bound_rect),
-                                    *sprite,
-                                    {posComp->x, posComp->y, posComp->z},
-                                    posComp->angle,
+                                    coll::buildVerticesFromRect3D(*bound_rect),
+                                    *sprite, posComp->pos, posComp->angle,
                                     posComp->rot_axis);
         };
 
@@ -121,7 +118,8 @@ void RenderSceneSystem::drawBoundingBoxes()
 
 void RenderSceneSystem::update_state(size_t delta)
 {
-    if (getGameState() == GameStates::PLAY)
+    auto game_state = getGameState();
+    if (game_state == GameStates::PLAY || game_state == GameStates::EDIT)
         drawToFramebuffer();
 }
 
@@ -161,9 +159,7 @@ void RenderSceneSystem::drawTerrain()
     auto terrain_en = getEntitiesByTag<TerrainComponent>().begin()->second;
     auto terrain = terrain_en->getComponent<TerrainComponent>()->terrain;
 
-    glBindTexture(GL_TEXTURE_2D, terrain->getTextureID());
-    glBindVertexArray(terrain->getVAO());
-    glDrawElements(GL_TRIANGLE_STRIP, terrain->getIndices().size(), GL_UNSIGNED_INT, nullptr);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindVertexArray(0);
+    render::renderTerrain(*program, *terrain);
 }
+
+

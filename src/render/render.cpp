@@ -1,6 +1,7 @@
 #include "render/render.hpp"
 #include "utils/math.hpp"
 #include "utils/logger.hpp"
+#include "render/terrain.hpp"
 
 using glm::vec2;
 using glm::mat4;
@@ -125,6 +126,15 @@ void render::drawTexture(ShaderProgram& program, const Texture &texture,
     scaling = glm::scale(mat4(1.f), 1 / scale);
     program.leftMult("ModelMatrix", translation * rotation * scaling);
     program.updateMat4("ModelMatrix");
+}
+
+void render::renderTerrain(ShaderProgram& program, const Terrain& terrain)
+{
+    glBindTexture(GL_TEXTURE_2D, terrain.getTextureID());
+    glBindVertexArray(terrain.getVAO());
+    glDrawElements(GL_TRIANGLE_STRIP, terrain.getIndices().size(), GL_UNSIGNED_INT, nullptr);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindVertexArray(0);
 }
 
 void render::drawBoundingBox(ShaderProgram& program,
