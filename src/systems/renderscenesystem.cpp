@@ -7,6 +7,7 @@
 #include "components/spritecomponent.hpp"
 #include "components/bvhcomponent.hpp"
 #include "components/scenecomponent.hpp"
+#include "components/terraincomponent.hpp"
 #include "render/render.hpp"
 #include "utils/logger.hpp"
 #include "exceptions/glexception.hpp"
@@ -74,7 +75,8 @@ void RenderSceneSystem::drawBoundingBoxes()
 {
     using NodeDataPtr = std::shared_ptr<utils::RectPoints3D>;
     auto program = SceneProgram::getInstance();
-    const auto &sprites = m_ecsManager->getEntities();
+//    const auto &sprites = m_ecsManager->getEntities();
+    const auto &sprites = getEntitiesByTag<SpriteComponent>();
 
     program->setInt("isPrimitive", true);
     program->updateInt("isPrimitive");
@@ -145,4 +147,23 @@ void RenderSceneSystem::drawToFramebuffer()
     drawSprites();
     if (Config::getVal<bool>("DrawBoundingBoxes"))
         drawBoundingBoxes();
+
+    drawTerrain();
+}
+
+void RenderSceneSystem::drawTerrain()
+{
+    auto program = SceneProgram::getInstance();
+    program->useFramebufferProgram();
+    program->setInt("isPrimitive", false);
+    program->updateInt("isPrimitive");
+
+    auto terrain_en = getEntitiesByTag<TerrainComponent>().begin()->second;
+    auto terrain = terrain_en->getComponent<TerrainComponent>()->terrain;
+
+    glBindTexture(GL_TEXTURE_2D, terrain->getTextureID());
+    glBindVertexArray(terrain->getVAO());
+    glDrawElements(GL_TRIANGLE_STRIP, terrain->getIndices().size(), GL_UNSIGNED_INT, nullptr);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindVertexArray(0);
 }

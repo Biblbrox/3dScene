@@ -50,6 +50,8 @@ namespace utils::texture
     GLuint loadTexture(const std::string &file,
                        GLuint *textureWidth, GLuint *textureHeight);
 
+    SDL_Surface* loadSurface(const std::string& file);
+
     /**
      * Return Surface format
      * if surface format can't be recognized 0 will be returned

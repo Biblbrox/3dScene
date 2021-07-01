@@ -22,6 +22,7 @@ private:
     void drawSprites();
     void drawBoundingBoxes();
     void drawToFramebuffer();
+    void drawTerrain();
     void update_state(size_t delta) override;
 };
 
