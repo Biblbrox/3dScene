@@ -109,6 +109,23 @@ utils::texture::loadObj(const std::string& file, std::string& textureFile,
     return res;
 }
 
+SDL_Surface* utils::texture::loadSurface(const std::string& file)
+{
+    SDL_Surface* surface = IMG_Load(file.c_str());
+    if (!surface)
+        throw SdlException((format("Unable to load image: %s"
+                                   ". SDL Error: %s\n")
+                            % file % SDL_GetError()).str());
+
+    SDL_Surface* flipped = flipVertically(surface);
+    SDL_FreeSurface(surface);
+
+    if (!flipped)
+        throw SdlException((format("Unable to flip surface %p\n") % surface).str());
+
+    return flipped;
+}
+
 GLuint utils::texture::loadTexture(const std::string &file,
                                    GLuint *textureWidth,
                                    GLuint *textureHeight) {
@@ -119,20 +136,12 @@ GLuint utils::texture::loadTexture(const std::string &file,
     if (!old_file.empty() && old_file == file)
         return old_texture;
 
-    SDL_Surface* surface = IMG_Load(file.c_str());
-    if (!surface)
-        throw SdlException((format("Unable to load image: %s"
-                                   ". SDL Error: %s\n")
-                            % file % SDL_GetError()).str());
-    SDL_Surface* flipped = flipVertically(surface);
-    SDL_FreeSurface(surface);
-    if (!flipped)
-        throw SdlException((format("Unable to flip surface %p\n") % surface).str());
+    SDL_Surface* surface = loadSurface(file);
 
-    GLenum texture_format = getSurfaceFormatInfo(*flipped);
+    GLenum texture_format = getSurfaceFormatInfo(*surface);
 
-    GLuint tw = flipped->w;
-    GLuint th = flipped->h;
+    GLuint tw = surface->w;
+    GLuint th = surface->h;
 
     if (textureWidth)
         *textureWidth = tw;
@@ -140,10 +149,10 @@ GLuint utils::texture::loadTexture(const std::string &file,
         *textureHeight = th;
 
     GLuint textureId = loadTextureFromPixels32(
-            static_cast<GLuint*>(flipped->pixels),
+            static_cast<GLuint*>(surface->pixels),
             tw, th, texture_format);
 
-    SDL_FreeSurface(flipped);
+    SDL_FreeSurface(surface);
 
     old_file = file;
     old_texture = textureId;

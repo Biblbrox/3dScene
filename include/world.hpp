@@ -35,12 +35,12 @@ public:
     void update(size_t delta) override;
 
 private:
-    Timer m_timer;
     utils::Fps m_fps;
 
     void init_sprites();
-
     void init_scene();
+    void init_terrain();
+
     void deallocate_scene();
 
     /**
@@ -50,6 +50,7 @@ private:
 
 
     bool m_wasInit;
+    GLuint m_terrainID;
 };
 
 #endif //MOONLANDER_WORLD_HPP

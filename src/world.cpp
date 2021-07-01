@@ -17,6 +17,7 @@
 #include "components/spritecomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "components/bvhcomponent.hpp"
+#include "components/terraincomponent.hpp"
 #include "systems/renderscenesystem.hpp"
 #include "systems/renderguisystem.hpp"
 #include "systems/keyboardsystem.hpp"
@@ -26,6 +27,7 @@
 #include "systems/particlerendersystem.hpp"
 #include "utils/random.hpp"
 #include "exceptions/sdlexception.hpp"
+#include "render/terrain.hpp"
 
 
 using utils::log::Logger;
@@ -93,42 +95,20 @@ void World::update(size_t delta)
     if constexpr (debug)
         m_fps.update();
 
-    if (getGameState() == GameStates::PAUSE
-        && !m_timer.isPaused()) {
-        m_timer.pause();
-        std::cout << "Timer paused" << std::endl;
-    }
-
     if (getGameState() == GameStates::STOP
         && getPrevGameState() != GameStates::STOP) {
         setGameState(GameStates::STOP);
-        m_timer.stop();
-        std::cout << "Timer stopped" << std::endl;
     }
 
     if (getGameState() == GameStates::PLAY
         && getPrevGameState() == GameStates::PAUSE) {
         setGameState(GameStates::PLAY);
-        m_timer.unpause();
-        std::cout << "Timer unpaused" << std::endl;
     }
 
     if (getGameState() == GameStates::PLAY
         && getPrevGameState() == GameStates::STOP) {
         setGameState(GameStates::PLAY);
-        m_timer.start();
-        // reinit field
         init();
-        std::cout << "Timer started" << std::endl;
-    }
-
-    if (getGameState() == GameStates::PLAY) {
-        GLfloat stepTime = Config::getVal<GLfloat>("StepTime");
-        if (m_timer.getTicks() / 1000.f > stepTime) {
-            m_timer.stop();
-            m_timer.start();
-            std::cout << "Field updated" << std::endl;
-        }
     }
 
     filter_entities();
@@ -148,6 +128,7 @@ void World::init()
     createSystem<LidarSystem>();
 
     m_entities.clear();
+    init_terrain();
     init_sprites();
     init_scene();
 
@@ -159,6 +140,21 @@ void World::filter_entities()
     for (auto it = m_entities.begin(); it != m_entities.end();)
         it = !it->second->isActivate() ? m_entities.erase(it) : ++it;
 }
+
+void World::init_terrain()
+{
+    m_terrainID = unique_id();
+    auto terrain = createEntity(m_terrainID);
+    terrain->activate();
+    terrain->addComponent<TerrainComponent>();
+    auto terrainComp = terrain->getComponent<TerrainComponent>();
+
+
+    terrainComp->terrain = std::make_shared<Terrain>
+            (1000, 1000, 30, getResourcePath("heightmap.png"),
+             getResourcePath("terrain.png"), 2500.f, glm::vec3(0.f));
+}
+
 
 void World::init_scene()
 {
@@ -219,6 +215,9 @@ void World::init_sprites()
 {
     utils::Random rand;
 
+    auto terrainEn = m_entities[m_terrainID];
+    auto terrain = terrainEn->getComponent<TerrainComponent>()->terrain;
+
     std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite;
     car_sprite = std::make_shared<Sprite>();
     palm_sprite = std::make_shared<Sprite>();
@@ -239,8 +238,8 @@ void World::init_sprites()
         sprite_left->sprite = palm_sprite;
         auto pos_left = en_left->getComponent<PositionComponent>();
         pos_left->x = i * 400;
-        pos_left->y = 0;
         pos_left->z = 0;
+        pos_left->y = terrain->getAltitude({pos_left->x, pos_left->z});
         auto tree = coll::buildBVH(sprite_left->sprite->getVertices()[0], min_rect);
         en_left->addComponent<BVHComponent>();
         en_left->getComponent<BVHComponent>()->vbh_tree = tree;
@@ -263,8 +262,8 @@ void World::init_sprites()
         sprite_right->sprite = palm_sprite;
         auto pos_right = en_right->getComponent<PositionComponent>();
         pos_right->x = i * 400;
-        pos_right->y = 0;
         pos_right->z = 1000;
+        pos_right->y = terrain->getAltitude({pos_right->x, pos_right->z});
         tree = coll::buildBVH(sprite_right->sprite->getVertices()[0], min_rect);
         en_right->addComponent<BVHComponent>();
         en_right->getComponent<BVHComponent>()->vbh_tree = tree;
@@ -287,8 +286,8 @@ void World::init_sprites()
         car_sprite_comp->sprite = car_sprite;
         auto car_pos = car->getComponent<PositionComponent>();
         car_pos->x = i * 400;
-        car_pos->y = 0;
         car_pos->z = rand.generateu(150, 350);
+        car_pos->y = terrain->getAltitude({car_pos->x, car_pos->z});
         car_pos->angle = -glm::half_pi<GLfloat>();
         car_pos->rot_axis = glm::vec3(0.f, 1.f, 0.f);
         tree = coll::buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect);
