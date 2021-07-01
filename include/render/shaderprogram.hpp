@@ -20,6 +20,11 @@ public:
     void useProgram(const std::string& programName);
     virtual void freeProgram() final;
 
+    /**
+     * Write data to program state
+     * @param str
+     * @param value
+     */
     virtual void setFloat(const std::string& str, GLfloat value);
     virtual void setInt(const std::string &name, GLint value);
     virtual void setVec3(const std::string &name, const glm::vec3& value);
@@ -37,6 +42,10 @@ public:
     virtual void leftMult(const std::string& name, const glm::mat4& matrix);
     virtual void mult(const std::string& name, const glm::vec4& vec);
 
+    /**
+     * Write actual data to uniforms
+     * @param str
+     */
     virtual void updateFloat(const std::string& str);
     virtual void updateInt(const std::string &name);
     virtual void updateVec3(const std::string &name);
@@ -46,6 +55,11 @@ public:
 
     void bind() const;
     void unbind();
+
+    /**
+     * Get current program ID
+     * @return
+     */
     GLuint getProgramID();
 
 protected:

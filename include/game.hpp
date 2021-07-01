@@ -13,7 +13,8 @@ enum class GameStates
 {
     PLAY,
     PAUSE,
-    STOP
+    STOP,
+    EDIT
 };
 
 void quit();

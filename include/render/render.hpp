@@ -5,6 +5,7 @@
 
 #include "shaderprogram.hpp"
 #include "sprite.hpp"
+#include "render/terrain.hpp"
 
 using glm::vec2;
 
@@ -34,6 +35,14 @@ namespace render
                          const Texture &texture,
                          const glm::vec3& position, GLfloat angle,
                          glm::vec3 rot_axis);
+
+    /**
+     * Render terrain
+     * @param program
+     * @param terrain
+     */
+    void renderTerrain(ShaderProgram& program,
+                       const Terrain& terrain);
 };
 
 #endif //RENDER_HPP

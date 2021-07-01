@@ -10,7 +10,7 @@
 #include <Eigen/Eigenvalues>
 
 #include "utils/math.hpp"
-#include "../render/texture.hpp"
+#include "render/texture.hpp"
 #include "sceneprogram.hpp"
 #include "utils/datastructs.hpp"
 

@@ -7,9 +7,7 @@
 
 struct PositionComponent : ecs::Component
 {
-    GLfloat x;
-    GLfloat y;
-    GLfloat z;
+    glm::vec3 pos;
     GLfloat angle = 0;
     glm::vec3 rot_axis = glm::vec3(1.f, 0.f, 0.f);
 };

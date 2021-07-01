@@ -142,6 +142,18 @@ void RenderGuiSystem::update_state(size_t delta)
             ImGui::InputFloat3("##min_rect", glm::value_ptr(
                     Config::getVal<glm::vec3>("MinRectSize")));
 
+            ImGui::Text("Laser position");
+            ImGui::InputFloat3("##laser_pos", glm::value_ptr(
+                    Config::getVal<glm::vec3>("LaserPos")));
+
+            ImGui::Text("Prism frequencies");
+            ImGui::InputFloat2("##prism_freq", glm::value_ptr(
+                    Config::getVal<glm::vec2>("PrismFreq")));
+
+            ImGui::Text("Prism start angle");
+            ImGui::InputFloat2("##prism_start_angle", glm::value_ptr(
+                    Config::getVal<glm::vec2>("PrismStartAngle")));
+
             ImGui::Text("Tree level show");
 //            ImGui::SameLine();
             ImGui::SliderInt("##tree_level",
@@ -150,6 +162,9 @@ void RenderGuiSystem::update_state(size_t delta)
 
             ImGui::Checkbox("Inverse rotation",
                             &Config::getVal<bool>("InverseRotation"));
+
+            if (ImGui::Checkbox("Edit mode", &Config::getVal<bool>("EditMode")))
+                setGameState(GameStates::EDIT);
 
             if (ImGui::Button("Start simulation"))
                 setGameState(GameStates::PLAY);
@@ -211,6 +226,10 @@ void RenderGuiSystem::update_state(size_t delta)
                 ImGui::Text("Application theme:");
                 ImGui::SameLine();
                 ImGui::ListBox("", &Config::getVal<int>("Theme"), items, 3);
+                ImGui::Text("Drag sensitivity:");
+                ImGui::SliderFloat("##mouse_sens",
+                                   &Config::getVal<GLfloat>("MouseSens"),
+                                   1, 100);
                 ImGui::End();
             }
 
@@ -219,6 +238,15 @@ void RenderGuiSystem::update_state(size_t delta)
             auto size = ImGui::GetContentRegionAvail();
             GLfloat image_height = size.x / m_aspectRatio;
             size.y = image_height;
+            if (!Config::hasKey("ViewportSize"))
+                Config::addVal<glm::vec2>("ViewportSize", {size.x, size.y}, "vec2");
+
+            auto pos = ImGui::GetCursorPos();
+            auto cur = utils::getMousePos<GLfloat>();
+
+            if (!Config::hasKey("ViewportPos"))
+                Config::addVal<glm::vec2>("ViewportPos", {pos.x, pos.y}, "vec2");
+
             if (getGameState() != GameStates::STOP)
                 ImGui::Image((ImTextureID) sceneComp->texture, size, {0, 1}, {1, 0});
         }

@@ -30,6 +30,19 @@ namespace utils
         return res;
     }
 
+    template <typename T>
+    inline glm::vec<2, T> getMousePos()
+    {
+        int window_x, window_y;
+        // Position in range 0:window_width and 0:window_height
+        SDL_GetMouseState(&window_x, &window_y);
+
+        T x = static_cast<T>(window_x);
+        T y = static_cast<T>(window_y);
+
+        return {x, y};
+    }
+
     /**
      * Return corrected cords. It's needed because when camera
      * moves all non-static objects moves also.

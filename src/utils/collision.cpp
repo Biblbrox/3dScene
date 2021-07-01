@@ -405,7 +405,7 @@ coll::BVHAABBTraversalRec(TreePtr tree,
 }
 
 /**
-* Find raycast intersection
+* Find intersection of ray with aabb recursively.
 * @param ray_dir
 * @param ray_origin
 * @param rect

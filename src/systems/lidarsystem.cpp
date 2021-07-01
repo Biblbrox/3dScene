@@ -23,8 +23,7 @@ LidarSystem::LidarSystem() : col_stream(getResourcePath("data.txt"),
                                         std::ios_base::app),
                              m_lidar(5000.f)
 {
-    auto pos = m_lidar.getPos();
-    pos.z = 1000.f;
+    auto pos = Config::getVal<glm::vec3>("LaserPos");
     m_lidar.setPos(pos);
     m_lidar.setPitch(0);
     m_lidar.setYaw(0);
@@ -39,6 +38,9 @@ LidarSystem::~LidarSystem()
 
 void LidarSystem::update_state(size_t delta)
 {
+    auto pos = Config::getVal<glm::vec3>("LaserPos");
+    m_lidar.setPos(pos);
+
     if (Config::getVal<bool>("CheckCollision"))
         drawLidarIntersect();
 }
@@ -54,8 +56,6 @@ void LidarSystem::drawLidarIntersect()
     const GLfloat length = m_lidar.getRayLength();
     dir *= length;
 
-    GLfloat hor_step = 2 * glm::pi<GLfloat>();
-    GLfloat ver_step = glm::pi<GLfloat>();
     std::vector<glm::vec3> rays;
     std::vector<glm::vec3> dots;
 
@@ -65,15 +65,16 @@ void LidarSystem::drawLidarIntersect()
     GLfloat yaw = m_lidar.getYaw();
     GLfloat pitch = m_lidar.getPitch();
 
-
-
     GLfloat alpha = glm::radians(2.f);
     GLfloat n = 1.5;
     GLfloat Delta = alpha * (n - 1);
-    GLfloat f1 = 100, f2 = 45;
+    glm::vec2 freq = Config::getVal<glm::vec2>("PrismFreq");
+    GLfloat f1 = freq[0];
+    GLfloat f2 = freq[1];
     GLfloat t = 0;
-    GLfloat Theta10 = 0;
-    GLfloat Theta20 = 0;
+    glm::vec2 start_angle = Config::getVal<glm::vec2>("PrismStartAngle");
+    GLfloat Theta10 = start_angle[0];
+    GLfloat Theta20 = start_angle[1];
     GLfloat Theta1 = 2 * glm::pi<GLfloat>() * f1 * t  + Theta10;
     GLfloat Theta2 = 2 * glm::pi<GLfloat>() * f2 * t  + Theta20;
     GLfloat X = Delta * (cos(Theta1) + cos(Theta2));
@@ -117,46 +118,6 @@ void LidarSystem::drawLidarIntersect()
         rays.push_back(m_lidar.getPos());
         rays.push_back(m_lidar.getPos() + glm::normalize(dir) * length);
     }
-
-
-    /*GLfloat alphaVer = -10 * glm::pi<GLfloat>();
-    while (alphaVer <= 10 * glm::pi<GLfloat>()) {
-        m_lidar.setPitch(pitch + alphaVer);
-
-        GLfloat alphaHor = -10 * glm::pi<GLfloat>();
-        while (alphaHor <= 10 * glm::pi<GLfloat>()) {
-            m_lidar.setYaw(yaw + alphaHor);
-
-            dir = m_lidar.getDirection();
-
-            for (const auto&[key, en]: m_ecsManager->getEntities()) {
-                auto bvh_comp = en->getComponent<BVHComponent>();
-                if (!bvh_comp)
-                    continue;
-                auto pos_comp = en->getComponent<PositionComponent>();
-                auto sprite_comp = en->getComponent<SpriteComponent>();
-
-                auto coll = coll::BVHAABBTraversal(bvh_comp->vbh_tree, dir,
-                                                   pos_trans);
-
-                if (coll.first) {
-                    Logger::info(
-                            "collision occurred, pos: %1$.3f, %2$.3f, %3$.3f",
-                            coll.second.x, coll.second.y, coll.second.z);
-
-                    col_stream << coll.second.x << ", "
-                               << coll.second.y << ", " << coll.second.z
-                               << "\n";
-                    coll_dots.emplace_back(coll.second);
-                }
-            }
-
-            alphaHor += hor_step;
-            rays.push_back(m_lidar.getPos());
-            rays.push_back(m_lidar.getPos() + glm::normalize(dir) * length);
-        }
-        alphaVer += ver_step;
-    } */
 
     // Restore yaw and pitch to original
     m_lidar.setYaw(yaw);
