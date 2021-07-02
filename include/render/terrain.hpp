@@ -32,6 +32,7 @@ public:
     const glm::vec3& getCenterPos() const;
     GLfloat getStep() const;
     const std::vector<GLuint>& getIndices() const;
+    const std::vector<GLfloat>& getVertices() const;
 
 
     /**
@@ -39,7 +40,8 @@ public:
      * @param point
      * @return
      */
-    GLfloat getAltitude(const glm::vec2& point) const;
+    GLfloat getAltitude(const vec2& point) const;
+    bool isUnderGround(const vec3& point) const;
 
 private:
     GLuint m_width;
@@ -52,8 +54,10 @@ private:
     glm::vec3 m_centerPos;
 
     std::vector<std::vector<GLfloat>> m_heightMap;
-    std::vector<GLfloat> m_vertices;
     std::vector<GLuint> m_indices;
+    std::vector<GLfloat> m_vertices;
+
+    std::vector<GLfloat> m_vertexData;
 
     GLuint m_vao;
 

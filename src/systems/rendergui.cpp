@@ -17,8 +17,6 @@
 #include "utils/math.hpp"
 #include "utils/texture.hpp"
 
-const float RAY_LENGTH = 100.f;
-
 using utils::log::Logger;
 using boost::format;
 using utils::log::program_log_file_name;
