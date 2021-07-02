@@ -6,6 +6,7 @@
 #include "systems/renderscenesystem.hpp"
 #include "components/spritecomponent.hpp"
 #include "components/bvhcomponent.hpp"
+#include "components/selectablecomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "components/terraincomponent.hpp"
 #include "render/render.hpp"
@@ -58,11 +59,45 @@ void RenderSceneSystem::drawSprites()
 
     for (const auto&[key, en]: sprites) {
         auto posComp = en->getComponent<PositionComponent>();
-        render::drawTexture(*program,
-                            *en->getComponent<SpriteComponent>()->sprite,
-                            posComp->pos,
-                            posComp->angle,
-                            posComp->rot_axis);
+        auto selComp = en->getComponent<SelectableComponent>();
+        if (selComp && selComp->dragged) {
+            glStencilFunc(GL_ALWAYS, 1, 0xFF); // all fragments should pass the stencil test
+            glStencilMask(0xFF); // enable writing to the stencil buffer
+
+            render::drawTexture(*program,
+                                *en->getComponent<SpriteComponent>()->sprite,
+                                posComp->pos, posComp->angle, posComp->rot_axis);
+
+            glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+            glStencilMask(0x00); // disable writing to the stencil buffer
+            glDisable(GL_DEPTH_TEST);
+
+            program->setInt("isPrimitive", true);
+            program->updateInt("isPrimitive");
+            program->setVec3("primColor", {0.f, 0.f, 1.f});
+            program->updateVec3("primColor");
+
+            program->setFloat("alpha", 0.55f);
+            program->updateFloat("alpha");
+
+            render::drawTexture(*program,
+                                *en->getComponent<SpriteComponent>()->sprite,
+                                posComp->pos, posComp->angle,
+                                posComp->rot_axis, 1.1f);
+
+            glStencilMask(0xFF);
+            glStencilFunc(GL_ALWAYS, 1, 0xFF);
+            glEnable(GL_DEPTH_TEST);
+        } else {
+            program->setInt("isPrimitive", false);
+            program->updateInt("isPrimitive");
+
+            render::drawTexture(*program,
+                                *en->getComponent<SpriteComponent>()->sprite,
+                                posComp->pos,
+                                posComp->angle,
+                                posComp->rot_axis);
+        }
     }
 
     if (GLenum error = glGetError(); error != GL_NO_ERROR)
@@ -75,8 +110,8 @@ void RenderSceneSystem::drawBoundingBoxes()
 {
     using NodeDataPtr = std::shared_ptr<utils::RectPoints3D>;
     auto program = SceneProgram::getInstance();
-    const auto &sprites = m_ecsManager->getEntities();
-//    const auto &sprites = getEntitiesByTag<SpriteComponent>();
+//    const auto &sprites = m_ecsManager->getEntities();
+    const auto &sprites = getEntitiesByTag<SpriteComponent>();
 
     program->setInt("isPrimitive", true);
     program->updateInt("isPrimitive");
@@ -138,15 +173,18 @@ void RenderSceneSystem::drawToFramebuffer()
         glBindFramebuffer(GL_FRAMEBUFFER, sceneComp->sceneBuffer);
 
     glm::vec4 color = Config::getVal<glm::vec4>("BackgroundColor");
-    glClearColor(color.x, color.y, color.z, color.w);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
+//    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glStencilFunc(GL_ALWAYS, 1, 0xFF); // all fragments should pass the stencil test
+    glClearColor(color.x, color.y, color.z, color.w);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    glStencilMask(0x00);
+    drawTerrain();
 
     drawSprites();
     if (Config::getVal<bool>("DrawBoundingBoxes"))
         drawBoundingBoxes();
-
-    drawTerrain();
 }
 
 void RenderSceneSystem::drawTerrain()

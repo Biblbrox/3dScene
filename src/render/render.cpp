@@ -92,23 +92,20 @@ void render::drawDots(const std::vector<vec3>& dots)
 
 void render::drawTexture(ShaderProgram& program, const Texture &texture,
                          const glm::vec3& position, GLfloat angle,
-                         glm::vec3 rot_axis)
+                         glm::vec3 rot_axis, GLfloat sc)
 {
     assert(texture.getVAO() != 0);
 
-//    glm::vec3 pos = {2.f * position.x / texture.getWidth(),
-//                     2.f * position.y / texture.getHeight(),
-//                     2.f * position.z / texture.getDepth()};
-    glm::vec3 pos = {position.x / texture.getWidth(),
-                     position.y / texture.getHeight(),
-                     position.z / texture.getDepth()};
+    glm::vec3 pos = {position.x / (sc * texture.getWidth()),
+                     position.y / (sc * texture.getHeight()),
+                     position.z / (sc * texture.getDepth())};
     const GLfloat half = 1.f;
     const GLfloat centerX = pos.x + half;
     const GLfloat centerY = pos.y + half;
     const GLfloat centerZ = pos.z + half;
 
-    const glm::vec3 scale = glm::vec3(texture.getWidth(), texture.getHeight(),
-                                      texture.getDepth());
+    const glm::vec3 scale = sc * glm::vec3(texture.getWidth(), texture.getHeight(),
+                                           texture.getDepth());
 
     mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
                                   rot_axis);
@@ -144,13 +141,10 @@ void render::drawBoundingBox(ShaderProgram& program,
                              const std::vector<GLfloat>& points,
                              const Texture &texture,
                              const glm::vec3& position, GLfloat angle,
-                             glm::vec3 rot_axis)
+                             glm::vec3 rot_axis, GLfloat sc)
 {
     assert(texture.getVAO() != 0);
 
-//    glm::vec3 pos = {2.f * position.x / texture.getWidth(),
-//                     2.f * position.y / texture.getHeight(),
-//                     2.f * position.z / texture.getDepth()};
     glm::vec3 pos = {position.x / texture.getWidth(),
                      position.y / texture.getHeight(),
                      position.z / texture.getDepth()};

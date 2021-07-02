@@ -6,6 +6,7 @@
 #include "sceneprogram.hpp"
 #include "view/fpscamera.hpp"
 #include "components/bvhcomponent.hpp"
+#include "components/selectablecomponent.hpp"
 #include "components/spritecomponent.hpp"
 #include "components/positioncomponent.hpp"
 #include "components/terraincomponent.hpp"
@@ -19,6 +20,7 @@ using glm::vec4;
 using glm::vec3;
 using utils::log::Logger;
 using utils::math::viewportToWorld;
+using coll::BVHAABBTraversal;
 
 void KeyboardSystem::update_state(size_t delta)
 {
@@ -89,6 +91,9 @@ void KeyboardSystem::update_state(size_t delta)
                     m_leftMousePressed = false;
                     m_dragEnabled = false;
                 }
+
+                if (e.button.button == SDL_BUTTON_LEFT && !stopped && m_draggedObj)
+                    m_draggedObj->getComponent<SelectableComponent>()->dragged = false;
                 break;
             case SDL_MOUSEWHEEL:
                 if (!stopped) {
@@ -150,17 +155,18 @@ void KeyboardSystem::processMouseDrag()
     vec3 origin = camera->getPos();
 
     const auto& entities
-            = getEntitiesByTags<SpriteComponent, BVHComponent, PositionComponent>();
+            = getEntitiesByTags<SpriteComponent, BVHComponent, PositionComponent,
+                    SelectableComponent>();
     for (const auto&[key, en]: entities) {
         auto bvh_comp = en->getComponent<BVHComponent>();
-        auto pos_comp = en->getComponent<PositionComponent>();
         auto sprite_comp = en->getComponent<SpriteComponent>();
 
-        auto coll = coll::BVHAABBTraversal(bvh_comp->vbh_tree, {ray_world, origin});
+        auto coll = BVHAABBTraversal(bvh_comp->vbh_tree, {ray_world, origin});
 
         if (coll.first) {
             m_dragEnabled = true;
             m_draggedObj = en;
+            m_draggedObj->getComponent<SelectableComponent>()->dragged = true;
             Logger::info("collision occurred, pos: %1$.3f, %2$.3f, %3$.3f",
                          coll.second.x, coll.second.y, coll.second.z);
             break;
@@ -168,7 +174,8 @@ void KeyboardSystem::processMouseDrag()
     }
 }
 
-KeyboardSystem::KeyboardSystem() : m_middlePressed(false), m_dragEnabled(false)
+KeyboardSystem::KeyboardSystem() : m_middlePressed(false), m_dragEnabled(false),
+                                   m_draggedObj(nullptr)
 {
 
 }

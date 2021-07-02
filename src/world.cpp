@@ -16,6 +16,7 @@
 #include "components/spritecomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "components/bvhcomponent.hpp"
+#include "components/selectablecomponent.hpp"
 #include "components/terraincomponent.hpp"
 #include "systems/renderscenesystem.hpp"
 #include "systems/renderguisystem.hpp"
@@ -90,6 +91,8 @@ World::World() : m_wasInit(false)
         Config::addVal("CellBorderColor", glm::vec4(1.f, 1.f, 1.f, 1.f), "vec4");
     if (!Config::hasKey("ColoredLife"))
         Config::addVal("ColoredLife", false, "bool");
+    if (!Config::hasKey("ShowCameraPos"))
+        Config::addVal("ShowCameraPos", false, "bool");
 }
 
 World::~World()
@@ -160,8 +163,8 @@ void World::init_terrain()
     auto terrainComp = terrain->getComponent<TerrainComponent>();
 
     terrainComp->terrain = std::make_shared<Terrain>
-            (1000, 1000, 30, getResourcePath("terrain.jpg"),
-             getResourcePath("terrain.jpg"), 200.f, glm::vec3(0.f));
+            (1000.f, 1000.f, 30, getResourcePath("terrain.jpg"),
+             getResourcePath("terrain.jpg"), 200.f);
 }
 
 
@@ -240,7 +243,8 @@ void World::init_sprites()
     start_x = start_z = terrain->getWorldWidth() / 2.f;
 
     auto camera = FpsCamera::getInstance();
-    camera->setPos({start_x, 5.f, start_z});
+    camera->setPos({start_x, 200.f, start_z});
+    Config::addVal<vec3>("LaserPos", {start_x, 200.f, start_z}, "vec3");
 
     auto min_rect = Config::getVal<glm::vec3>("MinRectSize");
     for (size_t i = 0; i < 5; ++i) {
@@ -248,6 +252,7 @@ void World::init_sprites()
         en_left->activate();
         en_left->addComponent<SpriteComponent>();
         en_left->addComponent<PositionComponent>();
+        en_left->addComponent<SelectableComponent>();
         auto sprite_left = en_left->getComponent<SpriteComponent>();
         sprite_left->sprite = palm_sprite;
         auto pos_left = en_left->getComponent<PositionComponent>();
@@ -270,6 +275,7 @@ void World::init_sprites()
         en_right->activate();
         en_right->addComponent<SpriteComponent>();
         en_right->addComponent<PositionComponent>();
+        en_right->addComponent<SelectableComponent>();
         auto sprite_right = en_right->getComponent<SpriteComponent>();
         sprite_right->sprite = palm_sprite;
         auto pos_right = en_right->getComponent<PositionComponent>();
@@ -292,6 +298,7 @@ void World::init_sprites()
         car->activate();
         car->addComponent<SpriteComponent>();
         car->addComponent<PositionComponent>();
+        car->addComponent<SelectableComponent>();
         auto car_sprite_comp = car->getComponent<SpriteComponent>();
         car_sprite_comp->sprite = car_sprite;
         auto car_pos = car->getComponent<PositionComponent>();

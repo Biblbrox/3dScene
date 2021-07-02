@@ -5,6 +5,7 @@
 #include <imgui_impl_sdl.h>
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>
+#include <imgui_internal.h>
 
 #include "systems/renderguisystem.hpp"
 #include "components/spritecomponent.hpp"
@@ -16,6 +17,7 @@
 #include "config.hpp"
 #include "utils/math.hpp"
 #include "utils/texture.hpp"
+#include "view/fpscamera.hpp"
 
 using utils::log::Logger;
 using boost::format;
@@ -104,6 +106,7 @@ void RenderGuiSystem::update_state(size_t delta)
             break;
     }
 
+
     ImGui::SetNextWindowPos({0, 0});
     ImGui::SetNextWindowSize({static_cast<float>(screen_width),
                               static_cast<float>(screen_height)});
@@ -112,8 +115,24 @@ void RenderGuiSystem::update_state(size_t delta)
                                       | ImGuiWindowFlags_NoScrollbar
                                       | ImGuiWindowFlags_NoScrollWithMouse
                                       | ImGuiWindowFlags_NoTitleBar
-                                      | ImGuiWindowFlags_NoBringToFrontOnFocus);
+                                      | ImGuiWindowFlags_NoBringToFrontOnFocus
+                                      | ImGuiWindowFlags_MenuBar);
     {
+        ImGui::PushItemWidth(ImGui::GetFontSize() * -12);
+        if (ImGui::BeginMenuBar())
+        {
+            if (ImGui::BeginMenu("View"))
+            {
+                if (ImGui::MenuItem("Show camera pos", "Ctrl+O")) {
+                    Config::addVal("ShowCameraPos",
+                                   !Config::getVal<bool>("ShowCameraPos"), "bool");
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
+
+        ImGui::Spacing();
         ImGui::BeginTable("table1", 2, ImGuiTableFlags_Borders
                                        | ImGuiTableFlags_Resizable
                                        | ImGuiTableFlags_NoHostExtendX
@@ -248,6 +267,15 @@ void RenderGuiSystem::update_state(size_t delta)
             if (getGameState() != GameStates::STOP)
                 ImGui::Image((ImTextureID) sceneComp->texture, size, {0, 1}, {1, 0});
         }
+
+        if (Config::getVal<bool>("ShowCameraPos")) {
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(1);
+            auto pos = FpsCamera::getInstance()->getPos();
+            ImGui::Text((format("Camera position: %1$.2f, %2$.2f, %3$.2f")
+                         % pos.x % pos.y % pos.z).str().c_str());
+        }
+
         ImGui::EndTable();
     }
     ImGui::End();
