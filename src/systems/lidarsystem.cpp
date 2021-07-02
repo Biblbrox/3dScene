@@ -21,7 +21,7 @@ using glm::acos;
 
 LidarSystem::LidarSystem() : col_stream(getResourcePath("data.txt"),
                                         std::ios_base::app),
-                             m_lidar(5000.f)
+                             m_lidar(60.f)
 {
     auto pos = Config::getVal<glm::vec3>("LaserPos");
     m_lidar.setPos(pos);

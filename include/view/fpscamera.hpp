@@ -51,7 +51,7 @@ public:
         m_worldUp = up;
         m_yaw = yaw;
         m_pitch = pitch;
-        updateCameraVectors();
+//        updateCameraVectors();
     }
 
 
@@ -64,7 +64,7 @@ public:
         m_worldUp = glm::vec3(upX, upY, upZ);
         m_yaw = yaw;
         m_pitch = pitch;
-        updateCameraVectors();
+//        updateCameraVectors();
     }
 
     // returns the view matrix calculated using Euler Angles and the LookAt Matrix

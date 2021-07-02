@@ -22,7 +22,7 @@ namespace render
      */
     void drawTexture(ShaderProgram& program, const Texture &texture,
                      const glm::vec3& pos, GLfloat angle = 0,
-                     glm::vec3 rot_axis = {1.f, 0, 0});
+                     glm::vec3 rot_axis = {1.f, 0, 0}, GLfloat scale = 1.f);
     
     void drawLinen(const std::vector<vec3>& points, bool adjacency = false);
 
@@ -34,7 +34,7 @@ namespace render
                          const std::vector<GLfloat>& points,
                          const Texture &texture,
                          const glm::vec3& position, GLfloat angle,
-                         glm::vec3 rot_axis);
+                         glm::vec3 rot_axis, GLfloat scale = 1.f);
 
     /**
      * Render terrain

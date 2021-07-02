@@ -10,14 +10,12 @@ using utils::log::Logger;
 Terrain::Terrain(GLuint width, GLuint height, GLfloat step,
                  const std::string& height_image,
                  const std::string& texture,
-                 GLfloat scale, const glm::vec3& center)
+                 GLfloat scale)
         : m_width(width), m_height(height), m_step(step),
           m_heightMap(vector<vector<GLfloat>>(height, vector<GLfloat>(width))),
-          m_vao(0), m_scale(scale), m_centerPos(center)
+          m_vao(0), m_scale(scale)
 {
-    m_heightMap = std::vector<std::vector<GLfloat>>(height,
-                                                    std::vector<GLfloat>(
-                                                            width));
+    m_heightMap = vector<vector<GLfloat>>(height, vector<GLfloat>(width));
 
     sampleHeightMapImage(height_image);;
     generateMesh();
@@ -176,11 +174,6 @@ GLfloat Terrain::getScale() const
 GLfloat Terrain::getStep() const
 {
     return m_step;
-}
-
-const glm::vec3 &Terrain::getCenterPos() const
-{
-    return m_centerPos;
 }
 
 GLfloat Terrain::getWorldWidth() const
