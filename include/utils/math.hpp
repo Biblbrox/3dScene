@@ -12,14 +12,7 @@ using glm::vec2;
 
 namespace utils::math {
 
-    /**
-     * Transform viewport coordinates to world space
-     * @param pos
-     * @return
-     */
-    inline glm::vec3 viewportToWorld(const glm::vec2& pos, const glm::vec2& clip,
-                                     const glm::mat4& projection,
-                                     const glm::mat4& view)
+    inline glm::vec3 viewportToNDC(const glm::vec2& pos, const glm::vec2& clip)
     {
         GLfloat width = clip.x;
         GLfloat height = clip.y;
@@ -31,8 +24,23 @@ namespace utils::math {
         y = 1.f - 2.f * y / height;
         GLfloat z = 1;
 
+        return {x, y, z};
+    }
+
+    /**
+     * Transform viewport coordinates to world space
+     * @param pos
+     * @return
+     */
+    inline glm::vec3 viewportToWorld(const glm::vec2& pos, const glm::vec2& clip,
+                                     const glm::mat4& projection,
+                                     const glm::mat4& view)
+    {
+        // To NDC space
+        glm::vec3 p = viewportToNDC(pos, clip);
+
         // To 4-d homogenus space
-        glm::vec4 ray = {x, y, -1.f, 1.f};
+        glm::vec4 ray = {p.x, p.y, -1.f, 1.f};
 
         // To eye space
         ray = glm::inverse(projection) * ray;

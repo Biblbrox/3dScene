@@ -96,9 +96,12 @@ void render::drawTexture(ShaderProgram& program, const Texture &texture,
 {
     assert(texture.getVAO() != 0);
 
-    glm::vec3 pos = {2.f * position.x / texture.getWidth(),
-                     2.f * position.y / texture.getHeight(),
-                     2.f * position.z / texture.getDepth()};
+//    glm::vec3 pos = {2.f * position.x / texture.getWidth(),
+//                     2.f * position.y / texture.getHeight(),
+//                     2.f * position.z / texture.getDepth()};
+    glm::vec3 pos = {position.x / texture.getWidth(),
+                     position.y / texture.getHeight(),
+                     position.z / texture.getDepth()};
     const GLfloat half = 1.f;
     const GLfloat centerX = pos.x + half;
     const GLfloat centerY = pos.y + half;
@@ -145,9 +148,13 @@ void render::drawBoundingBox(ShaderProgram& program,
 {
     assert(texture.getVAO() != 0);
 
-    glm::vec3 pos = {2.f * position.x / texture.getWidth(),
-                     2.f * position.y / texture.getHeight(),
-                     2.f * position.z / texture.getDepth()};
+//    glm::vec3 pos = {2.f * position.x / texture.getWidth(),
+//                     2.f * position.y / texture.getHeight(),
+//                     2.f * position.z / texture.getDepth()};
+    glm::vec3 pos = {position.x / texture.getWidth(),
+                     position.y / texture.getHeight(),
+                     position.z / texture.getDepth()};
+
     const GLfloat half = 1.f;
     const GLfloat centerX = pos.x + half;
     const GLfloat centerY = pos.y + half;
@@ -162,9 +169,6 @@ void render::drawBoundingBox(ShaderProgram& program,
     mat4 scaling = glm::scale(mat4(1.f), scale);
     program.leftMult("ModelMatrix", scaling * rotation * translation);
     program.updateMat4("ModelMatrix");
-
-//    glBindTexture(GL_TEXTURE_2D, texture.getTextureID());
-//    glBindVertexArray(texture.getVAO());
 
     GLuint verticesID = 0;
     GLuint VAO = 0;
@@ -185,9 +189,6 @@ void render::drawBoundingBox(ShaderProgram& program,
 
     glDeleteBuffers(1, &verticesID);
     glDeleteVertexArrays(1, &VAO);
-
-//    glBindTexture(GL_TEXTURE_2D, 0);
-//    glBindVertexArray(0);
 
     translation[3] = glm::vec4(-pos.x,  -pos.y, -pos.z, 1);
     rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), -angle,

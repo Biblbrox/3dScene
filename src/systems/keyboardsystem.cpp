@@ -8,6 +8,7 @@
 #include "components/bvhcomponent.hpp"
 #include "components/spritecomponent.hpp"
 #include "components/positioncomponent.hpp"
+#include "components/terraincomponent.hpp"
 #include "utils/collision.hpp"
 #include "utils/logger.hpp"
 #include "config.hpp"
@@ -47,11 +48,26 @@ void KeyboardSystem::update_state(size_t delta)
                 }
 
                 if (m_dragEnabled) {
-                    GLfloat x_off = e.motion.xrel;
-                    GLfloat y_off = e.motion.yrel;
                     auto pos = m_draggedObj->getComponent<PositionComponent>();
+                    vec2 mouse_pos = utils::getMousePos<GLfloat>();
+                    vec2 viewport_size = Config::getVal<vec2>("ViewportSize");
+                    vec2 viewport_pos = Config::getVal<vec2>("ViewportPos");
+                    mouse_pos -= viewport_pos;
+
+                    auto program = SceneProgram::getInstance();
+                    program->useFramebufferProgram();
+                    mat4 projection = program->getMat4("ProjectionMatrix");
+                    mat4 view = program->getMat4("ViewMatrix");
                     GLfloat sens = Config::getVal<GLfloat>("MouseSens");
-                    pos->pos += vec3{x_off, -y_off, 0.f} * sens;
+
+                    vec3 dir = viewportToWorld(mouse_pos * sens, viewport_size,
+                                               projection, view);
+                    Ray ray = {dir, camera->getPos()};
+                    auto terrain_en = getEntitiesByTag<TerrainComponent>().begin()->second;
+                    auto terrain = terrain_en->getComponent<TerrainComponent>()->terrain;
+                    auto [col, pos_on_ter] = coll::rayTerrainIntersection(*terrain, ray, 0, 10000.f, 1000);
+
+                    pos->pos = pos_on_ter;
                 }
                 break;
             case SDL_MOUSEBUTTONDOWN:
@@ -140,7 +156,7 @@ void KeyboardSystem::processMouseDrag()
         auto pos_comp = en->getComponent<PositionComponent>();
         auto sprite_comp = en->getComponent<SpriteComponent>();
 
-        auto coll = coll::BVHAABBTraversal(bvh_comp->vbh_tree, ray_world, origin);
+        auto coll = coll::BVHAABBTraversal(bvh_comp->vbh_tree, {ray_world, origin});
 
         if (coll.first) {
             m_dragEnabled = true;

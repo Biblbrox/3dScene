@@ -1,8 +1,10 @@
 #include <stack>
 
-#include "../include/utils/collision.hpp"
+#include "utils/collision.hpp"
+#include "utils/logger.hpp"
 
 using utils::RectPoints3D;
+using utils::log::Logger;
 
 std::vector<GLfloat>
 coll::buildVerticesFromRect3D(utils::RectPoints3D rect)
@@ -158,13 +160,16 @@ coll::rebuildAABBinWorldSpace(const utils::RectPoints3D& rect) noexcept
 */
 utils::RectPoints3D
 coll::AABBtoWorldSpace(utils::RectPoints3D rect,
-                 const glm::vec3& rot_axis, GLfloat angle,
-                 const glm::vec3& position, const Texture& texture) noexcept
+                       const glm::vec3& rot_axis, GLfloat angle,
+                       const glm::vec3& position, const Texture& texture) noexcept
 {
 
-    glm::vec3 pos = {2.f * position.x / texture.getWidth(),
-                     2.f * position.y / texture.getHeight(),
-                     2.f * position.z / texture.getDepth()};
+//    glm::vec3 pos = {2.f * position.x / texture.getWidth(),
+//                     2.f * position.y / texture.getHeight(),
+//                     2.f * position.z / texture.getDepth()};
+    glm::vec3 pos = {position.x / texture.getWidth(),
+                     position.y / texture.getHeight(),
+                     position.z / texture.getDepth()};
 
     const GLfloat half = 1.f;
     const GLfloat centerX = pos.x + half;
@@ -387,20 +392,19 @@ using TreePtr = std::shared_ptr<utils::data::Node<size_t, utils::RectPoints3D>>;
  * @return
  */
 void
-coll::BVHAABBTraversalRec(TreePtr tree,
-                          const glm::vec3& ray_dir, const glm::vec3& ray_origin,
+coll::BVHAABBTraversalRec(TreePtr tree, const Ray& ray,
                           std::vector<glm::vec3>& intersections)
 {
     bool isLeaf = !tree->m_left && !tree->m_right;
     if (isLeaf) {
-        auto [instersect, pos] = raycastAABB(ray_dir, ray_origin, *tree->m_data);
+        auto [instersect, pos] = raycastAABB(ray, *tree->m_data);
         if (instersect)
             intersections.push_back(pos);
     } else {
         if (tree->m_left)
-            BVHAABBTraversalRec(tree->m_left, ray_dir, ray_origin, intersections);
+            BVHAABBTraversalRec(tree->m_left, ray, intersections);
         if (tree->m_right)
-            BVHAABBTraversalRec(tree->m_right, ray_dir, ray_origin, intersections);
+            BVHAABBTraversalRec(tree->m_right, ray, intersections);
     }
 }
 
@@ -412,21 +416,48 @@ coll::BVHAABBTraversalRec(TreePtr tree,
 * @return
 */
 std::pair<bool, glm::vec3>
-coll::BVHAABBTraversal(TreePtr tree,
-                       const glm::vec3& ray_dir, const glm::vec3& ray_origin)
+coll::BVHAABBTraversal(TreePtr tree, const Ray& ray)
 {
     std::vector<glm::vec3> intersections;
-    BVHAABBTraversalRec(tree, ray_dir, ray_origin, intersections);
+    BVHAABBTraversalRec(tree, ray, intersections);
 
     if (intersections.empty())
         return {false, glm::vec3(0)};
 
+    vec3 ray_origin = ray.ray_origin;
     GLfloat closest_length = glm::length(intersections[0] - ray_origin);
     glm::vec3 closest_hit = intersections[0];
-    for (const auto & pos: intersections) {
+    for (const auto & pos: intersections)
         if (glm::length(pos - ray_origin) < closest_length)
             closest_hit = pos;
-    }
 
     return {true, closest_hit};
+}
+
+bool
+coll::interInRange(const Terrain& terrain, GLfloat start, GLfloat end, const Ray& ray)
+{
+    vec3 start_p = ray_point(ray, start);
+    vec3 end_p = ray_point(ray, end);
+
+    return !terrain.isUnderGround(start_p) && terrain.isUnderGround(end_p);
+}
+
+std::pair<bool, glm::vec3>
+coll::rayTerrainIntersection(const Terrain &terrain, const Ray &ray,
+                             GLfloat start, GLfloat end, size_t num_iter)
+{
+    size_t iter = 0;
+    GLfloat mid = 0;
+    while (++iter <= num_iter) {
+        mid = start + (end - start) / 2.f;
+
+        if (interInRange(terrain, start, mid, ray))
+            end = mid;
+        else
+            start = mid;
+    }
+
+    vec3 inter = ray_point(ray, mid);
+    return {true, inter};
 }

@@ -65,16 +65,18 @@ void Terrain::generateMesh()
             GLfloat h = m_heightMap[i][j];
 
             glm::vec3 vertex = {(float) i * m_step, h, (float) j * m_step};
-            vertex.x -= m_centerPos.x;
-            vertex.z -= m_centerPos.z;
-            glm::vec2 uv = {u_step * j, v_step * i};
+            glm::vec2 uv = {u_step * i, v_step * j};
 
             m_vertices.push_back(vertex.x);
             m_vertices.push_back(vertex.y);
             m_vertices.push_back(vertex.z);
 
-            m_vertices.push_back(uv.x);
-            m_vertices.push_back(uv.y);
+            m_vertexData.push_back(vertex.x);
+            m_vertexData.push_back(vertex.y);
+            m_vertexData.push_back(vertex.z);
+
+            m_vertexData.push_back(uv.x);
+            m_vertexData.push_back(uv.y);
         }
     }
 
@@ -112,11 +114,11 @@ void Terrain::generateBuffers()
     GLuint vbo;
     GLuint ebo;
 
-    GLfloat *vertices = &m_vertices[0];
+    GLfloat *vertices = &m_vertexData[0];
     glBindVertexArray(m_vao);
     glGenBuffers(1, &vbo);
 
-    size_t vertSize = m_vertices.size() * sizeof(GLfloat);
+    size_t vertSize = m_vertexData.size() * sizeof(GLfloat);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, vertSize, vertices, GL_STATIC_DRAW);
 
@@ -198,9 +200,21 @@ GLfloat Terrain::getAltitude(const glm::vec2 &point) const
     size_t y = round(point.y / m_step);
 
     if (x >= m_heightMap.size() || y >= m_heightMap[0].size())
-        throw new BaseGameException((boost::format("Terrain at coordinate %f, %f doesn't exists")
-                                     % point.x % point.y).str());
+        throw BaseGameException((boost::format("Terrain at coordinate %f, %f doesn't exists")
+                                 % point.x % point.y).str());
 
 
     return m_heightMap[x][y];
+}
+
+const std::vector<GLfloat> &Terrain::getVertices() const
+{
+    return m_vertices;
+}
+
+bool Terrain::isUnderGround(const vec3 &point) const
+{
+    GLfloat height = getAltitude({point.x, point.z});
+
+    return point.y < height;
 }

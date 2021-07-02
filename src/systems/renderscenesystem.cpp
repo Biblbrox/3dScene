@@ -75,8 +75,8 @@ void RenderSceneSystem::drawBoundingBoxes()
 {
     using NodeDataPtr = std::shared_ptr<utils::RectPoints3D>;
     auto program = SceneProgram::getInstance();
-//    const auto &sprites = m_ecsManager->getEntities();
-    const auto &sprites = getEntitiesByTag<SpriteComponent>();
+    const auto &sprites = m_ecsManager->getEntities();
+//    const auto &sprites = getEntitiesByTag<SpriteComponent>();
 
     program->setInt("isPrimitive", true);
     program->updateInt("isPrimitive");

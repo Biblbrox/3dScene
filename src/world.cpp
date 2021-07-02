@@ -156,11 +156,12 @@ void World::init_terrain()
     auto terrain = createEntity(m_terrainID);
     terrain->activate();
     terrain->addComponent<TerrainComponent>();
+
     auto terrainComp = terrain->getComponent<TerrainComponent>();
 
     terrainComp->terrain = std::make_shared<Terrain>
-            (1000, 1000, 30, getResourcePath("heightmap.png"),
-             getResourcePath("terrain.png"), 2500.f, glm::vec3(0.f));
+            (1000, 1000, 30, getResourcePath("terrain.jpg"),
+             getResourcePath("terrain.jpg"), 200.f, glm::vec3(0.f));
 }
 
 
@@ -228,12 +229,19 @@ void World::init_sprites()
     car_sprite = std::make_shared<Sprite>();
     palm_sprite = std::make_shared<Sprite>();
     house_sprite = std::make_shared<Sprite>();
-    car_sprite->addTexture(getResourcePath("ford_focus2.obj"), 40, 40, 40);
+    car_sprite->addTexture(getResourcePath("ford_focus2.obj"), 2.f, 2.f, 2.f);
     car_sprite->generateDataBuffer();
-    palm_sprite->addTexture(getResourcePath("lowpolypalm.obj"), 40, 40, 40);
+    palm_sprite->addTexture(getResourcePath("lowpolypalm.obj"), 2.f, 2.f, 2.f);
     palm_sprite->generateDataBuffer();
 //    house_sprite->addTexture(getResourcePath("house8.obj"), 40, 40, 40);
 //    house_sprite->generateDataBuffer();
+
+    GLfloat start_x, start_z;
+    start_x = start_z = terrain->getWorldWidth() / 2.f;
+
+    auto camera = FpsCamera::getInstance();
+    camera->setPos({start_x, 5.f, start_z});
+
     auto min_rect = Config::getVal<glm::vec3>("MinRectSize");
     for (size_t i = 0; i < 5; ++i) {
         auto en_left = createEntity(unique_id());
@@ -243,8 +251,8 @@ void World::init_sprites()
         auto sprite_left = en_left->getComponent<SpriteComponent>();
         sprite_left->sprite = palm_sprite;
         auto pos_left = en_left->getComponent<PositionComponent>();
-        pos_left->pos.x = i * 400;
-        pos_left->pos.z = 0;
+        pos_left->pos.x = i * 30.f + start_x;
+        pos_left->pos.z = 0 + start_z;
         pos_left->pos.y = terrain->getAltitude({pos_left->pos.x, pos_left->pos.z});
         auto tree = coll::buildBVH(sprite_left->sprite->getVertices()[0], min_rect);
         en_left->addComponent<BVHComponent>();
@@ -265,8 +273,8 @@ void World::init_sprites()
         auto sprite_right = en_right->getComponent<SpriteComponent>();
         sprite_right->sprite = palm_sprite;
         auto pos_right = en_right->getComponent<PositionComponent>();
-        pos_right->pos.x = i * 400;
-        pos_right->pos.z = 1000;
+        pos_right->pos.x = i * 30.f + start_x;
+        pos_right->pos.z = 30.f + start_z;
         pos_right->pos.y = terrain->getAltitude({pos_right->pos.x, pos_right->pos.z});
         tree = coll::buildBVH(sprite_right->sprite->getVertices()[0], min_rect);
         en_right->addComponent<BVHComponent>();
@@ -287,8 +295,8 @@ void World::init_sprites()
         auto car_sprite_comp = car->getComponent<SpriteComponent>();
         car_sprite_comp->sprite = car_sprite;
         auto car_pos = car->getComponent<PositionComponent>();
-        car_pos->pos.x = i * 400;
-        car_pos->pos.z = rand.generateu(150, 350);
+        car_pos->pos.x = i * 30.f + start_x;
+        car_pos->pos.z = rand.generateu(30.f, 40.f) + start_z;
         car_pos->pos.y = terrain->getAltitude({car_pos->pos.x, car_pos->pos.z});
         car_pos->angle = -glm::half_pi<GLfloat>();
         car_pos->rot_axis = glm::vec3(0.f, 1.f, 0.f);

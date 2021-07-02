@@ -13,6 +13,8 @@
 #include "render/texture.hpp"
 #include "sceneprogram.hpp"
 #include "utils/datastructs.hpp"
+#include "render/terrain.hpp"
+#include "view/lidar.hpp"
 
 namespace coll {
 
@@ -100,13 +102,10 @@ namespace coll {
     using TreePtr = std::shared_ptr<utils::data::Node<size_t, utils::RectPoints3D>>;
 
     std::pair<bool, glm::vec3>
-    BVHAABBTraversal(TreePtr tree,
-                        const glm::vec3& ray_dir, const glm::vec3& ray_origin);
+    BVHAABBTraversal(TreePtr tree, const Ray& ray);
 
-    void
-    BVHAABBTraversalRec(TreePtr tree,
-                        const glm::vec3& ray_dir, const glm::vec3& ray_origin,
-                        std::vector<glm::vec3>& instersections);
+    void BVHAABBTraversalRec(TreePtr tree, const Ray& ray,
+                             std::vector<glm::vec3>& intersections);
 
     /**
      * Check whether first line (p11, p12) intersect with second (p21, p22)
@@ -148,8 +147,8 @@ namespace coll {
      * @return
      */
     constexpr std::pair<bool, glm::vec3>
-    raycastAABB(glm::vec3 ray_dir, glm::vec3 ray_origin,
-                utils::RectPoints3D rect) noexcept
+
+    raycastAABB(const Ray& ray, utils::RectPoints3D rect) noexcept
     {
         GLfloat min_x = std::min(
                 {rect.a.x, rect.b.x, rect.c.x, rect.d.x, rect.e.x,
@@ -171,6 +170,9 @@ namespace coll {
         GLfloat max_z = std::max(
                 {rect.a.z, rect.b.z, rect.c.z, rect.d.z, rect.e.z,
                  rect.f.z, rect.g.z, rect.k.z});
+
+        vec3 ray_origin = ray.ray_origin;
+        vec3 ray_dir = ray.ray_dir;
 
         GLfloat tMinX = (min_x - ray_origin.x) / ray_dir.x;
         GLfloat tMaxX = (max_x - ray_origin.x) / ray_dir.x;
@@ -199,6 +201,22 @@ namespace coll {
 
         return {true, ray_origin + ray_dir * tmin};
     }
+
+    /**
+     * Find ray-terrain intersection by binary search
+     * @param terrain
+     * @param ray
+     * @param start
+     * @param end
+     * @param num_iter
+     * @return
+     */
+    std::pair<bool, glm::vec3>
+    rayTerrainIntersection(const Terrain& terrain, const Ray& ray,
+                           GLfloat start, GLfloat end, size_t num_iter);
+
+    bool interInRange(const Terrain& terrain,
+                      GLfloat start, GLfloat end, const Ray& ray);
 }
 
 #endif //COLLISION_HPP
