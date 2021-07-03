@@ -20,6 +20,7 @@ Terrain::Terrain(GLuint width, GLuint height, GLfloat step,
     sampleHeightMapImage(height_image);;
     generateMesh();
     computeIndices();
+    computeNormals();
     generateBuffers();
 
     m_textureId = utils::texture::loadTexture(texture, nullptr, nullptr);
@@ -101,6 +102,11 @@ void Terrain::computeIndices()
                 m_indices.push_back((c + 1) * m_height + r);
         }
     }
+}
+
+void Terrain::computeNormals()
+{
+    
 }
 
 void Terrain::generateBuffers()

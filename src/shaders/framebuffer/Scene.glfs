@@ -2,6 +2,7 @@
 
 // Texture coords
 in vec2 TextureCoords;
+in vec3 Normal;
 
 // Texture number
 uniform sampler2D TextureNum;

@@ -39,7 +39,7 @@ namespace coll {
 
 
     std::array<GLfloat, 6>
-    findMeshBound(const std::vector<GLfloat> &mesh_vertices);
+    findMeshBound(const std::vector<vec3> &mesh_vertices);
 
     /**
      * Return rectangular bounding box for given vertices
@@ -50,7 +50,7 @@ namespace coll {
      * @return
      */
     utils::RectPoints3D
-    buildAABB(const std::vector<GLfloat> &mesh_vertices) noexcept;
+    buildAABB(const std::vector<vec3> &mesh_vertices) noexcept;
 
     utils::RectPoints3D
     rebuildAABBinWorldSpace(const utils::RectPoints3D& rect) noexcept;
@@ -76,17 +76,17 @@ namespace coll {
      * @return
      */
     inline utils::RectPoints3D
-    buildOBB(const std::vector<GLfloat> &mesh_vertices) noexcept;
+    buildOBB(const std::vector<vec3> &mesh_vertices) noexcept;
 
-    std::array<std::vector<GLfloat>, 2>
-    divideByLongestSize(const std::vector<GLfloat>& mesh_vertices);
+    std::array<std::vector<vec3>, 2>
+    divideByLongestSize(const std::vector<vec3>& mesh_vertices);
 
     using NodeData = utils::RectPoints3D;
     using Node = utils::data::Node<size_t, NodeData>;
     using NodePtr = std::shared_ptr<Node>;
 
-    using VertData = std::vector<GLfloat>;
-    using VertDataPtr = std::shared_ptr<VertData>;
+    using VertData = std::vector<vec3>;
+    using VertDataPtr = std::shared_ptr<vec3>;
 
     /**
      * Build top-down BVH tree until min_rect condition not required in
@@ -95,8 +95,7 @@ namespace coll {
      * @param mesh_vertices
      * @return
      */
-    NodePtr
-    buildBVH(const VertData &mesh_vertices, glm::vec3 min_rect) noexcept;
+    NodePtr buildBVH(const VertData &mesh_vertices, vec3 min_rect) noexcept;
 
 
     using TreePtr = std::shared_ptr<utils::data::Node<size_t, utils::RectPoints3D>>;
@@ -105,7 +104,7 @@ namespace coll {
     BVHAABBTraversal(TreePtr tree, const Ray& ray);
 
     void BVHAABBTraversalRec(TreePtr tree, const Ray& ray,
-                             std::vector<glm::vec3>& intersections);
+                             std::vector<vec3>& intersections);
 
     /**
      * Check whether first line (p11, p12) intersect with second (p21, p22)

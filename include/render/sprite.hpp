@@ -2,6 +2,7 @@
 #define SPRITE_HPP
 
 #include "texture.hpp"
+#include "utils/texture.hpp"
 #include "utils/utils.hpp"
 
 /**
@@ -31,9 +32,13 @@ public:
 
     glm::vec3 getCurrentClip() const noexcept;
     GLuint getIdx() const noexcept;
-    const std::vector<std::vector<GLfloat>>& getVertices() const;
     GLuint getSpritesCount() const noexcept;
     void setIdx(GLuint idx);
+
+    const std::vector<std::vector<vec3>>& getVertices() const;
+    const std::vector<std::vector<vec2>>& getUv() const;
+    const std::vector<std::vector<vec3>>& getNormals() const;
+    const std::vector<std::vector<vec3u>>& getIndices() const;
 
     void generateDataBuffer() override;
     void freeVBO() noexcept final;
@@ -46,7 +51,12 @@ protected:
 //    GLuint m_curIdx = 0;
 
     std::vector<std::vector<GLfloat>> m_vertexData;
-    std::vector<std::vector<GLfloat>> m_vertices;
+
+    std::vector<std::vector<vec3>> m_vertices;
+    std::vector<std::vector<vec2>> m_uv;
+    std::vector<std::vector<vec3>> m_normals;
+    std::vector<std::vector<vec3u>> m_indices;
+
     std::vector<GLuint> m_textureIds;
 };
 

@@ -24,15 +24,16 @@ void Sprite::addTexture(const std::string& objFile,
     using namespace utils::texture;
 
     std::string textureFile;
-    auto vertices = loadObj(objFile, textureFile);
-    m_vertexData.push_back(vertices);
-
-    m_vertices.emplace_back();
-    for (size_t i = 0; i < m_vertexData[0].size(); i += 5) {
-        m_vertices[0].push_back(m_vertexData[0][i]);
-        m_vertices[0].push_back(m_vertexData[0][i + 1]);
-        m_vertices[0].push_back(m_vertexData[0][i + 2]);
-    }
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec2> uv;
+    std::vector<glm::vec3> normals;
+    std::vector<vec3u> indices;
+    auto v = loadObj(objFile, textureFile, vertices, uv, normals, indices);
+    m_vertices.push_back(vertices);
+    m_uv.push_back(uv);
+    m_normals.push_back(normals);
+    m_indices.push_back(indices);
+    m_vertexData.push_back(v);
 
     GLuint textureId = loadTexture(getResourcePath(textureFile),
                                           nullptr, nullptr);
@@ -66,12 +67,16 @@ void Sprite::generateDataBuffer()
             glBufferData(GL_ARRAY_BUFFER, vertSize, vertices, GL_STATIC_DRAW);
 
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, // Pos of vertices
-                                  5 * sizeof(GLfloat), nullptr);
+                                  8 * sizeof(GLfloat), nullptr);
             glEnableVertexAttribArray(0);
 
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), // UV coords
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), // UV coords
                                   (void*)(3 * sizeof(GLfloat)));
             glEnableVertexAttribArray(1);
+
+            glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), // normals
+                                  (void*)(5 * sizeof(GLfloat)));
+            glEnableVertexAttribArray(2);
 
             glBindVertexArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -157,8 +162,23 @@ GLuint Sprite::getTriangleCount() const
     return m_vertexData[m_textureId].size() * 3;
 }
 
-const std::vector<std::vector<GLfloat>>& Sprite::getVertices() const
+const std::vector<std::vector<vec3>>& Sprite::getVertices() const
 {
     return m_vertices;
+}
+
+const std::vector<std::vector<vec2>> &Sprite::getUv() const
+{
+    return m_uv;
+}
+
+const std::vector<std::vector<vec3u>> &Sprite::getIndices() const
+{
+    return m_indices;
+}
+
+const std::vector<std::vector<vec3>> &Sprite::getNormals() const
+{
+    return m_normals;
 }
 
