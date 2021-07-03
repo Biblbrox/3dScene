@@ -5,9 +5,10 @@
 
 using utils::RectPoints3D;
 using utils::log::Logger;
+using utils::math::rotate_around;
+using std::sort;
 
-std::vector<GLfloat>
-coll::buildVerticesFromRect3D(utils::RectPoints3D rect)
+std::vector<GLfloat> coll::buildVerticesFromRect3D(RectPoints3D rect)
 {
     auto[a, b, c, d, e, f, g, k] = rect;
     return {
@@ -57,27 +58,27 @@ coll::buildVerticesFromRect3D(utils::RectPoints3D rect)
 }
 
 std::array<GLfloat, 6>
-coll::findMeshBound(const std::vector<GLfloat> &mesh_vertices)
+coll::findMeshBound(const std::vector<vec3> &mesh_vertices)
 {
     GLfloat min_x, max_x, min_y, max_y, min_z, max_z;
-    min_x = max_x = mesh_vertices[0];
-    min_y = max_y = mesh_vertices[1];
-    min_z = max_z = mesh_vertices[2];
-    for (size_t i = 0; i < mesh_vertices.size(); i += 3) {
-        if (mesh_vertices[i] < min_x)
-            min_x = mesh_vertices[i];
-        if (mesh_vertices[i] > max_x)
-            max_x = mesh_vertices[i];
+    min_x = max_x = mesh_vertices[0].x;
+    min_y = max_y = mesh_vertices[0].y;
+    min_z = max_z = mesh_vertices[0].z;
+    for (auto vert: mesh_vertices) {
+        if (vert.x < min_x)
+            min_x = vert.x;
+        if (vert.x > max_x)
+            max_x = vert.x;
 
-        if (mesh_vertices[i + 1] < min_y)
-            min_y = mesh_vertices[i + 1];
-        if (mesh_vertices[i + 1] > max_y)
-            max_y = mesh_vertices[i + 1];
+        if (vert.y < min_y)
+            min_y = vert.y;
+        if (vert.y > max_y)
+            max_y = vert.y;
 
-        if (mesh_vertices[i + 2] < min_z)
-            min_z = mesh_vertices[i + 2];
-        if (mesh_vertices[i + 2] > max_z)
-            max_z = mesh_vertices[i + 2];
+        if (vert.z < min_z)
+            min_z = vert.z;
+        if (vert.z > max_z)
+            max_z = vert.z;
     }
 
     return {min_x, max_x, min_y, max_y, min_z, max_z};
@@ -91,34 +92,30 @@ coll::findMeshBound(const std::vector<GLfloat> &mesh_vertices)
  * @param rot_axis
  * @return
  */
-utils::RectPoints3D
-coll::buildAABB(const std::vector<GLfloat> &mesh_vertices) noexcept
+RectPoints3D coll::buildAABB(const std::vector<vec3> &mesh_vertices) noexcept
 {
-    assert(mesh_vertices.size() % 3 == 0
-           && "Vertices count must be power of 3");
     auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(
             mesh_vertices);
 
     // Front plane
-    glm::vec3 a = {min_x, min_y, min_z};
-    glm::vec3 b = {max_x, min_y, min_z};
-    glm::vec3 c = {max_x, max_y, min_z};
-    glm::vec3 d = {min_x, max_y, min_z};
+    vec3 a = {min_x, min_y, min_z};
+    vec3 b = {max_x, min_y, min_z};
+    vec3 c = {max_x, max_y, min_z};
+    vec3 d = {min_x, max_y, min_z};
 
     // Right plane
-    glm::vec3 e = {max_x, min_y, max_z};
-    glm::vec3 f = {max_x, max_y, max_z};
+    vec3 e = {max_x, min_y, max_z};
+    vec3 f = {max_x, max_y, max_z};
 
     // Back plane
-    glm::vec3 g = {min_x, max_y, max_z};
-    glm::vec3 k = {min_x, min_y, max_z};
+    vec3 g = {min_x, max_y, max_z};
+    vec3 k = {min_x, min_y, max_z};
 
     return {a, b, c, d, e, f, g, k};
 }
 
 
-utils::RectPoints3D
-coll::rebuildAABBinWorldSpace(const utils::RectPoints3D& rect) noexcept
+RectPoints3D coll::rebuildAABBinWorldSpace(const RectPoints3D& rect) noexcept
 {
     GLfloat min_x = std::min({rect.a.x, rect.b.x, rect.c.x, rect.d.x,
                               rect.e.x, rect.f.x, rect.g.x, rect.k.x});
@@ -134,18 +131,18 @@ coll::rebuildAABBinWorldSpace(const utils::RectPoints3D& rect) noexcept
                               rect.e.z, rect.f.z, rect.g.z, rect.k.z});
 
     // Front plane
-    glm::vec3 a = {min_x, min_y, min_z};
-    glm::vec3 b = {max_x, min_y, min_z};
-    glm::vec3 c = {max_x, max_y, min_z};
-    glm::vec3 d = {min_x, max_y, min_z};
+    vec3 a = {min_x, min_y, min_z};
+    vec3 b = {max_x, min_y, min_z};
+    vec3 c = {max_x, max_y, min_z};
+    vec3 d = {min_x, max_y, min_z};
 
     // Right plane
-    glm::vec3 e = {max_x, min_y, max_z};
-    glm::vec3 f = {max_x, max_y, max_z};
+    vec3 e = {max_x, min_y, max_z};
+    vec3 f = {max_x, max_y, max_z};
 
     // Back plane
-    glm::vec3 g = {min_x, max_y, max_z};
-    glm::vec3 k = {min_x, min_y, max_z};
+    vec3 g = {min_x, max_y, max_z};
+    vec3 k = {min_x, min_y, max_z};
 
     return {a, b, c, d, e, f, g, k};
 }
@@ -158,32 +155,29 @@ coll::rebuildAABBinWorldSpace(const utils::RectPoints3D& rect) noexcept
 * @param rot_axis
 * @return
 */
-utils::RectPoints3D
-coll::AABBtoWorldSpace(utils::RectPoints3D rect,
-                       const glm::vec3& rot_axis, GLfloat angle,
-                       const glm::vec3& position, const Texture& texture) noexcept
+RectPoints3D
+coll::AABBtoWorldSpace(RectPoints3D rect,
+                       const vec3& rot_axis, GLfloat angle,
+                       const vec3& position, const Texture& texture) noexcept
 {
 
-//    glm::vec3 pos = {2.f * position.x / texture.getWidth(),
-//                     2.f * position.y / texture.getHeight(),
-//                     2.f * position.z / texture.getDepth()};
-    glm::vec3 pos = {position.x / texture.getWidth(),
-                     position.y / texture.getHeight(),
-                     position.z / texture.getDepth()};
+    vec3 pos = {position.x / texture.getWidth(),
+                position.y / texture.getHeight(),
+                position.z / texture.getDepth()};
 
     const GLfloat half = 1.f;
     const GLfloat centerX = pos.x + half;
     const GLfloat centerY = pos.y + half;
     const GLfloat centerZ = pos.z + half;
 
-    const glm::vec3 scale = glm::vec3(texture.getWidth(), texture.getHeight(),
-                                      texture.getDepth());
+    const vec3 scale = vec3(texture.getWidth(), texture.getHeight(),
+                            texture.getDepth());
 
-    mat4 rotation = utils::math::rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
-                                               rot_axis);
+    mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
+                                  rot_axis);
     mat4 translation = translate(mat4(1.f), pos);
     mat4 scaling = glm::scale(mat4(1.f), scale);
-    glm::mat4 transform = scaling * rotation * translation;
+    mat4 transform = scaling * rotation * translation;
 
     rect.a = transform * vec4(rect.a, 1.f);
     rect.b = transform * vec4(rect.b, 1.f);
@@ -205,8 +199,7 @@ coll::AABBtoWorldSpace(utils::RectPoints3D rect,
  * @param rot_axis
  * @return
  */
-utils::RectPoints3D
-coll::buildOBB(const std::vector<GLfloat> &mesh_vertices) noexcept
+RectPoints3D coll::buildOBB(const std::vector<vec3> &mesh_vertices) noexcept
 {
     assert(mesh_vertices.size() % 3 == 0
            && "Vertices count must be power of 3");
@@ -228,45 +221,42 @@ coll::buildOBB(const std::vector<GLfloat> &mesh_vertices) noexcept
             mesh_vertices);
 
     // Front plane
-    glm::vec3 a = {min_x, min_y, min_z};
-    glm::vec3 b = {max_x, min_y, min_z};
-    glm::vec3 c = {max_x, max_y, min_z};
-    glm::vec3 d = {min_x, max_y, min_z};
+    vec3 a = {min_x, min_y, min_z};
+    vec3 b = {max_x, min_y, min_z};
+    vec3 c = {max_x, max_y, min_z};
+    vec3 d = {min_x, max_y, min_z};
 
     // Right plane
-    glm::vec3 e = {max_x, min_y, max_z};
-    glm::vec3 f = {max_x, max_y, max_z};
+    vec3 e = {max_x, min_y, max_z};
+    vec3 f = {max_x, max_y, max_z};
 
     // Back plane
-    glm::vec3 g = {min_x, max_y, max_z};
-    glm::vec3 k = {min_x, min_y, max_z};
+    vec3 g = {min_x, max_y, max_z};
+    vec3 k = {min_x, min_y, max_z};
 
     return {a, b, c, d, e, f, g, k};
 }
 
-std::array<std::vector<GLfloat>, 2>
-coll::divideByLongestSize(const std::vector<GLfloat>& mesh_vertices)
+std::array<std::vector<vec3>, 2>
+coll::divideByLongestSize(const std::vector<vec3>& mesh_vertices)
 {
     auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(
             mesh_vertices);
 
-    std::vector<glm::vec3> sorted_x;
-    std::vector<glm::vec3> sorted_y;
-    std::vector<glm::vec3> sorted_z;
-    for (size_t i = 0; i < mesh_vertices.size(); i += 3)
-        sorted_x.emplace_back(mesh_vertices[i], mesh_vertices[i + 1], mesh_vertices[i + 2]);
+    std::vector<vec3> sorted_x;
+    std::vector<vec3> sorted_y;
+    std::vector<vec3> sorted_z;
+//    for (size_t i = 0; i < mesh_vertices.size(); i += 3)
+//        sorted_x.emplace_back(mesh_vertices[i], mesh_vertices[i + 1], mesh_vertices[i + 2]);
 
-    sorted_y = sorted_z = sorted_x;
-    std::sort(sorted_x.begin(), sorted_x.end(), [](const glm::vec3& v1,
-                                                   const glm::vec3& v2){
+    sorted_y = sorted_z = sorted_x = mesh_vertices;
+    sort(sorted_x.begin(), sorted_x.end(), [](const vec3& v1, const vec3& v2){
         return v1.x < v2.x;
     });
-    std::sort(sorted_y.begin(), sorted_y.end(), [](const glm::vec3& v1,
-                                                   const glm::vec3& v2){
+    sort(sorted_y.begin(), sorted_y.end(), [](const vec3& v1, const vec3& v2){
         return v1.y < v2.y;
     });
-    std::sort(sorted_z.begin(), sorted_z.end(), [](const glm::vec3& v1,
-                                                   const glm::vec3& v2){
+    std::sort(sorted_z.begin(), sorted_z.end(), [](const vec3& v1, const vec3& v2){
         return v1.z < v2.z;
     });
 
@@ -283,43 +273,28 @@ coll::divideByLongestSize(const std::vector<GLfloat>& mesh_vertices)
     GLfloat y_border = min_y + y_length / 2.f;
     GLfloat z_border = min_z + z_length / 2.f;
 
-    std::vector<GLfloat> left_part;
-    std::vector<GLfloat> right_part;
+    std::vector<vec3> left_part;
+    std::vector<vec3> right_part;
     if (longest_side == 0) { // divide by x side
         for (auto & i : sorted_x) {
-            if (i.x < x_border) {
-                left_part.push_back(i.x);
-                left_part.push_back(i.y);
-                left_part.push_back(i.z);
-            } else {
-                right_part.push_back(i.x);
-                right_part.push_back(i.y);
-                right_part.push_back(i.z);
-            }
+            if (i.x < x_border)
+                left_part.push_back(i);
+            else
+                right_part.push_back(i);
         }
     } else if (longest_side == 1) { // divide by y side
         for (auto & i : sorted_y) {
-            if (i.y < y_border) {
-                left_part.push_back(i.x);
-                left_part.push_back(i.y);
-                left_part.push_back(i.z);
-            } else {
-                right_part.push_back(i.x);
-                right_part.push_back(i.y);
-                right_part.push_back(i.z);
-            }
+            if (i.y < y_border)
+                left_part.push_back(i);
+            else
+                right_part.push_back(i);
         }
     } else if (longest_side == 2) { // divide by z side
         for (auto & i : sorted_z) {
-            if (i.z < z_border) {
-                left_part.push_back(i.x);
-                left_part.push_back(i.y);
-                left_part.push_back(i.z);
-            } else {
-                right_part.push_back(i.x);
-                right_part.push_back(i.y);
-                right_part.push_back(i.z);
-            }
+            if (i.z < z_border)
+                left_part.push_back(i);
+            else
+                right_part.push_back(i);
         }
     }
 
@@ -337,7 +312,7 @@ coll::divideByLongestSize(const std::vector<GLfloat>& mesh_vertices)
     return {left_part, right_part};
 }
 
-using NodeData = utils::RectPoints3D;
+using NodeData = RectPoints3D;
 using Node = utils::data::Node<size_t, NodeData>;
 using NodePtr = std::shared_ptr<Node>;
 
@@ -351,12 +326,10 @@ using VertDataPtr = std::shared_ptr<VertData>;
  * @param mesh_vertices
  * @return
  */
-NodePtr
-coll::buildBVH(const VertData &mesh_vertices, glm::vec3 min_rect) noexcept
+NodePtr coll::buildBVH(const VertData &mesh_vertices, vec3 min_rect) noexcept
 {
     NodePtr node = std::make_shared<Node>();
-    node->m_data = std::make_shared<NodeData>(
-            coll::buildAABB(mesh_vertices));
+    node->m_data = std::make_shared<NodeData>(coll::buildAABB(mesh_vertices));
 
     auto[left_part, right_part] = divideByLongestSize(mesh_vertices);
 
@@ -380,9 +353,9 @@ coll::buildBVH(const VertData &mesh_vertices, glm::vec3 min_rect) noexcept
     return nullptr;
 }
 
-using Node = utils::data::Node<size_t, utils::RectPoints3D>;
+using Node = utils::data::Node<size_t, RectPoints3D>;
 using NodePtr = std::shared_ptr<Node>;
-using TreePtr = std::shared_ptr<utils::data::Node<size_t, utils::RectPoints3D>>;
+using TreePtr = std::shared_ptr<utils::data::Node<size_t, RectPoints3D>>;
 
 /**
  * Find raycast intersection
@@ -393,7 +366,7 @@ using TreePtr = std::shared_ptr<utils::data::Node<size_t, utils::RectPoints3D>>;
  */
 void
 coll::BVHAABBTraversalRec(TreePtr tree, const Ray& ray,
-                          std::vector<glm::vec3>& intersections)
+                          std::vector<vec3>& intersections)
 {
     bool isLeaf = !tree->m_left && !tree->m_right;
     if (isLeaf) {
@@ -415,18 +388,17 @@ coll::BVHAABBTraversalRec(TreePtr tree, const Ray& ray,
 * @param rect
 * @return
 */
-std::pair<bool, glm::vec3>
-coll::BVHAABBTraversal(TreePtr tree, const Ray& ray)
+std::pair<bool, vec3> coll::BVHAABBTraversal(TreePtr tree, const Ray& ray)
 {
-    std::vector<glm::vec3> intersections;
+    std::vector<vec3> intersections;
     BVHAABBTraversalRec(tree, ray, intersections);
 
     if (intersections.empty())
-        return {false, glm::vec3(0)};
+        return {false, vec3(0)};
 
     vec3 ray_origin = ray.ray_origin;
     GLfloat closest_length = glm::length(intersections[0] - ray_origin);
-    glm::vec3 closest_hit = intersections[0];
+    vec3 closest_hit = intersections[0];
     for (const auto & pos: intersections)
         if (glm::length(pos - ray_origin) < closest_length)
             closest_hit = pos;
@@ -443,7 +415,7 @@ coll::interInRange(const Terrain& terrain, GLfloat start, GLfloat end, const Ray
     return !terrain.isUnderGround(start_p) && terrain.isUnderGround(end_p);
 }
 
-std::pair<bool, glm::vec3>
+std::pair<bool, vec3>
 coll::rayTerrainIntersection(const Terrain &terrain, const Ray &ray,
                              GLfloat start, GLfloat end, size_t num_iter)
 {

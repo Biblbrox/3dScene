@@ -1,7 +1,11 @@
 #ifndef UTILS_TEXTURE_HPP
 #define UTILS_TEXTURE_HPP
 
+#include <glm/vec2.hpp>
+#include <SDL_image.h>
+
 #include "exceptions/glexception.hpp"
+#include "base.hpp"
 
 #define CHECK_FRAMEBUFFER_COMPLETE() \
 if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) \
@@ -10,6 +14,11 @@ throw GLException((boost::format( \
         "GL Error: %s\n") % gluErrorString(glGetError())).str(), \
         utils::log::program_log_file_name(), \
         utils::log::Category::INITIALIZATION_ERROR); \
+
+using glm::vec3;
+using glm::vec2;
+using glm::vec;
+using std::vector;
 
 namespace utils::texture
 {
@@ -34,9 +43,10 @@ namespace utils::texture
      * @param file
      * @return
      */
-    std::vector<GLfloat>
-    loadObj(const std::string &file, std::string &textureFile,
-            bool storeNormals = false);
+    vector<GLfloat> loadObj(const std::string& file,
+                            std::string& textureFile,
+                            vector<vec3>& vertices, vector<vec2>& uv,
+                            vector<vec3>& normals, vector<vec3u> indices);
 
     /**
      * Load texture from file

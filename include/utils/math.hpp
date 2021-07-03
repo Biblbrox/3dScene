@@ -9,6 +9,7 @@
 #include <GL/glew.h>
 
 using glm::vec2;
+using glm::vec3;
 
 namespace utils::math {
 
@@ -58,27 +59,27 @@ namespace utils::math {
      * @param points
      * @return
      */
-    inline glm::mat3 build_covarience_matrix(const std::vector<GLfloat>& points)
+    inline glm::mat3 build_covarience_matrix(const std::vector<vec3>& points)
     {
-        glm::mat3 cov{0.f};
-        glm::vec3 means{0.f};
-        for (int i = 0; i < points.size(); ++i) {
-            means[0] += points[i];
-            means[1] += points[i + 1];
-            means[2] += points[i + 2];
-        }
-
-        means /= points.size();
-
-        for (int i = 0; i < 3; ++i)
-            for (int j = 0; j < 3; ++j)
-                for (int k = 0; k < points.size(); ++k)
-                    cov[i][j] += (points[k + i] - means[i])
-                                 * (points[k + j] - means[j]);
-
-        cov /= points.size() - 1;
-
-        return cov;
+//        glm::mat3 cov{0.f};
+//        glm::vec3 means{0.f};
+//        for (int i = 0; i < points.size(); ++i) {
+//            means[0] += points[i].x;
+//            means[1] += points[i].y;
+//            means[2] += points[i].z;
+//        }
+//
+//        means /= points.size();
+//
+//        for (int i = 0; i < 3; ++i)
+//            for (int j = 0; j < 3; ++j)
+//                for (int k = 0; k < points.size(); ++k)
+//                    cov[i][j] += (points[k + i] - means[i])
+//                                 * (points[k + j] - means[j]);
+//
+//        cov /= points.size() - 1;
+//
+//        return cov;
     }
 
     constexpr unsigned int power_two(unsigned int val) noexcept

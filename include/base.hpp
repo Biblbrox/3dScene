@@ -1,6 +1,11 @@
 #ifndef BASE_HPP
 #define BASE_HPP
 
+#include <GL/glew.h>
+#include <glm/vec3.hpp>
+
+using glm::vec;
+
 #ifndef NDEBUG
 constexpr const bool debug = true;
 #else
@@ -57,5 +62,6 @@ inline int get_thread_count()
 #define PROJECTION "ProjectionMatrix"
 #define TEXTURE_NUM "TextureNum"
 
+typedef vec<3, GLuint> vec3u;
 
 #endif //BASE_HPP

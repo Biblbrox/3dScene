@@ -20,10 +20,16 @@
 
 using boost::format;
 using utils::string::split;
+using std::vector;
+using glm::vec3;
+using glm::vec2;
+using glm::vec;
 
-std::vector<GLfloat>
-utils::texture::loadObj(const std::string& file, std::string& textureFile,
-                        bool storeNormals)
+vector<GLfloat>
+utils::texture::loadObj(const std::string& file,
+                        std::string& textureFile,
+                        vector<vec3>& vertices, vector<vec2>& uv,
+                        vector<vec3>& normals, vector<vec3u> indices)
 {
     if (!std::filesystem::exists(file))
         throw FSException((format("File %s doesn't exists") % file).str(),
@@ -33,10 +39,6 @@ utils::texture::loadObj(const std::string& file, std::string& textureFile,
     std::ifstream obj(file);
     std::string line;
     std::string mtlFile;
-    std::vector<glm::vec3> vertices;
-    std::vector<glm::vec2> uv;
-    std::vector<glm::vec3> normals;
-    std::vector<glm::vec<3, GLuint>> indices;
     while (std::getline(obj, line)) {
         if (line.starts_with("vt")) {
             GLfloat x, y;
@@ -50,7 +52,7 @@ utils::texture::loadObj(const std::string& file, std::string& textureFile,
             std::istringstream s(data);
             s >> x >> y >> z;
             vertices.emplace_back(x, y, z);
-        } else if (line.starts_with("vn") && storeNormals) {
+        } else if (line.starts_with("vn")) {
             GLfloat x, y, z;
             std::string data = line.substr(line.find(' ')); // Skip "v"
             std::istringstream s(data);
@@ -82,11 +84,9 @@ utils::texture::loadObj(const std::string& file, std::string& textureFile,
         res.emplace_back(uv[data[1]].x); // UV coords
         res.emplace_back(uv[data[1]].y);
 
-        if (storeNormals) {
-            res.emplace_back(normals[data[2]].x); // normals
-            res.emplace_back(normals[data[2]].y);
-            res.emplace_back(normals[data[2]].z);
-        }
+        res.emplace_back(indices[data[2]].x);
+        res.emplace_back(indices[data[2]].y);
+        res.emplace_back(indices[data[2]].z);
     }
 
     // Extract texture file name from mtl file

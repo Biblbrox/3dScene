@@ -4,13 +4,16 @@ uniform mat4 ProjectionMatrix;
 uniform mat4 ViewMatrix;
 uniform mat4 ModelMatrix;
 
-layout (location = 0) in vec3 position;
-layout (location = 1) in vec2 inTexCoords;
+layout (location = 0) in vec3 vPosition;
+layout (location = 1) in vec2 vTexCoords;
+layout (location = 2) in vec3 vNormal;
 
 out vec2 TextureCoords;
+out vec3 Normal;
 
 void main()
 {
-    TextureCoords = inTexCoords;
-    gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix * vec4(position, 1.0);
+    TextureCoords = vTexCoords;
+    Normal = vNormal;
+    gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix * vec4(vPosition, 1.0);
 }
