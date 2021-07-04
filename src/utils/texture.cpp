@@ -29,12 +29,12 @@ vector<GLfloat>
 utils::texture::loadObj(const std::string& file,
                         std::string& textureFile,
                         vector<vec3>& vertices, vector<vec2>& uv,
-                        vector<vec3>& normals, vector<vec3u> indices)
+                        vector<vec3>& normals, vector<vec3u>& indices)
 {
     if (!std::filesystem::exists(file))
         throw FSException((format("File %s doesn't exists") % file).str(),
                           program_log_file_name(),
-                          utils::log::Category::FS_ERROR);
+                              utils::log::Category::FS_ERROR);
 
     std::ifstream obj(file);
     std::string line;
@@ -84,9 +84,9 @@ utils::texture::loadObj(const std::string& file,
         res.emplace_back(uv[data[1]].x); // UV coords
         res.emplace_back(uv[data[1]].y);
 
-        res.emplace_back(indices[data[2]].x);
-        res.emplace_back(indices[data[2]].y);
-        res.emplace_back(indices[data[2]].z);
+        res.emplace_back(normals[data[2]].x);
+        res.emplace_back(normals[data[2]].y);
+        res.emplace_back(normals[data[2]].z);
     }
 
     // Extract texture file name from mtl file

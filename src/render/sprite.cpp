@@ -17,27 +17,32 @@ Sprite::Sprite() : m_vao(nullptr)
 
 }
 
-void Sprite::addTexture(const std::string& objFile,
-                        GLfloat textureWidth, GLfloat textureHeight,
-                        GLfloat textureDepth)
+void Sprite::addMesh(const std::string &objFile,
+                     GLfloat textureWidth, GLfloat textureHeight,
+                     GLfloat textureDepth)
 {
     using namespace utils::texture;
 
-    std::string textureFile;
+    std::string textureFile = "";
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> uv;
     std::vector<glm::vec3> normals;
     std::vector<vec3u> indices;
     auto v = loadObj(objFile, textureFile, vertices, uv, normals, indices);
     m_vertices.push_back(vertices);
+
     m_uv.push_back(uv);
+
     m_normals.push_back(normals);
+
     m_indices.push_back(indices);
     m_vertexData.push_back(v);
 
-    GLuint textureId = loadTexture(getResourcePath(textureFile),
-                                          nullptr, nullptr);
-    m_textureIds.push_back(textureId);
+    if (!textureFile.empty()) {
+        GLuint textureId = loadTexture(getResourcePath(textureFile), nullptr,
+                                       nullptr);
+        m_textureIds.push_back(textureId);
+    }
 
     m_sizes.emplace_back(textureWidth, textureHeight, textureDepth);
 }
@@ -50,48 +55,44 @@ glm::vec3 Sprite::getClip(GLuint idx) noexcept
 
 void Sprite::generateDataBuffer()
 {
-    if (!m_textureIds.empty()) {
-        size_t texCount = m_sizes.size();
-        m_vao = new GLuint[texCount];
+    size_t texCount = m_sizes.size();
+    m_vao = new GLuint[texCount];
 
-        glGenVertexArrays(texCount, m_vao);
-        GLuint VBO;
+    glGenVertexArrays(texCount, m_vao);
+    GLuint VBO;
+    GLuint EBO;
 
-        for (GLuint i = 0; i < texCount; ++i) {
-            GLfloat* vertices = &m_vertexData[i][0];
-            glBindVertexArray(m_vao[i]);
-            glGenBuffers(1, &VBO);
+    for (GLuint i = 0; i < texCount; ++i) {
+        GLfloat *vertices = &m_vertexData[i][0];
+        glBindVertexArray(m_vao[i]);
+        glGenBuffers(1, &VBO);
 
-            size_t vertSize = m_vertexData[i].size() * sizeof(GLfloat);
-            glBindBuffer(GL_ARRAY_BUFFER, VBO);
-            glBufferData(GL_ARRAY_BUFFER, vertSize, vertices, GL_STATIC_DRAW);
+//        glGenBuffers(1, &EBO);
+//        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+//        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * m_indices.size(), m_indices.data(),
+//                     GL_STATIC_DRAW);
 
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, // Pos of vertices
-                                  8 * sizeof(GLfloat), nullptr);
-            glEnableVertexAttribArray(0);
+        size_t vertSize = m_vertexData[i].size() * sizeof(GLfloat);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, vertSize, vertices, GL_STATIC_DRAW);
 
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), // UV coords
-                                  (void*)(3 * sizeof(GLfloat)));
-            glEnableVertexAttribArray(1);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, // Pos of vertices
+                              8 * sizeof(GLfloat), nullptr);
+        glEnableVertexAttribArray(0);
 
-            glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), // normals
-                                  (void*)(5 * sizeof(GLfloat)));
-            glEnableVertexAttribArray(2);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
+                              8 * sizeof(GLfloat), // UV coords
+                              (void *) (3 * sizeof(GLfloat)));
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
+                              8 * sizeof(GLfloat), // normals
+                              (void *) (5 * sizeof(GLfloat)));
+        glEnableVertexAttribArray(2);
 
-            glBindVertexArray(0);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-            glDeleteBuffers(1, &VBO);
-        }
-
-    } else {
-        if (m_textureId == 0)
-            throw SdlException("No texture to generate from\n",
-                               program_log_file_name(), Category::INTERNAL_ERROR);
-
-        if (m_sizes.empty())
-            throw SdlException("No data generate from\n",
-                               program_log_file_name(), Category::INTERNAL_ERROR);
+        glDeleteBuffers(1, &VBO);
     }
 }
 
@@ -162,7 +163,7 @@ GLuint Sprite::getTriangleCount() const
     return m_vertexData[m_textureId].size() * 3;
 }
 
-const std::vector<std::vector<vec3>>& Sprite::getVertices() const
+const std::vector<std::vector<vec3>> &Sprite::getVertices() const
 {
     return m_vertices;
 }

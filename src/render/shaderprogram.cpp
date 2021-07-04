@@ -1,5 +1,6 @@
 #include <GL/glew.h>
 #include <boost/format.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "render/shaderprogram.hpp"
 #include "utils/utils.hpp"
@@ -25,15 +26,11 @@ GLuint create_program(const std::string& vertex, const std::string& fragment,
                           program_log_file_name(),
                           Category::INITIALIZATION_ERROR);
 
-    // Vertex shader
     vertexShader = utils::loadShaderFromFile(
             getShaderPath(vertex), GL_VERTEX_SHADER);
-    // Vertex shader end
 
-    // Fragment shader
     fragmentShader = utils::loadShaderFromFile(
             getShaderPath(fragment), GL_FRAGMENT_SHADER);
-    // Fragment shader end
 
     if (!geometry.empty())
         geometryShader = utils::loadShaderFromFile(
@@ -109,29 +106,8 @@ GLuint ShaderProgram::getProgramID()
     return m_programID;
 }
 
-void ShaderProgram::updateInt(const std::string& name)
+void ShaderProgram::setFloat(const std::string &name, GLfloat value)
 {
-    using utils::log::Logger;
-
-    assert(!name.empty());
-    GLint loc = glGetUniformLocation(m_programID, name.c_str());
-    if (loc == -1)
-        throw GLException((format("Unable to set uniform variable %1%\n") %
-                           name).str(),
-                          shader_log_file_name(),
-                          Category::INTERNAL_ERROR);
-
-    glUniform1i(loc, m_intUniforms[m_programID][name]);
-    if (GLenum error = glGetError(); error != GL_NO_ERROR)
-        throw GLException((format("Unable to set uniform variable \"%1%\"\n") % name).str(),
-                          shader_log_file_name(),
-                          Category::INTERNAL_ERROR);
-}
-
-void ShaderProgram::updateFloat(const std::string &name)
-{
-    using utils::log::Logger;
-
     assert(!name.empty());
     GLint loc = glGetUniformLocation(m_programID, name.c_str());
     if (loc == -1)
@@ -140,119 +116,108 @@ void ShaderProgram::updateFloat(const std::string &name)
                 shader_log_file_name(),
                 Category::INTERNAL_ERROR);
 
-    glUniform1f(loc, m_flUniforms[m_programID][name]);
+    glUniform1f(loc, value);
     if (GLenum error = glGetError(); error != GL_NO_ERROR)
         throw GLException(
                 (format("Unable to set uniform variable \"%1%\"\n") % name).str(),
                 shader_log_file_name(),
                 Category::INTERNAL_ERROR);
-}
 
-void ShaderProgram::updateVec3(const std::string& name)
-{
-    using utils::log::Logger;
-
-    assert(!name.empty());
-    GLint loc = glGetUniformLocation(m_programID, name.c_str());
-    if (loc == -1)
-        throw GLException((format("Unable to set uniform variable %1%\n") %
-                           name).str(),
-                          shader_log_file_name(),
-                          Category::INTERNAL_ERROR);
-
-    auto value = m_vec3Uniforms[m_programID][name];
-    glUniform3f(loc, value.x, value.y, value.z);
-    if (GLenum error = glGetError(); error != GL_NO_ERROR)
-        throw GLException((format("Unable to set uniform variable \"%1%\"\n") % name).str(),
-                          shader_log_file_name(),
-                          Category::INTERNAL_ERROR);
-}
-
-void ShaderProgram::updateVec4(const std::string& name)
-{
-    using utils::log::Logger;
-
-    assert(!name.empty());
-    GLint loc = glGetUniformLocation(m_programID, name.c_str());
-    if (loc == -1)
-        throw GLException((format("Unable to set uniform variable %1%\n") %
-                           name).str(),
-                          shader_log_file_name(),
-                          Category::INTERNAL_ERROR);
-
-    auto value = m_vec4Uniforms[m_programID][name];
-    glUniform4f(loc, value.x, value.y, value.z, value.w);
-    if (GLenum error = glGetError(); error != GL_NO_ERROR)
-        throw GLException((format("Unable to set uniform variable \"%1%\"\n") % name).str(),
-                          shader_log_file_name(),
-                          Category::INTERNAL_ERROR);
-}
-
-void ShaderProgram::updateMat3(const std::string &name)
-{
-    using utils::log::Logger;
-
-    assert(!name.empty());
-    GLint loc = glGetUniformLocation(m_programID, name.c_str());
-    if (loc == -1)
-        throw GLException((format("Unable to set uniform variable %1%\n") %
-                           name).str(),
-                          shader_log_file_name(),
-                          Category::INTERNAL_ERROR);
-
-    glUniformMatrix3fv(loc, 1, false, &m_mat3Uniforms[m_programID][name][0][0]);
-    if (GLenum error = glGetError(); error != GL_NO_ERROR)
-        throw GLException((format("Unable to set uniform variable \"%1%\"\n") % name).str(),
-                          shader_log_file_name(),
-                          Category::INTERNAL_ERROR);
-}
-
-void ShaderProgram::updateMat4(const std::string &name)
-{
-    using utils::log::Logger;
-
-    assert(!name.empty());
-    GLint loc = glGetUniformLocation(m_programID, name.c_str());
-    if (loc == -1)
-        throw GLException((format("Unable to set uniform variable %1%\n") %
-                           name).str(),
-                          shader_log_file_name(),
-                          Category::INTERNAL_ERROR);
-
-    glUniformMatrix4fv(loc, 1, false, &m_mat4Uniforms[m_programID][name][0][0]);
-    if (GLenum error = glGetError(); error != GL_NO_ERROR)
-        throw GLException((format("Unable to set uniform variable \"%1%\"\n") % name).str(),
-                          shader_log_file_name(),
-                          Category::INTERNAL_ERROR);
-}
-
-void ShaderProgram::setFloat(const std::string &str, GLfloat value)
-{
-    m_flUniforms[m_programID][str] = value;
+    m_flUniforms[m_programID][name] = value;
 }
 
 void ShaderProgram::setInt(const std::string &name, GLint value)
 {
+    assert(!name.empty());
+    GLint loc = glGetUniformLocation(m_programID, name.c_str());
+    if (loc == -1)
+        throw GLException((format("Unable to set uniform variable %1%\n") %
+                           name).str(),
+                          shader_log_file_name(),
+                          Category::INTERNAL_ERROR);
+
+    glUniform1i(loc, value);
+    if (GLenum error = glGetError(); error != GL_NO_ERROR)
+        throw GLException((format("Unable to set uniform variable \"%1%\"\n") % name).str(),
+                          shader_log_file_name(),
+                          Category::INTERNAL_ERROR);
+
     m_intUniforms[m_programID][name] = value;
 }
 
 void ShaderProgram::setVec3(const std::string &name, const vec3 &value)
 {
+    assert(!name.empty());
+    GLint loc = glGetUniformLocation(m_programID, name.c_str());
+    if (loc == -1)
+        throw GLException((format("Unable to set uniform variable %1%\n") %
+                           name).str(),
+                          shader_log_file_name(),
+                          Category::INTERNAL_ERROR);
+
+    glUniform3f(loc, value.x, value.y, value.z);
+    if (GLenum error = glGetError(); error != GL_NO_ERROR)
+        throw GLException((format("Unable to set uniform variable \"%1%\"\n") % name).str(),
+                          shader_log_file_name(),
+                          Category::INTERNAL_ERROR);
+
     m_vec3Uniforms[m_programID][name] = value;
 }
 
 void ShaderProgram::setVec4(const std::string &name, const glm::vec4 &value)
 {
+    assert(!name.empty());
+    GLint loc = glGetUniformLocation(m_programID, name.c_str());
+    if (loc == -1)
+        throw GLException((format("Unable to set uniform variable %1%\n") %
+                           name).str(),
+                          shader_log_file_name(),
+                          Category::INTERNAL_ERROR);
+
+    glUniform4f(loc, value.x, value.y, value.z, value.w);
+    if (GLenum error = glGetError(); error != GL_NO_ERROR)
+        throw GLException((format("Unable to set uniform variable \"%1%\"\n") % name).str(),
+                          shader_log_file_name(),
+                          Category::INTERNAL_ERROR);
+
     m_vec4Uniforms[m_programID][name] = value;
 }
 
 void ShaderProgram::setMat3(const std::string &name, const glm::mat3 &value)
 {
+    assert(!name.empty());
+    GLint loc = glGetUniformLocation(m_programID, name.c_str());
+    if (loc == -1)
+        throw GLException((format("Unable to set uniform variable %1%\n") %
+                           name).str(),
+                          shader_log_file_name(),
+                          Category::INTERNAL_ERROR);
+
+    glUniformMatrix3fv(loc, 1, false, glm::value_ptr(value));
+    if (GLenum error = glGetError(); error != GL_NO_ERROR)
+        throw GLException((format("Unable to set uniform variable \"%1%\"\n") % name).str(),
+                          shader_log_file_name(),
+                          Category::INTERNAL_ERROR);
+
     m_mat3Uniforms[m_programID][name] = value;
 }
 
 void ShaderProgram::setMat4(const std::string &name, const glm::mat4 &value)
 {
+    assert(!name.empty());
+    GLint loc = glGetUniformLocation(m_programID, name.c_str());
+    if (loc == -1)
+        throw GLException((format("Unable to set uniform variable %1%\n") %
+                           name).str(),
+                          shader_log_file_name(),
+                          Category::INTERNAL_ERROR);
+
+    glUniformMatrix4fv(loc, 1, false, glm::value_ptr(value));
+    if (GLenum error = glGetError(); error != GL_NO_ERROR)
+        throw GLException((format("Unable to set uniform variable \"%1%\"\n") % name).str(),
+                          shader_log_file_name(),
+                          Category::INTERNAL_ERROR);
+
     m_mat4Uniforms[m_programID][name] = value;
 }
 
@@ -283,11 +248,13 @@ ShaderProgram::addProgram(const std::string &programName, const std::string& ver
 void ShaderProgram::leftMult(const std::string &name, const glm::mat4 &matrix)
 {
     m_mat4Uniforms[m_programID][name] = matrix * m_mat4Uniforms[m_programID][name];
+    setMat4(name, m_mat4Uniforms[m_programID][name]);
 }
 
 void ShaderProgram::mult(const std::string& name, const glm::vec4 &vec)
 {
     m_mat4Uniforms[m_programID][name] *= vec;
+    setMat4(name, m_mat4Uniforms[m_programID][name]);
 }
 
 GLfloat ShaderProgram::getFloat(const std::string &name)

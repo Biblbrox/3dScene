@@ -51,7 +51,6 @@ void LidarSystem::drawLidarIntersect()
     program->useFramebufferProgram();
 
     program->setInt("isPrimitive", true);
-    program->updateInt("isPrimitive");
     glm::vec3 dir = m_lidar.getDirection();
     const GLfloat length = m_lidar.getRayLength();
     dir *= length;
@@ -124,17 +123,14 @@ void LidarSystem::drawLidarIntersect()
     m_lidar.setPitch(pitch);
 
     program->setInt("isPrimitive", true);
-    program->updateInt("isPrimitive");
 
     program->setVec3("primColor", {0.1, 1.f, 0.1});
-    program->updateVec3("primColor");
     render::drawDots(coll_dots);
 
     if (Config::getVal<bool>("DrawRays"))
         render::drawLinen(rays);
 
     program->setVec3("primColor", {1.f, 1.f, 1.f});
-    program->updateVec3("primColor");
     dots.push_back(m_lidar.getPos());
     render::drawDots(dots);
 

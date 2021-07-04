@@ -43,9 +43,6 @@ int main(int argc, char *args[])
         program->setMat4(PROJECTION, perspective);
         program->setMat4(MODEL, glm::mat4(1.f));
         program->setMat4(VIEW, glm::mat4(1.f));
-        program->updateMat4(PROJECTION);
-        program->updateMat4(MODEL);
-        program->updateMat4(VIEW);
         program->setInt(TEXTURE_NUM, 0);
 
         GLfloat delta_time = 0.f;

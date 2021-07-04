@@ -6,9 +6,11 @@
 #include "systems/renderscenesystem.hpp"
 #include "components/spritecomponent.hpp"
 #include "components/bvhcomponent.hpp"
+#include "components/materialcomponent.hpp"
 #include "components/selectablecomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "components/terraincomponent.hpp"
+#include "components/lightcomponent.hpp"
 #include "render/render.hpp"
 #include "utils/logger.hpp"
 #include "exceptions/glexception.hpp"
@@ -52,37 +54,78 @@ void RenderSceneSystem::drawSprites()
 
     program->useFramebufferProgram();
     program->setInt("isPrimitive", false);
-    program->updateInt("isPrimitive");
     program->setFloat("alpha", 1.f);
-    program->updateFloat("alpha");
-    const auto &sprites = getEntitiesByTag<SpriteComponent>();
 
+    bool lighting = Config::getVal<bool>("EnableLight");
+
+    if (lighting) {
+        auto terrain = getEntitiesByTag<TerrainComponent>().begin()
+                ->second->getComponent<TerrainComponent>()->terrain;
+        GLfloat ter_half = terrain->getWorldWidth() / 2.f;
+        vec3 lightPos = {ter_half, 200, ter_half};
+
+        program->setVec3("viewPos", camera->getPos());
+
+        auto lightEn = getEntitiesByTag<LightComponent>().begin()->second;
+        auto light = lightEn->getComponent<LightComponent>();
+        light->pos = Config::getVal<vec3>("LightPos");
+        program->setInt("lighting", true);
+        program->setVec3("light.position", light->pos);
+        program->setVec3("light.ambient", light->ambient);
+        program->setVec3("light.diffuse", light->diffuse);
+        program->setVec3("light.specular", light->specular);
+
+        auto lightSprite = lightEn->getComponent<SpriteComponent>()->sprite;
+        auto sprite_vert_vec = lightSprite->getVertices()[lightSprite->getIdx()];
+        float* light_vertices = &sprite_vert_vec[0].x;
+        program->setInt("isPrimitive", true);
+        program->setFloat("alpha", 1.f);
+        program->setVec3("primColor", {1.f, 1.f, 1.f});
+        render::drawVerticesVAO(*program, light_vertices, sprite_vert_vec.size(),
+                                    *lightSprite, light->pos);
+    } else {
+        program->setInt("lighting", false);
+    }
+
+    const auto &sprites = getEntitiesByTag<PositionComponent>();
     for (const auto&[key, en]: sprites) {
         auto posComp = en->getComponent<PositionComponent>();
+        auto sprite = en->getComponent<SpriteComponent>()->sprite;
+
+        if (lighting) {
+            auto material = en->getComponent<MaterialComponent>();
+            if (material) {
+                program->setVec3("material.ambient", material->ambient);
+                program->setVec3("material.diffuse", material->diffuse);
+                program->setVec3("material.specular", material->specular);
+                program->setFloat("material.shininess", material->shininess);
+            } else {
+                program->setVec3("material.ambient", vec3(1.f, 0.5, 0.31f));
+                program->setVec3("material.diffuse", vec3(1.f, 0.5f, 0.31f));
+                program->setVec3("material.specular", vec3(0.5f, 0.5f, 0.5f));
+                program->setFloat("material.shininess", 32.f);
+            }
+        }
+
         auto selComp = en->getComponent<SelectableComponent>();
-        if (selComp && selComp->dragged) {
+        if (getGameState() == GameStates::EDIT && selComp && selComp->dragged) {
+
             glStencilFunc(GL_ALWAYS, 1, 0xFF); // all fragments should pass the stencil test
             glStencilMask(0xFF); // enable writing to the stencil buffer
 
-            render::drawTexture(*program,
-                                *en->getComponent<SpriteComponent>()->sprite,
-                                posComp->pos, posComp->angle, posComp->rot_axis);
+            render::drawTexture(*program, *sprite, posComp->pos,
+                                posComp->angle, posComp->rot_axis);
 
             glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
             glStencilMask(0x00); // disable writing to the stencil buffer
             glDisable(GL_DEPTH_TEST);
 
             program->setInt("isPrimitive", true);
-            program->updateInt("isPrimitive");
             program->setVec3("primColor", {0.f, 0.f, 1.f});
-            program->updateVec3("primColor");
 
             program->setFloat("alpha", 0.55f);
-            program->updateFloat("alpha");
 
-            render::drawTexture(*program,
-                                *en->getComponent<SpriteComponent>()->sprite,
-                                posComp->pos, posComp->angle,
+            render::drawTexture(*program, *sprite, posComp->pos, posComp->angle,
                                 posComp->rot_axis, 1.1f);
 
             glStencilMask(0xFF);
@@ -90,7 +133,6 @@ void RenderSceneSystem::drawSprites()
             glEnable(GL_DEPTH_TEST);
         } else {
             program->setInt("isPrimitive", false);
-            program->updateInt("isPrimitive");
 
             render::drawTexture(*program,
                                 *en->getComponent<SpriteComponent>()->sprite,
@@ -110,13 +152,10 @@ void RenderSceneSystem::drawBoundingBoxes()
 {
     using NodeDataPtr = std::shared_ptr<utils::RectPoints3D>;
     auto program = SceneProgram::getInstance();
-//    const auto &sprites = m_ecsManager->getEntities();
     const auto &sprites = getEntitiesByTag<SpriteComponent>();
 
     program->setInt("isPrimitive", true);
-    program->updateInt("isPrimitive");
     program->setFloat("alpha", 0.6f);
-    program->updateFloat("alpha");
 
     for (const auto&[key, en]: sprites) {
         auto treeComp = en->getComponent<BVHComponent>();
@@ -129,11 +168,11 @@ void RenderSceneSystem::drawBoundingBoxes()
 
         auto draw_fun = [program, sprite, posComp](NodeDataPtr bound_rect) {
             program->setVec3("primColor", {0.8f, 0.1f, 0.1f});
-            program->updateVec3("primColor");
-            render::drawBoundingBox(*program,
-                                    coll::buildVerticesFromRect3D(*bound_rect),
-                                    *sprite, posComp->pos, posComp->angle,
-                                    posComp->rot_axis);
+            auto vert_vec = coll::buildVerticesFromRect3D(*bound_rect);
+            GLfloat* vertices = vert_vec.data();
+            render::drawVertices(*program, vertices, vert_vec.size(),
+                                 *sprite, posComp->pos, posComp->angle,
+                                 posComp->rot_axis);
         };
 
         if (Config::getVal<bool>("DrawLeafs")) {
@@ -174,7 +213,6 @@ void RenderSceneSystem::drawToFramebuffer()
 
     glm::vec4 color = Config::getVal<glm::vec4>("BackgroundColor");
     glEnable(GL_DEPTH_TEST);
-//    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glStencilFunc(GL_ALWAYS, 1, 0xFF); // all fragments should pass the stencil test
     glClearColor(color.x, color.y, color.z, color.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -192,7 +230,6 @@ void RenderSceneSystem::drawTerrain()
     auto program = SceneProgram::getInstance();
     program->useFramebufferProgram();
     program->setInt("isPrimitive", false);
-    program->updateInt("isPrimitive");
 
     auto terrain_en = getEntitiesByTag<TerrainComponent>().begin()->second;
     auto terrain = terrain_en->getComponent<TerrainComponent>()->terrain;

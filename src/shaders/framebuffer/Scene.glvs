@@ -4,16 +4,20 @@ uniform mat4 ProjectionMatrix;
 uniform mat4 ViewMatrix;
 uniform mat4 ModelMatrix;
 
+//uniform mat3 NormalMatrix;
+
 layout (location = 0) in vec3 vPosition;
 layout (location = 1) in vec2 vTexCoords;
 layout (location = 2) in vec3 vNormal;
 
 out vec2 TextureCoords;
 out vec3 Normal;
+out vec3 FragPos;
 
 void main()
 {
     TextureCoords = vTexCoords;
-    Normal = vNormal;
+    FragPos = vec3(ModelMatrix * vec4(vPosition, 1.0));
+    Normal = mat3(transpose(inverse(ModelMatrix))) * vNormal;
     gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix * vec4(vPosition, 1.0);
 }

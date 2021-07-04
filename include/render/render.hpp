@@ -21,8 +21,8 @@ namespace render
      * @param scale_factor
      */
     void drawTexture(ShaderProgram& program, const Texture &texture,
-                     const glm::vec3& pos, GLfloat angle = 0,
-                     glm::vec3 rot_axis = {1.f, 0, 0}, GLfloat scale = 1.f);
+                     const vec3& pos, GLfloat angle = 0,
+                     vec3 rot_axis = {1.f, 0.f, 0.f}, GLfloat scale = 1.f);
     
     void drawLinen(const std::vector<vec3>& points, bool adjacency = false);
 
@@ -30,19 +30,23 @@ namespace render
 
     void drawTriangles(const std::vector<GLfloat> &points);
 
-    void drawBoundingBox(ShaderProgram& program,
-                         const std::vector<GLfloat>& points,
-                         const Texture &texture,
-                         const glm::vec3& position, GLfloat angle,
-                         glm::vec3 rot_axis, GLfloat scale = 1.f);
+    void drawVertices(ShaderProgram& program, const GLfloat* points,
+                      size_t size, const Texture &texture,
+                      const vec3& position, GLfloat angle = 0.f,
+                      vec3 rot_axis = {1.f, 0.f, 0.f}, GLfloat scale = 1.f);
+
+    void drawVerticesVAO(ShaderProgram& program, const GLfloat* points,
+                             size_t size, const Texture &texture,
+                             const vec3& position,
+                             GLfloat angle = 0.f,
+                             vec3 rot_axis = {1.f, 0.f, 0.f}, GLfloat scale = 1.f);
 
     /**
      * Render terrain
      * @param program
      * @param terrain
      */
-    void renderTerrain(ShaderProgram& program,
-                       const Terrain& terrain);
+    void renderTerrain(ShaderProgram& program, const Terrain& terrain);
 };
 
 #endif //RENDER_HPP

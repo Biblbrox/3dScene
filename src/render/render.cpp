@@ -112,7 +112,6 @@ void render::drawTexture(ShaderProgram& program, const Texture &texture,
     mat4 translation = translate(mat4(1.f), pos);
     mat4 scaling = glm::scale(mat4(1.f), scale);
     program.leftMult("ModelMatrix", scaling * rotation * translation);
-    program.updateMat4("ModelMatrix");
 
     glBindTexture(GL_TEXTURE_2D, texture.getTextureID());
     glBindVertexArray(texture.getVAO());
@@ -125,7 +124,6 @@ void render::drawTexture(ShaderProgram& program, const Texture &texture,
                              rot_axis);
     scaling = glm::scale(mat4(1.f), 1 / scale);
     program.leftMult("ModelMatrix", translation * rotation * scaling);
-    program.updateMat4("ModelMatrix");
 }
 
 void render::renderTerrain(ShaderProgram& program, const Terrain& terrain)
@@ -137,11 +135,10 @@ void render::renderTerrain(ShaderProgram& program, const Terrain& terrain)
     glBindVertexArray(0);
 }
 
-void render::drawBoundingBox(ShaderProgram& program,
-                             const std::vector<GLfloat>& points,
-                             const Texture &texture,
-                             const glm::vec3& position, GLfloat angle,
-                             glm::vec3 rot_axis, GLfloat sc)
+void render::drawVertices(ShaderProgram& program, const GLfloat* points,
+                          size_t size, const Texture &texture,
+                          const glm::vec3& position,
+                          GLfloat angle, glm::vec3 rot_axis, GLfloat sc)
 {
     assert(texture.getVAO() != 0);
 
@@ -162,7 +159,6 @@ void render::drawBoundingBox(ShaderProgram& program,
     mat4 translation = translate(mat4(1.f), pos);
     mat4 scaling = glm::scale(mat4(1.f), scale);
     program.leftMult("ModelMatrix", scaling * rotation * translation);
-    program.updateMat4("ModelMatrix");
 
     GLuint verticesID = 0;
     GLuint VAO = 0;
@@ -172,13 +168,12 @@ void render::drawBoundingBox(ShaderProgram& program,
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, verticesID);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * points.size(), points.data(),
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * size, points, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnableVertexAttribArray(0);
 
-    glDrawArrays(GL_TRIANGLES, 0, points.size());
+    glDrawArrays(GL_TRIANGLES, 0, size);
     glDisableVertexAttribArray(0);
 
     glDeleteBuffers(1, &verticesID);
@@ -189,7 +184,42 @@ void render::drawBoundingBox(ShaderProgram& program,
                              rot_axis);
     scaling = glm::scale(mat4(1.f), 1 / scale);
     program.leftMult("ModelMatrix", translation * rotation * scaling);
-    program.updateMat4("ModelMatrix");
+}
+
+void render::drawVerticesVAO(ShaderProgram& program, const GLfloat* points,
+                             size_t size, const Texture &texture,
+                             const vec3& position, GLfloat angle,
+                             vec3 rot_axis, GLfloat sc)
+{
+    assert(texture.getVAO() != 0);
+
+    glm::vec3 pos = {position.x / texture.getWidth(),
+                     position.y / texture.getHeight(),
+                     position.z / texture.getDepth()};
+
+    const GLfloat half = 1.f;
+    const GLfloat centerX = pos.x + half;
+    const GLfloat centerY = pos.y + half;
+    const GLfloat centerZ = pos.z + half;
+
+    const glm::vec3 scale = glm::vec3(texture.getWidth(), texture.getHeight(),
+                                      texture.getDepth());
+
+    mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
+                                  rot_axis);
+    mat4 translation = translate(mat4(1.f), pos);
+    mat4 scaling = glm::scale(mat4(1.f), scale);
+    program.leftMult("ModelMatrix", scaling * rotation * translation);
+
+    glBindVertexArray(texture.getVAO());
+    glDrawArrays(GL_TRIANGLES, 0, texture.getTriangleCount());
+    glBindVertexArray(0);
+
+    translation[3] = glm::vec4(-pos.x,  -pos.y, -pos.z, 1);
+    rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), -angle,
+                             rot_axis);
+    scaling = glm::scale(mat4(1.f), 1 / scale);
+    program.leftMult("ModelMatrix", translation * rotation * scaling);
 }
 
 
