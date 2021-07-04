@@ -118,6 +118,14 @@ void RenderGuiSystem::update_state(size_t delta)
                                       | ImGuiWindowFlags_NoBringToFrontOnFocus
                                       | ImGuiWindowFlags_MenuBar);
     {
+
+        ImGui::GetStyle().WindowRounding = 0.0f;// <- Set this on init or use ImGui::PushStyleVar()
+        ImGui::GetStyle().ChildRounding = 0.0f;
+        ImGui::GetStyle().FrameRounding = 0.0f;
+        ImGui::GetStyle().GrabRounding = 0.0f;
+        ImGui::GetStyle().PopupRounding = 0.0f;
+        ImGui::GetStyle().ScrollbarRounding = 0.0f;
+
         ImGui::PushItemWidth(ImGui::GetFontSize() * -12);
         if (ImGui::BeginMenuBar())
         {
@@ -154,6 +162,8 @@ void RenderGuiSystem::update_state(size_t delta)
                             &Config::getVal<bool>("DrawBoundingBoxes"));
             ImGui::Checkbox("Check collision",
                             &Config::getVal<bool>("CheckCollision"));
+            ImGui::Checkbox("Enable lighting",
+                            &Config::getVal<bool>("EnableLight"));
 
             ImGui::Text("Minimal rect fraction size");
             ImGui::InputFloat3("##min_rect", glm::value_ptr(
@@ -162,6 +172,10 @@ void RenderGuiSystem::update_state(size_t delta)
             ImGui::Text("Laser position");
             ImGui::InputFloat3("##laser_pos", glm::value_ptr(
                     Config::getVal<glm::vec3>("LaserPos")));
+
+            ImGui::Text("Light position");
+            ImGui::InputFloat3("##light_pos", glm::value_ptr(
+                    Config::getVal<glm::vec3>("LightPos")));
 
             ImGui::Text("Prism frequencies");
             ImGui::InputFloat2("##prism_freq", glm::value_ptr(

@@ -60,7 +60,7 @@ private:
     GLuint m_textureId;
 
     void computeIndices();
-    void computeNormals();
+    vec3 computeNormal(int x, int z);
     void generateBuffers();
     void generateMesh();
     void sampleHeightMapImage(const std::string& image_file);

@@ -99,7 +99,6 @@ void KeyboardSystem::update_state(size_t delta)
                 if (!stopped) {
                     camera->processMouseScroll(e.wheel.y / 10.f);
                     program->setMat4(VIEW, camera->getView());
-                    program->updateMat4(VIEW);
                 }
                 break;
             case SDL_WINDOWEVENT:
@@ -132,7 +131,6 @@ void KeyboardSystem::update_state(size_t delta)
 
         if (!stopped) {
             program->setMat4(VIEW, camera->getView());
-            program->updateMat4(VIEW);
         }
     }
 }

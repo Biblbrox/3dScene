@@ -14,8 +14,10 @@
 #include "utils/texture.hpp"
 #include "components/positioncomponent.hpp"
 #include "components/spritecomponent.hpp"
+#include "components/lightcomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "components/bvhcomponent.hpp"
+#include "components/materialcomponent.hpp"
 #include "components/selectablecomponent.hpp"
 #include "components/terraincomponent.hpp"
 #include "systems/renderscenesystem.hpp"
@@ -93,6 +95,10 @@ World::World() : m_wasInit(false)
         Config::addVal("ColoredLife", false, "bool");
     if (!Config::hasKey("ShowCameraPos"))
         Config::addVal("ShowCameraPos", false, "bool");
+    if (!Config::hasKey("EnableLight"))
+        Config::addVal("EnableLight", false, "bool");
+    if (!Config::hasKey("LightPos"))
+        Config::addVal("LightPos", glm::vec3(0.f), "vec3");
 }
 
 World::~World()
@@ -224,20 +230,10 @@ void World::init_scene()
 void World::init_sprites()
 {
     utils::Random rand;
+    auto min_rect = Config::getVal<glm::vec3>("MinRectSize");
 
     auto terrainEn = m_entities[m_terrainID];
     auto terrain = terrainEn->getComponent<TerrainComponent>()->terrain;
-
-    std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite;
-    car_sprite = std::make_shared<Sprite>();
-    palm_sprite = std::make_shared<Sprite>();
-    house_sprite = std::make_shared<Sprite>();
-    car_sprite->addTexture(getResourcePath("ford_focus2.obj"), 2.f, 2.f, 2.f);
-    car_sprite->generateDataBuffer();
-    palm_sprite->addTexture(getResourcePath("lowpolypalm.obj"), 2.f, 2.f, 2.f);
-    palm_sprite->generateDataBuffer();
-//    house_sprite->addTexture(getResourcePath("house8.obj"), 40, 40, 40);
-//    house_sprite->generateDataBuffer();
 
     GLfloat start_x, start_z;
     start_x = start_z = terrain->getWorldWidth() / 2.f;
@@ -246,24 +242,55 @@ void World::init_sprites()
     camera->setPos({start_x, 200.f, start_z});
     Config::addVal<vec3>("LaserPos", {start_x, 200.f, start_z}, "vec3");
 
-    auto min_rect = Config::getVal<glm::vec3>("MinRectSize");
+    std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite;
+    car_sprite = std::make_shared<Sprite>();
+    palm_sprite = std::make_shared<Sprite>();
+    car_sprite->addMesh(getResourcePath("ford_focus2.obj"), 2.f, 2.f, 2.f);
+    car_sprite->generateDataBuffer();
+    palm_sprite->addMesh(getResourcePath("lowpolypalm.obj"), 2.f, 2.f, 2.f);
+    palm_sprite->generateDataBuffer();
+
+    auto light_en = createEntity(unique_id());
+    light_en->activate();
+    light_en->addComponents<LightComponent, SpriteComponent>();
+
+    auto light_comp = light_en->getComponent<LightComponent>();
+    light_comp->pos = camera->getPos();
+    light_comp->ambient = vec3(0.1f);
+    light_comp->diffuse = vec3(0.5f);
+    light_comp->specular = vec3(0.5f);
+    std::shared_ptr<Sprite> light_sprite = std::make_shared<Sprite>();
+    light_sprite->addMesh(getResourcePath("DiscoBall.obj"), 2.f, 2.f, 2.f);
+    light_sprite->generateDataBuffer();
+    light_en->getComponent<SpriteComponent>()->sprite = light_sprite;
+
+    Config::addVal("LightPos", camera->getPos(), "vec3");
+
+//    auto tree = coll::buildBVH(light_sprite->getVertices()[0], min_rect);
+//    light_en->getComponent<BVHComponent>()->vbh_tree = tree;
+//    light_en->getComponent<BVHComponent>()->vbh_tree_model =
+//            coll::buildBVH(light_sprite->getVertices()[0], min_rect);
+
     for (size_t i = 0; i < 5; ++i) {
-        auto en_left = createEntity(unique_id());
-        en_left->activate();
-        en_left->addComponent<SpriteComponent>();
-        en_left->addComponent<PositionComponent>();
-        en_left->addComponent<SelectableComponent>();
-        auto sprite_left = en_left->getComponent<SpriteComponent>();
+        auto left = createEntity(unique_id());
+        left->activate();
+        left->addComponents<SpriteComponent, PositionComponent,
+                SelectableComponent, BVHComponent, MaterialComponent>();
+        auto sprite_left = left->getComponent<SpriteComponent>();
         sprite_left->sprite = palm_sprite;
-        auto pos_left = en_left->getComponent<PositionComponent>();
+        auto pos_left = left->getComponent<PositionComponent>();
         pos_left->pos.x = i * 30.f + start_x;
         pos_left->pos.z = 0 + start_z;
         pos_left->pos.y = terrain->getAltitude({pos_left->pos.x, pos_left->pos.z});
         auto tree = coll::buildBVH(sprite_left->sprite->getVertices()[0], min_rect);
-        en_left->addComponent<BVHComponent>();
-        en_left->getComponent<BVHComponent>()->vbh_tree = tree;
-        en_left->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVH(sprite_left->sprite->getVertices()[0], min_rect);
-        utils::data::mapBinaryTree(en_left->getComponent<BVHComponent>()->vbh_tree, [pos_left, sprite_left](std::shared_ptr<utils::RectPoints3D> bound_rect)
+        left->getComponent<BVHComponent>()->vbh_tree = tree;
+        left->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVH(sprite_left->sprite->getVertices()[0], min_rect);
+        auto material = left->getComponent<MaterialComponent>();
+        material->ambient = vec3(1.f);
+        material->diffuse = vec3(0.8f);
+        material->specular = vec3(0.f);
+        material->shininess = 32.f;
+        utils::data::mapBinaryTree(left->getComponent<BVHComponent>()->vbh_tree, [pos_left, sprite_left](std::shared_ptr<utils::RectPoints3D> bound_rect)
         {
             *bound_rect = coll::AABBtoWorldSpace(
                     *bound_rect, pos_left->rot_axis, pos_left->angle,
@@ -271,34 +298,37 @@ void World::init_sprites()
             );
         });
 
-        auto en_right = createEntity(unique_id());
-        en_right->activate();
-        en_right->addComponent<SpriteComponent>();
-        en_right->addComponent<PositionComponent>();
-        en_right->addComponent<SelectableComponent>();
-        auto sprite_right = en_right->getComponent<SpriteComponent>();
+        auto right = createEntity(unique_id());
+        right->activate();
+        right->addComponents<SpriteComponent, PositionComponent,
+                SelectableComponent, BVHComponent, MaterialComponent>();
+        auto sprite_right = right->getComponent<SpriteComponent>();
         sprite_right->sprite = palm_sprite;
-        auto pos_right = en_right->getComponent<PositionComponent>();
+        auto pos_right = right->getComponent<PositionComponent>();
         pos_right->pos.x = i * 30.f + start_x;
         pos_right->pos.z = 30.f + start_z;
         pos_right->pos.y = terrain->getAltitude({pos_right->pos.x, pos_right->pos.z});
         tree = coll::buildBVH(sprite_right->sprite->getVertices()[0], min_rect);
-        en_right->addComponent<BVHComponent>();
-        en_right->getComponent<BVHComponent>()->vbh_tree = tree;
-        en_right->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVH(sprite_right->sprite->getVertices()[0], min_rect);
-        utils::data::mapBinaryTree(en_right->getComponent<BVHComponent>()->vbh_tree, [pos_right, sprite_right](std::shared_ptr<utils::RectPoints3D> bound_rect)
+        right->addComponent<BVHComponent>();
+        right->getComponent<BVHComponent>()->vbh_tree = tree;
+        right->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVH(sprite_right->sprite->getVertices()[0], min_rect);
+        utils::data::mapBinaryTree(right->getComponent<BVHComponent>()->vbh_tree, [pos_right, sprite_right](std::shared_ptr<utils::RectPoints3D> bound_rect)
         {
             *bound_rect = coll::AABBtoWorldSpace(
                     *bound_rect, pos_right->rot_axis, pos_right->angle,
                     pos_right->pos, *sprite_right->sprite
             );
         });
+        material = right->getComponent<MaterialComponent>();
+        material->ambient = vec3(1.f);
+        material->diffuse = vec3(0.8f);
+        material->specular = vec3(0.f);
+        material->shininess = 32.f;
 
         auto car = createEntity(unique_id());
         car->activate();
-        car->addComponent<SpriteComponent>();
-        car->addComponent<PositionComponent>();
-        car->addComponent<SelectableComponent>();
+        car->addComponents<SpriteComponent, PositionComponent,
+                SelectableComponent, BVHComponent, MaterialComponent>();
         auto car_sprite_comp = car->getComponent<SpriteComponent>();
         car_sprite_comp->sprite = car_sprite;
         auto car_pos = car->getComponent<PositionComponent>();
@@ -318,22 +348,11 @@ void World::init_sprites()
                     car_pos->pos, *car_sprite_comp->sprite
             );
         });
-
-        /*auto house = createEntity(unique_id());
-        house->activate();
-        house->addComponent<SpriteComponent>();
-        house->addComponent<PositionComponent>();
-        auto house_sprite_comp = house->getComponent<SpriteComponent>();
-        house_sprite_comp->sprite = house_sprite;
-        auto house_pos = house->getComponent<PositionComponent>();
-        house_pos->x = (i + 6) * 400;
-        house_pos->y = 0;
-        house_pos->z = rand.generateu(150, 350);
-        house_pos->angle = -glm::half_pi<GLfloat>();
-        house_pos->rot_axis = glm::vec3(0.f, 1.f, 0.f);
-        tree = coll::buildBVH(house_sprite_comp->sprite->getVertices()[0], min_rect);
-        house->addComponent<BVHComponent>();
-        house->getComponent<BVHComponent>()->vbh_tree = tree;*/
+        material = car->getComponent<MaterialComponent>();
+        material->ambient = vec3(1.f);
+        material->diffuse = vec3(1.f);
+        material->specular = vec3(0.5f);
+        material->shininess = 32.f;
     }
 }
 

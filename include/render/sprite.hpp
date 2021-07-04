@@ -18,9 +18,9 @@ public:
 //    Sprite(Sprite& en) = default;
 //    Sprite& operator=(Sprite&&) = default;
 //    Sprite& operator=(const Sprite&) = default;
-    void addTexture(const std::string& objFile,
-                      GLfloat textureWidth,
-                      GLfloat textureHeight, GLfloat textureDepth);
+    void addMesh(const std::string& objFile,
+                 GLfloat textureWidth,
+                 GLfloat textureHeight, GLfloat textureDepth);
     glm::vec3 getClip(GLuint idx) noexcept;
 
     GLuint getTriangleCount() const;

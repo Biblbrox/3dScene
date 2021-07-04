@@ -21,7 +21,7 @@ public:
     virtual void freeProgram() final;
 
     /**
-     * Write data to program state
+     * Write data to uniforms
      * @param str
      * @param value
      */
@@ -41,17 +41,6 @@ public:
 
     virtual void leftMult(const std::string& name, const glm::mat4& matrix);
     virtual void mult(const std::string& name, const glm::vec4& vec);
-
-    /**
-     * Write actual data to uniforms
-     * @param str
-     */
-    virtual void updateFloat(const std::string& str);
-    virtual void updateInt(const std::string &name);
-    virtual void updateVec3(const std::string &name);
-    virtual void updateVec4(const std::string &name);
-    virtual void updateMat3(const std::string &name);
-    virtual void updateMat4(const std::string &name);
 
     void bind() const;
     void unbind();

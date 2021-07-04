@@ -46,7 +46,7 @@ namespace utils::texture
     vector<GLfloat> loadObj(const std::string& file,
                             std::string& textureFile,
                             vector<vec3>& vertices, vector<vec2>& uv,
-                            vector<vec3>& normals, vector<vec3u> indices);
+                            vector<vec3>& normals, vector<vec3u>& indices);
 
     /**
      * Load texture from file

@@ -1,4 +1,5 @@
 #include <SDL_image.h>
+#include <glm/glm.hpp>
 
 #include "render/terrain.hpp"
 #include "utils/texture.hpp"
@@ -20,7 +21,6 @@ Terrain::Terrain(GLuint width, GLuint height, GLfloat step,
     sampleHeightMapImage(height_image);;
     generateMesh();
     computeIndices();
-    computeNormals();
     generateBuffers();
 
     m_textureId = utils::texture::loadTexture(texture, nullptr, nullptr);
@@ -63,8 +63,9 @@ void Terrain::generateMesh()
         for (int j = 0; j < m_height; ++j) {
             GLfloat h = m_heightMap[i][j];
 
-            glm::vec3 vertex = {(float) i * m_step, h, (float) j * m_step};
-            glm::vec2 uv = {u_step * i, v_step * j};
+            vec3 vertex = {(float) i * m_step, h, (float) j * m_step};
+            vec2 uv = {u_step * i, v_step * j};
+            vec3 normal = computeNormal(i, j);
 
             m_vertices.push_back(vertex.x);
             m_vertices.push_back(vertex.y);
@@ -76,6 +77,10 @@ void Terrain::generateMesh()
 
             m_vertexData.push_back(uv.x);
             m_vertexData.push_back(uv.y);
+
+            m_vertexData.push_back(normal.x);
+            m_vertexData.push_back(normal.y);
+            m_vertexData.push_back(normal.z);
         }
     }
 
@@ -104,9 +109,21 @@ void Terrain::computeIndices()
     }
 }
 
-void Terrain::computeNormals()
+vec3 Terrain::computeNormal(int x, int z)
 {
-    
+    if (x == 0)
+        x = 1;
+    if (z == 0)
+        z = 1;
+
+    GLfloat hl = getAltitude({x - 1, z});
+    GLfloat hr = getAltitude({x + 1, z});
+    GLfloat hd = getAltitude({x, z + 1});
+    GLfloat hu = getAltitude({x, z - 1});
+
+    vec3 normal = {hl - hr, 2.0f, hd - hu};
+
+    return glm::normalize(normal);
 }
 
 void Terrain::generateBuffers()
@@ -132,13 +149,18 @@ void Terrain::generateBuffers()
                  GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, // Pos of vertices
-                          5 * sizeof(GLfloat), nullptr);
+                          8 * sizeof(GLfloat), nullptr);
     glEnableVertexAttribArray(0);
 
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
-                          5 * sizeof(GLfloat), // UV coords
+                          8 * sizeof(GLfloat), // UV coords
                           (void *) (3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
+                          8 * sizeof(GLfloat), // Normals
+                          (void *) (5 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
