@@ -159,6 +159,10 @@ void RenderSceneSystem::drawBoundingBoxes()
 
     for (const auto&[key, en]: sprites) {
         auto treeComp = en->getComponent<BVHComponent>();
+        auto lightComp = en->getComponent<LightComponent>();
+        if (lightComp) // Do not draw bb for light source
+            continue;
+
         if (!treeComp)
             continue;
 

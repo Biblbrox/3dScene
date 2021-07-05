@@ -213,8 +213,6 @@ coll::divideByLongestSize(const std::vector<vec3>& mesh_vertices)
     std::vector<vec3> sorted_x;
     std::vector<vec3> sorted_y;
     std::vector<vec3> sorted_z;
-//    for (size_t i = 0; i < mesh_vertices.size(); i += 3)
-//        sorted_x.emplace_back(mesh_vertices[i], mesh_vertices[i + 1], mesh_vertices[i + 2]);
 
     sorted_y = sorted_z = sorted_x = mesh_vertices;
     sort(sorted_x.begin(), sorted_x.end(), [](const vec3& v1, const vec3& v2){
@@ -229,9 +227,9 @@ coll::divideByLongestSize(const std::vector<vec3>& mesh_vertices)
 
 
     // Divide by longest side
-    GLfloat x_length = std::abs(std::abs(max_x) - std::abs(min_x));
-    GLfloat y_length = std::abs(std::abs(max_y) - std::abs(min_y));
-    GLfloat z_length = std::abs(std::abs(max_z) - std::abs(min_z));
+    GLfloat x_length = std::abs(max_x - min_x);
+    GLfloat y_length = std::abs(max_y - min_y);
+    GLfloat z_length = std::abs(max_z - min_z);
     int longest_side = (x_length > y_length && x_length > z_length)
                        ? 0
                        : (y_length > x_length && y_length > z_length) ? 1 : 2;
@@ -265,15 +263,15 @@ coll::divideByLongestSize(const std::vector<vec3>& mesh_vertices)
         }
     }
 
-    if (left_part.size() <= 9 || right_part.size() <= 9)
+    if (left_part.size() <= 1 && right_part.size() <= 1)
         return {left_part, right_part};
 
     if (longest_side == 0) {
-        left_part[left_part.size() - 3] = right_part[0];
+        left_part[left_part.size() - 1].x = right_part[0].x;
     } else if (longest_side == 1) {
-        left_part[left_part.size() - 2] = right_part[1];
+        left_part[left_part.size() - 1].y = right_part[0].y;
     } else {
-        left_part[left_part.size() - 1] = right_part[2];
+        left_part[left_part.size() - 1].z = right_part[0].z;
     }
 
     return {left_part, right_part};
@@ -300,7 +298,7 @@ NodePtr coll::buildBVH(const VertData &mesh_vertices, vec3 min_rect) noexcept
 
     auto[left_part, right_part] = divideByLongestSize(mesh_vertices);
 
-    if (left_part.size() <= 9 || right_part.size() <= 9)
+    if (left_part.size() <= 1 && right_part.size() <= 1)
         return nullptr;
 
     auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(
@@ -310,6 +308,7 @@ NodePtr coll::buildBVH(const VertData &mesh_vertices, vec3 min_rect) noexcept
     GLfloat x_length = std::abs(std::abs(max_x) - std::abs(min_x));
     GLfloat y_length = std::abs(std::abs(max_y) - std::abs(min_y));
     GLfloat z_length = std::abs(std::abs(max_z) - std::abs(min_z));
+
     if (x_length > min_rect.x || y_length > min_rect.y
         || z_length > min_rect.z) {
         node->m_left = buildBVH(left_part, min_rect);
