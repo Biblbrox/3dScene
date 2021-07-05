@@ -38,12 +38,16 @@ using boost::format;
 using std::floor;
 using std::vector;
 using std::make_shared;
+using std::shared_ptr;
+using utils::RectPoints3D;
 using std::sin;
 using std::cos;
 using std::find_if;
 using utils::fix_coords;
 using utils::texture::genRbo;
 using utils::texture::genTexture;
+using utils::data::mapBinaryTree;
+using ecs::Entity;
 
 size_t unique_id()
 {
@@ -64,7 +68,7 @@ World::World() : m_wasInit(false)
     if (!Config::hasKey("TreeLevelShow"))
         Config::addVal("TreeLevelShow", 0, "int");
     if (!Config::hasKey("MinRectSize"))
-        Config::addVal("MinRectSize", glm::vec3(0.001f), "vec3");
+        Config::addVal("MinRectSize", glm::vec3(0.0001f), "vec3");
     if (!Config::hasKey("PrismFreq"))
         Config::addVal("PrismFreq", glm::vec2(90.f, 45.f), "vec2");
     if (!Config::hasKey("PrismStartAngle"))
@@ -264,12 +268,20 @@ void World::init_sprites()
     light_sprite->generateDataBuffer();
     light_en->getComponent<SpriteComponent>()->sprite = light_sprite;
 
+
     Config::addVal("LightPos", camera->getPos(), "vec3");
 
 //    auto tree = coll::buildBVH(light_sprite->getVertices()[0], min_rect);
 //    light_en->getComponent<BVHComponent>()->vbh_tree = tree;
 //    light_en->getComponent<BVHComponent>()->vbh_tree_model =
 //            coll::buildBVH(light_sprite->getVertices()[0], min_rect);
+//    mapBinaryTree(light_en->getComponent<BVHComponent>()->vbh_tree,
+//                  [light_comp, light_sprite](shared_ptr<RectPoints3D> bound_rect)
+//                  {
+//                      *bound_rect = coll::AABBtoWorldSpace(
+//                              *bound_rect, {0.f, 0.f, 0.f}, 0.f, light_comp->pos, *light_sprite
+//                      );
+//                  });
 
     for (size_t i = 0; i < 5; ++i) {
         auto left = createEntity(unique_id());
@@ -290,7 +302,7 @@ void World::init_sprites()
         material->diffuse = vec3(0.8f);
         material->specular = vec3(0.f);
         material->shininess = 32.f;
-        utils::data::mapBinaryTree(left->getComponent<BVHComponent>()->vbh_tree, [pos_left, sprite_left](std::shared_ptr<utils::RectPoints3D> bound_rect)
+        utils::data::mapBinaryTree(left->getComponent<BVHComponent>()->vbh_tree, [pos_left, sprite_left](shared_ptr<RectPoints3D> bound_rect)
         {
             *bound_rect = coll::AABBtoWorldSpace(
                     *bound_rect, pos_left->rot_axis, pos_left->angle,
