@@ -39,23 +39,16 @@ public:
     void setPitch(GLfloat pitch);
     void setPos(const glm::vec3& pos);
     void setFront(const glm::vec3& front);
+    void setWorldUp(const glm::vec3& worldUp);
+    void setRayLength(GLfloat length);
 
     GLfloat getYaw() const;
     GLfloat getPitch() const;
     glm::vec3 getFront() const;
 
-    void updateCameraVectors() override
-    {
-        // calculate the new Front vector
-        glm::vec3 front;
-        front.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-        front.y = sin(glm::radians(m_pitch));
-        front.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-//        m_front = glm::normalize(front);
-        // also re-calculate the Right and Up vector
-        m_right = glm::normalize(glm::cross(m_front, m_worldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-        m_up    = glm::normalize(glm::cross(m_right, m_front));
-    }
+    std::vector<vec3> pattern() const;
+
+    void updateCameraVectors() override;
 
 private:
     GLfloat m_rayLength;
