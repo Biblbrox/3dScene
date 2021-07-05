@@ -158,6 +158,38 @@ coll::AABBtoWorldSpace(RectPoints3D rect,
     return rebuildAABBinWorldSpace(rect);
 }
 
+RectPoints3D
+coll::AABBTransform(RectPoints3D rect,
+                    const vec3& rot_axis, GLfloat angle,
+                    const vec3& position, const Texture& texture) noexcept
+{
+
+    vec3 pos = {position.x / texture.getWidth(),
+                position.y / texture.getHeight(),
+                position.z / texture.getDepth()};
+
+    const GLfloat half = 1.f;
+    const GLfloat centerX = pos.x + half;
+    const GLfloat centerY = pos.y + half;
+    const GLfloat centerZ = pos.z + half;
+
+    mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
+                                  rot_axis);
+    mat4 translation = translate(mat4(1.f), position);
+    mat4 transform = rotation * translation;
+
+    rect.a = transform * vec4(rect.a, 1.f);
+    rect.b = transform * vec4(rect.b, 1.f);
+    rect.c = transform * vec4(rect.c, 1.f);
+    rect.d = transform * vec4(rect.d, 1.f);
+    rect.e = transform * vec4(rect.e, 1.f);
+    rect.f = transform * vec4(rect.f, 1.f);
+    rect.g = transform * vec4(rect.g, 1.f);
+    rect.k = transform * vec4(rect.k, 1.f);
+
+    return rebuildAABBinWorldSpace(rect);
+}
+
 /**
  * Return rectangular oriented bounding box for given vertices
  * Result contain vertices grouped to triangle primitives

@@ -98,6 +98,11 @@ namespace coll {
                      const glm::vec3& rot_axis, GLfloat angle,
                      const glm::vec3& position, const Texture& texture) noexcept;
 
+    RectPoints3D
+    AABBTransform(RectPoints3D rect,
+                  const vec3& rot_axis, GLfloat angle,
+                  const vec3& position, const Texture& texture) noexcept;
+
     /**
      * Return rectangular oriented bounding box for given vertices
      * Result contain vertices grouped to triangle primitives

@@ -2,10 +2,13 @@
 #include "utils/math.hpp"
 #include "utils/logger.hpp"
 #include "render/terrain.hpp"
+#include "config.hpp"
 
 using glm::vec2;
-using glm::mat4;
 using glm::vec3;
+using glm::vec4;
+using glm::mat3;
+using glm::mat4;
 using utils::math::rotate_around;
 using utils::math::operator/;
 using utils::log::program_log_file_name;
@@ -96,22 +99,25 @@ void render::drawTexture(ShaderProgram& program, const Texture &texture,
 {
     assert(texture.getVAO() != 0);
 
-    glm::vec3 pos = {position.x / (sc * texture.getWidth()),
-                     position.y / (sc * texture.getHeight()),
-                     position.z / (sc * texture.getDepth())};
+    vec3 pos = {position.x / (sc * texture.getWidth()),
+                position.y / (sc * texture.getHeight()),
+                position.z / (sc * texture.getDepth())};
     const GLfloat half = 1.f;
     const GLfloat centerX = pos.x + half;
     const GLfloat centerY = pos.y + half;
     const GLfloat centerZ = pos.z + half;
 
-    const glm::vec3 scale = sc * glm::vec3(texture.getWidth(), texture.getHeight(),
-                                           texture.getDepth());
+    const vec3 scale = sc * glm::vec3(texture.getWidth(), texture.getHeight(),
+                                       texture.getDepth());
 
     mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
                                   rot_axis);
     mat4 translation = translate(mat4(1.f), pos);
     mat4 scaling = glm::scale(mat4(1.f), scale);
-    program.leftMult("ModelMatrix", scaling * rotation * translation);
+    mat4 model = scaling * rotation * translation;
+    program.leftMult("ModelMatrix", model);
+    if (Config::getVal<bool>("EnableLight"))
+        program.setMat3("NormalMatrix", mat3(transpose(inverse(model))));
 
     glBindTexture(GL_TEXTURE_2D, texture.getTextureID());
     glBindVertexArray(texture.getVAO());
@@ -119,7 +125,7 @@ void render::drawTexture(ShaderProgram& program, const Texture &texture,
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
 
-    translation[3] = glm::vec4(-pos.x,  -pos.y, -pos.z, 1);
+    translation[3] = vec4(-pos.x,  -pos.y, -pos.z, 1);
     rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), -angle,
                              rot_axis);
     scaling = glm::scale(mat4(1.f), 1 / scale);
@@ -137,22 +143,22 @@ void render::renderTerrain(ShaderProgram& program, const Terrain& terrain)
 
 void render::drawVertices(ShaderProgram& program, const GLfloat* points,
                           size_t size, const Texture &texture,
-                          const glm::vec3& position,
-                          GLfloat angle, glm::vec3 rot_axis, GLfloat sc)
+                          const vec3& position,
+                          GLfloat angle, vec3 rot_axis, GLfloat sc)
 {
     assert(texture.getVAO() != 0);
 
-    glm::vec3 pos = {position.x / texture.getWidth(),
-                     position.y / texture.getHeight(),
-                     position.z / texture.getDepth()};
+    vec3 pos = {position.x / texture.getWidth(),
+                position.y / texture.getHeight(),
+                position.z / texture.getDepth()};
 
     const GLfloat half = 1.f;
     const GLfloat centerX = pos.x + half;
     const GLfloat centerY = pos.y + half;
     const GLfloat centerZ = pos.z + half;
 
-    const glm::vec3 scale = glm::vec3(texture.getWidth(), texture.getHeight(),
-                                      texture.getDepth());
+    const vec3 scale = vec3 (texture.getWidth(), texture.getHeight(),
+                             texture.getDepth());
 
     mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
                                   rot_axis);
@@ -215,7 +221,7 @@ void render::drawVerticesVAO(ShaderProgram& program, const GLfloat* points,
     glDrawArrays(GL_TRIANGLES, 0, texture.getTriangleCount());
     glBindVertexArray(0);
 
-    translation[3] = glm::vec4(-pos.x,  -pos.y, -pos.z, 1);
+    translation[3] = vec4(-pos.x,  -pos.y, -pos.z, 1);
     rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), -angle,
                              rot_axis);
     scaling = glm::scale(mat4(1.f), 1 / scale);

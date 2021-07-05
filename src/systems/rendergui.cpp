@@ -162,8 +162,7 @@ void RenderGuiSystem::update_state(size_t delta)
                             &Config::getVal<bool>("DrawBoundingBoxes"));
             ImGui::Checkbox("Check collision",
                             &Config::getVal<bool>("CheckCollision"));
-            ImGui::Checkbox("Enable lighting",
-                            &Config::getVal<bool>("EnableLight"));
+            ImGui::Checkbox("Enable lighting", &Config::getVal<bool>("EnableLight"));
 
             ImGui::Text("Minimal rect fraction size");
             ImGui::InputFloat3("##min_rect", glm::value_ptr(
