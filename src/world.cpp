@@ -249,10 +249,13 @@ void World::init_sprites()
     std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite;
     car_sprite = std::make_shared<Sprite>();
     palm_sprite = std::make_shared<Sprite>();
+    house_sprite = std::make_shared<Sprite>();
     car_sprite->addMesh(getResourcePath("ford_focus2.obj"), 2.f, 2.f, 2.f);
     car_sprite->generateDataBuffer();
     palm_sprite->addMesh(getResourcePath("lowpolypalm.obj"), 2.f, 2.f, 2.f);
     palm_sprite->generateDataBuffer();
+    house_sprite->addMesh(getResourcePath("spah9lvl.obj"), 1.f, 1.f, 1.f);
+    house_sprite->generateDataBuffer();
 
     auto light_en = createEntity(unique_id());
     light_en->activate();
@@ -302,12 +305,11 @@ void World::init_sprites()
         material->diffuse = vec3(0.8f);
         material->specular = vec3(0.f);
         material->shininess = 32.f;
-        utils::data::mapBinaryTree(left->getComponent<BVHComponent>()->vbh_tree, [pos_left, sprite_left](shared_ptr<RectPoints3D> bound_rect)
+        mapBinaryTree(tree, [pos_left, palm_sprite](auto rect)
         {
-            *bound_rect = coll::AABBtoWorldSpace(
-                    *bound_rect, pos_left->rot_axis, pos_left->angle,
-                    pos_left->pos, *sprite_left->sprite
-            );
+            *rect = coll::AABBtoWorldSpace(*rect, pos_left->rot_axis,
+                                           pos_left->angle, pos_left->pos,
+                                           *palm_sprite);
         });
 
         auto right = createEntity(unique_id());
@@ -324,13 +326,13 @@ void World::init_sprites()
         right->addComponent<BVHComponent>();
         right->getComponent<BVHComponent>()->vbh_tree = tree;
         right->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVH(sprite_right->sprite->getVertices()[0], min_rect);
-        utils::data::mapBinaryTree(right->getComponent<BVHComponent>()->vbh_tree, [pos_right, sprite_right](std::shared_ptr<utils::RectPoints3D> bound_rect)
+        mapBinaryTree(tree, [pos_right, palm_sprite](auto rect)
         {
-            *bound_rect = coll::AABBtoWorldSpace(
-                    *bound_rect, pos_right->rot_axis, pos_right->angle,
-                    pos_right->pos, *sprite_right->sprite
-            );
+            *rect = coll::AABBtoWorldSpace(*rect, pos_right->rot_axis,
+                                           pos_right->angle, pos_right->pos,
+                                           *palm_sprite);
         });
+
         material = right->getComponent<MaterialComponent>();
         material->ambient = vec3(1.f);
         material->diffuse = vec3(0.8f);
@@ -353,14 +355,42 @@ void World::init_sprites()
         car->addComponent<BVHComponent>();
         car->getComponent<BVHComponent>()->vbh_tree = tree;
         car->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect);
-        utils::data::mapBinaryTree(car->getComponent<BVHComponent>()->vbh_tree, [car_pos, car_sprite_comp](std::shared_ptr<utils::RectPoints3D> bound_rect)
+        mapBinaryTree(tree, [car_pos, car_sprite](auto rect)
         {
-            *bound_rect = coll::AABBtoWorldSpace(
-                    *bound_rect, car_pos->rot_axis, car_pos->angle,
-                    car_pos->pos, *car_sprite_comp->sprite
-            );
+            *rect = coll::AABBtoWorldSpace(*rect, car_pos->rot_axis,
+                                           car_pos->angle, car_pos->pos,
+                                           *car_sprite);
         });
         material = car->getComponent<MaterialComponent>();
+        material->ambient = vec3(1.f);
+        material->diffuse = vec3(1.f);
+        material->specular = vec3(0.5f);
+        material->shininess = 32.f;
+
+
+        auto house = createEntity(unique_id());
+        house->activate();
+        house->addComponents<SpriteComponent, PositionComponent,
+                SelectableComponent, BVHComponent, MaterialComponent>();
+        auto house_sprite_comp = house->getComponent<SpriteComponent>();
+        house_sprite_comp->sprite = house_sprite;
+        auto house_pos = house->getComponent<PositionComponent>();
+        house_pos->pos.x = i * 30.f + start_x;
+        house_pos->pos.z = rand.generateu(30.f, 40.f) + start_z;
+        house_pos->pos.y = terrain->getAltitude({house_pos->pos.x, house_pos->pos.z});
+        house_pos->angle = -glm::half_pi<GLfloat>();
+        house_pos->rot_axis = vec3(0.f, 1.f, 0.f);
+        tree = coll::buildBVH(house_sprite_comp->sprite->getVertices()[0], min_rect);
+        house->addComponent<BVHComponent>();
+        house->getComponent<BVHComponent>()->vbh_tree = tree;
+        house->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVH(house_sprite_comp->sprite->getVertices()[0], min_rect);
+        mapBinaryTree(tree, [house_pos, house_sprite](auto rect)
+        {
+            *rect = coll::AABBtoWorldSpace(*rect, house_pos->rot_axis,
+                                           house_pos->angle, house_pos->pos,
+                                           *house_sprite);
+        });
+        material = house->getComponent<MaterialComponent>();
         material->ambient = vec3(1.f);
         material->diffuse = vec3(1.f);
         material->specular = vec3(0.5f);

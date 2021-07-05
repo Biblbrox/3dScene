@@ -6,6 +6,8 @@
 
 #include "components/keyboardcomponent.hpp"
 
+using glm::vec3;
+
 class KeyboardSystem : public ecs::System<KeyboardComponent>
 {
 public:
@@ -17,6 +19,8 @@ private:
     bool m_middlePressed;
     bool m_leftMousePressed;
     bool m_dragEnabled;
+
+    vec3 m_dragStartPos;
 
     std::shared_ptr<ecs::Entity> m_draggedObj;
 };

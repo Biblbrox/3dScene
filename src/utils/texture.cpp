@@ -60,6 +60,7 @@ utils::texture::loadObj(const std::string& file,
             normals.emplace_back(x, y, z);
         } else if (line.starts_with("f")) {
             std::string data = line.substr(line.find(' ')); // Skip "f"
+            boost::trim(data);
             std::vector<std::string> parts = split(data, " ");
             for (auto& str: parts) {
                 std::vector<std::string> idx = split(str, "/");

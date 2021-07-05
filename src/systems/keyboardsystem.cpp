@@ -21,6 +21,8 @@ using glm::vec3;
 using utils::log::Logger;
 using utils::math::viewportToWorld;
 using coll::BVHAABBTraversal;
+using coll::AABBtoWorldSpace;
+using utils::data::mapBinaryTree;
 
 void KeyboardSystem::update_state(size_t delta)
 {
@@ -87,13 +89,25 @@ void KeyboardSystem::update_state(size_t delta)
                 if (e.button.button == SDL_BUTTON_MIDDLE && !stopped)
                     m_middlePressed = false;
 
-                if (e.button.button == SDL_BUTTON_LEFT && !stopped) {
+                if (e.button.button == SDL_BUTTON_LEFT && !stopped)
                     m_leftMousePressed = false;
-                    m_dragEnabled = false;
-                }
 
-                if (e.button.button == SDL_BUTTON_LEFT && !stopped && m_draggedObj)
+                if (e.button.button == SDL_BUTTON_LEFT && !stopped && m_draggedObj) {
                     m_draggedObj->getComponent<SelectableComponent>()->dragged = false;
+                    m_dragEnabled = false;
+                    auto bvh = m_draggedObj->getComponent<BVHComponent>();
+                    if (bvh) { // Update aabb positions in world space
+                        auto pos = m_draggedObj->getComponent<PositionComponent>();
+                        auto sprite = m_draggedObj->getComponent<SpriteComponent>()->sprite;
+                        mapBinaryTree(bvh->vbh_tree, [pos, sprite, this](auto rect)
+                        {
+                            *rect = coll::AABBTransform(*rect, pos->rot_axis,
+                                                        pos->angle,
+                                                        pos->pos - m_dragStartPos, *sprite);
+                        });
+                    }
+                    m_draggedObj = nullptr;
+                }
                 break;
             case SDL_MOUSEWHEEL:
                 if (!stopped) {
@@ -164,6 +178,7 @@ void KeyboardSystem::processMouseDrag()
         if (coll.first) {
             m_dragEnabled = true;
             m_draggedObj = en;
+            m_dragStartPos = en->getComponent<PositionComponent>()->pos;
             m_draggedObj->getComponent<SelectableComponent>()->dragged = true;
             Logger::info("collision occurred, pos: %1$.3f, %2$.3f, %3$.3f",
                          coll.second.x, coll.second.y, coll.second.z);
