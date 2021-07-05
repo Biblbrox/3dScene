@@ -168,21 +168,37 @@ void RenderGuiSystem::update_state(size_t delta)
             ImGui::InputFloat3("##min_rect", glm::value_ptr(
                     Config::getVal<glm::vec3>("MinRectSize")));
 
-            ImGui::Text("Laser position");
-            ImGui::InputFloat3("##laser_pos", glm::value_ptr(
-                    Config::getVal<glm::vec3>("LaserPos")));
+
+            if (ImGui::Button("Laser Settings"))
+                m_laserSettingsOpen = true;
+
+            if (m_laserSettingsOpen) {
+                ImGui::Begin("Laser settings", &m_colorSettingsOpen);
+                ImGui::Text("Laser position");
+                ImGui::InputFloat3("##laser_pos", glm::value_ptr(
+                        Config::getVal<glm::vec3>("LaserPos")));
+
+                ImGui::Text("Laser yaw");
+                ImGui::InputFloat("##laser_yaw", &Config::getVal<GLfloat>("LaserYaw"));
+                ImGui::Text("Laser pitch");
+                ImGui::InputFloat("##laser_pitch", &Config::getVal<GLfloat>("LaserPitch"));
+
+                ImGui::Text("Prism frequencies");
+                ImGui::InputFloat2("##prism_freq", glm::value_ptr(
+                        Config::getVal<glm::vec2>("PrismFreq")));
+
+                ImGui::Text("Prism start angle");
+                ImGui::InputFloat2("##prism_start_angle", glm::value_ptr(
+                        Config::getVal<glm::vec2>("PrismStartAngle")));
+
+                ImGui::Text("Length of rays");
+                ImGui::InputFloat("##ray_length", &Config::getVal<GLfloat>("RayLength"));
+                ImGui::End();
+            }
 
             ImGui::Text("Light position");
             ImGui::InputFloat3("##light_pos", glm::value_ptr(
                     Config::getVal<glm::vec3>("LightPos")));
-
-            ImGui::Text("Prism frequencies");
-            ImGui::InputFloat2("##prism_freq", glm::value_ptr(
-                    Config::getVal<glm::vec2>("PrismFreq")));
-
-            ImGui::Text("Prism start angle");
-            ImGui::InputFloat2("##prism_start_angle", glm::value_ptr(
-                    Config::getVal<glm::vec2>("PrismStartAngle")));
 
             ImGui::Text("Tree level show");
 //            ImGui::SameLine();

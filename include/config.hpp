@@ -5,7 +5,7 @@
 #include <any>
 #include <fstream>
 #include <iostream>
-#include <glm/vec4.hpp>
+#include <glm/glm.hpp>
 
 #include "utils/string.hpp"
 
@@ -33,6 +33,13 @@ static std::string as_string(const std::any& val, const std::string& type)
         auto value = std::any_cast<glm::vec4>(val);
         return std::to_string(value.x) + "," + std::to_string(value.y)
                + "," + std::to_string(value.z) + "," + std::to_string(value.w);
+    } else if (type == "vec3") {
+        auto value = std::any_cast<glm::vec3>(val);
+        return std::to_string(value.x) + "," + std::to_string(value.y)
+               + "," + std::to_string(value.z);
+    } else if (type == "vec2") {
+        auto value = std::any_cast<glm::vec2>(val);
+        return std::to_string(value.x) + "," + std::to_string(value.y);
     }
 
     return "";
@@ -114,6 +121,17 @@ public:
                         std::stof(vec[2]), std::stof(vec[3])
                 };
                 addVal(key, val, "vec4");
+            } else if (type == "vec3") {
+                auto vec = split(parts[2], ",");
+                glm::vec3 val = {
+                        std::stof(vec[0]), std::stof(vec[1]),
+                        std::stof(vec[2])
+                };
+                addVal(key, val, "vec3");
+            } else if (type == "vec2") {
+                auto vec = split(parts[2], ",");
+                glm::vec2 val{std::stof(vec[0]), std::stof(vec[1])};
+                addVal(key, val, "vec2");
             }
         }
 

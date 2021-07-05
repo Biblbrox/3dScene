@@ -103,6 +103,12 @@ World::World() : m_wasInit(false)
         Config::addVal("EnableLight", false, "bool");
     if (!Config::hasKey("LightPos"))
         Config::addVal("LightPos", glm::vec3(0.f), "vec3");
+    if (!Config::hasKey("LaserYaw"))
+        Config::addVal("LaserYaw", 0.f, "float");
+    if (!Config::hasKey("LaserPitch"))
+        Config::addVal("LaserPitch", 0.f, "float");
+    if (!Config::hasKey("RayLength"))
+        Config::addVal("RayLength", 10.f, "float");
 }
 
 World::~World()
@@ -244,7 +250,6 @@ void World::init_sprites()
 
     auto camera = FpsCamera::getInstance();
     camera->setPos({start_x, 200.f, start_z});
-    Config::addVal<vec3>("LaserPos", {start_x, 200.f, start_z}, "vec3");
 
     std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite;
     car_sprite = std::make_shared<Sprite>();

@@ -25,6 +25,7 @@ private:
 
     bool m_videoSettingsOpen;
     bool m_colorSettingsOpen;
+    bool m_laserSettingsOpen;
 };
 
 #endif //RENDERGUISYSTEM_HPP
