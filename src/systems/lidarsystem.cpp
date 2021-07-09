@@ -1,5 +1,4 @@
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/rotate_vector.hpp>
 #include <glm/glm.hpp>
 
 #include "sceneprogram.hpp"
@@ -40,16 +39,11 @@ void LidarSystem::update_state(size_t delta)
     auto length = Config::getVal<GLfloat>("RayLength");
     m_lidar.setRayLength(length);
 
-    if (Config::getVal<bool>("CheckCollision"))
-        drawLidarIntersect();
+    drawLidarIntersect();
 }
 
 void LidarSystem::drawLidarIntersect()
 {
-    auto program = SceneProgram::getInstance();
-    program->useFramebufferProgram();
-    program->setInt("isPrimitive", true);
-
     GLfloat yaw = Config::getVal<GLfloat>("LaserYaw");
     GLfloat pitch = Config::getVal<GLfloat>("LaserPitch");
 
@@ -57,22 +51,40 @@ void LidarSystem::drawLidarIntersect()
     m_lidar.setPitch(pitch);
 
     auto pattern = m_lidar.pattern();
-    program->setVec3("primColor", {1.f, 1.f, 1.f});
-    pattern.push_back(m_lidar.getPos());
-    render::drawDots(pattern);
-    if (Config::getVal<bool>("DrawRays")) {
-        vector<vec3> rays;
-        for (const auto& dot: pattern) {
-            rays.push_back(m_lidar.getPos());
-            rays.push_back(dot);
+    if (Config::getVal<bool>("DrawPattern")) {
+        auto program = SceneProgram::getInstance();
+        program->useFramebufferProgram();
+        program->setInt("isPrimitive", true);
+
+        program->setVec3("primColor", {1.f, 1.f, 1.f});
+        pattern.push_back(m_lidar.getPos());
+        render::drawDots(pattern);
+        if (Config::getVal<bool>("DrawRays")) {
+            vector<vec3> rays;
+            for (const auto &dot: pattern) {
+                rays.push_back(m_lidar.getPos());
+                rays.push_back(dot);
+            }
+            program->setVec3("primColor", {0.1, 1.f, 0.1});
+            render::drawLinen(rays);
         }
-        program->setVec3("primColor", {0.1, 1.f, 0.1});
-        render::drawLinen(rays);
+
+        m_lidar.setYaw(yaw);
+        m_lidar.setPitch(pitch);
     }
 
+    if (!Config::getVal<bool>("CheckCollision"))
+        return;
+
     vector<vec3> coll_dots;
+    size_t nans = 0;
     for (const auto& dot: pattern) {
-        vec3 dir = normalize(m_lidar.getPos() - dot);
+        vec3 dir = normalize(dot - m_lidar.getPos());
+        if (std::isnan(dir.x) || std::isnan(dir.y) || std::isnan(dir.z)) {
+            nans++;
+            return;
+        }
+
         // Check collision
         for (const auto&[key, en]: m_ecsManager->getEntities()) {
             auto bvh_comp = en->getComponent<BVHComponent>();
@@ -87,14 +99,11 @@ void LidarSystem::drawLidarIntersect()
                 Logger::info("collision occurred, pos: %1$.3f, %2$.3f, %3$.3f",
                              coll.second.x, coll.second.y, coll.second.z);
 
-                col_stream << coll.second.x << ", "
-                           << coll.second.y << ", " << coll.second.z
-                           << "\n";
+                col_stream << coll.second.x << ", " << coll.second.y << ", "
+                           << coll.second.z << "\n";
                 coll_dots.emplace_back(coll.second);
             }
         }
     }
-
-    m_lidar.setYaw(yaw);
-    m_lidar.setPitch(pitch);
+    Logger::info("nans: %lu", nans);
 }
