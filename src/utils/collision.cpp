@@ -237,16 +237,15 @@ RectPoints3D coll::buildOBB(const std::vector<vec3> &mesh_vertices) noexcept
 }
 
 std::array<std::vector<vec3>, 2>
-coll::divideByLongestSize(const std::vector<vec3>& mesh_vertices)
+coll::divideByLongestSize(const std::vector<vec3>& vertices)
 {
-    auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(
-            mesh_vertices);
+    auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(vertices);
 
     std::vector<vec3> sorted_x;
     std::vector<vec3> sorted_y;
     std::vector<vec3> sorted_z;
 
-    sorted_y = sorted_z = sorted_x = mesh_vertices;
+    sorted_y = sorted_z = sorted_x = vertices;
     sort(sorted_x.begin(), sorted_x.end(), [](const vec3& v1, const vec3& v2){
         return v1.x < v2.x;
     });

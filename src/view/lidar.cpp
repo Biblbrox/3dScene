@@ -81,7 +81,8 @@ void Lidar::updateCameraVectors()
     m_up    = glm::normalize(glm::cross(m_right, m_front));
 }
 
-std::vector<vec3> Lidar::pattern() const
+std::vector<vec3>
+Lidar::risleyPattern2(const vec2& freq, const vec2& start_angle, GLfloat dens) const
 {
     vector<vec3> res;
 
@@ -94,11 +95,9 @@ std::vector<vec3> Lidar::pattern() const
     GLfloat alpha = glm::radians(2.f);
     GLfloat n = 1.5;
     GLfloat Delta = alpha * (n - 1);
-    vec2 freq = Config::getVal<glm::vec2>("PrismFreq");
     GLfloat f1 = freq[0];
     GLfloat f2 = freq[1];
     GLfloat t = 0;
-    vec2 start_angle = Config::getVal<glm::vec2>("PrismStartAngle");
     GLfloat Theta10 = start_angle[0];
     GLfloat Theta20 = start_angle[1];
     GLfloat Theta1 = (2 * pi<GLfloat>() * f1 * t  + Theta10) / 360;
@@ -107,8 +106,7 @@ std::vector<vec3> Lidar::pattern() const
     GLfloat Z = distance * Delta * (cos(Theta1) + cos(Theta2));
     GLfloat Y = distance * Delta * (sin(Theta1) + sin(Theta2));
 
-    GLfloat dot_dens = Config::getVal<GLfloat>("DotDens");
-    while (t <= dot_dens) {
+    while (t <= dens) {
         GLfloat rho = sqrt(Z * Z + Y * Y);
         dir_on_plane = cross(up, dir);
         GLfloat angle = (pi<GLfloat>() / 2.f - atan(Z / Y)) * 2.f - pi<GLfloat>();

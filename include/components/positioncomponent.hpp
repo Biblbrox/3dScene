@@ -7,9 +7,9 @@
 
 struct PositionComponent : ecs::Component
 {
-    glm::vec3 pos;
+    glm::vec3 pos = {0.f, 0.f, 0.f};
     GLfloat angle = 0;
-    glm::vec3 rot_axis = glm::vec3(1.f, 0.f, 0.f);
+    glm::vec3 rot_axis = {1.f, 0.f, 0.f};
 };
 
 #endif //MOONLANDER_POSITIONCOMPONENT_HPP

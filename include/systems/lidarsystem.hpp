@@ -18,7 +18,6 @@ private:
     void drawLidarIntersect();
 
     std::ofstream col_stream;
-    Lidar m_lidar;
 };
 
 

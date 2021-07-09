@@ -3,6 +3,7 @@
 
 #include <GL/glew.h>
 #include <glm/vec3.hpp>
+#include <boost/locale.hpp>
 
 using glm::vec;
 
@@ -63,5 +64,8 @@ inline int get_thread_count()
 #define TEXTURE_NUM "TextureNum"
 
 typedef vec<3, GLuint> vec3u;
+
+
+#define _(String) (boost::locale::gettext(String)).c_str()
 
 #endif //BASE_HPP

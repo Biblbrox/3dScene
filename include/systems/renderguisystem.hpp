@@ -26,6 +26,8 @@ private:
     bool m_videoSettingsOpen;
     bool m_colorSettingsOpen;
     bool m_laserSettingsOpen;
+
+    ImFont* m_font;
 };
 
 #endif //RENDERGUISYSTEM_HPP

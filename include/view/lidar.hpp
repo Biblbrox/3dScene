@@ -7,6 +7,7 @@
 #include "fpscamera.hpp"
 
 using glm::vec3;
+using glm::vec2;
 using glm::normalize;
 
 struct Ray
@@ -46,11 +47,15 @@ public:
     GLfloat getPitch() const;
     glm::vec3 getFront() const;
 
-    std::vector<vec3> pattern() const;
 
-    void updateCameraVectors() override;
-
+    /**
+     * Perform lidar point cloud by pattern
+     * @return
+     */
+    std::vector<vec3>
+    risleyPattern2(const vec2& freq, const vec2& angle, GLfloat dens) const;
 private:
+    void updateCameraVectors();
     GLfloat m_rayLength;
 };
 

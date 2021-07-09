@@ -51,7 +51,7 @@ public:
         m_worldUp = up;
         m_yaw = yaw;
         m_pitch = pitch;
-//        updateCameraVectors();
+        updateCameraVectors();
     }
 
 
@@ -64,7 +64,7 @@ public:
         m_worldUp = glm::vec3(upX, upY, upZ);
         m_yaw = yaw;
         m_pitch = pitch;
-//        updateCameraVectors();
+        updateCameraVectors();
     }
 
     // returns the view matrix calculated using Euler Angles and the LookAt Matrix
@@ -143,9 +143,9 @@ public:
     }
 
 
-protected:
+private:
     // calculates the front vector from the Camera's (updated) Euler Angles
-    virtual void updateCameraVectors()
+    void updateCameraVectors()
     {
         // calculate the new Front vector
         glm::vec3 front;
@@ -157,7 +157,7 @@ protected:
         m_right = glm::normalize(glm::cross(m_front, m_worldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
         m_up    = glm::normalize(glm::cross(m_right, m_front));
     }
-
+protected:
     // camera Attributes
     glm::vec3 m_pos;
     glm::vec3 m_front;
