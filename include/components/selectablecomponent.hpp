@@ -6,7 +6,7 @@
 struct SelectableComponent : ecs::Component
 {
     // Is entity dragged
-    bool dragged;
+    bool dragged = false;
 };
 
 

@@ -2,6 +2,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <imgui.h>
+#include <imgui_impl_opengl3.h>
 
 #include "systems/renderscenesystem.hpp"
 #include "components/spritecomponent.hpp"
@@ -87,7 +88,7 @@ void RenderSceneSystem::drawSprites()
         program->setInt("lighting", false);
     }
 
-    const auto &sprites = getEntitiesByTag<PositionComponent>();
+    const auto &sprites = getEntitiesByTags<PositionComponent, SpriteComponent>();
     for (const auto&[key, en]: sprites) {
         auto posComp = en->getComponent<PositionComponent>();
         auto sprite = en->getComponent<SpriteComponent>()->sprite;

@@ -13,6 +13,7 @@
 #include "utils/collision.hpp"
 #include "utils/texture.hpp"
 #include "components/positioncomponent.hpp"
+#include "components/lidarcomponent.hpp"
 #include "components/spritecomponent.hpp"
 #include "components/lightcomponent.hpp"
 #include "components/scenecomponent.hpp"
@@ -32,22 +33,27 @@
 #include "render/terrain.hpp"
 
 
-using utils::log::Logger;
-using utils::log::program_log_file_name;
-using boost::format;
 using std::floor;
 using std::vector;
 using std::make_shared;
 using std::shared_ptr;
-using utils::RectPoints3D;
 using std::sin;
 using std::cos;
 using std::find_if;
+
+using utils::RectPoints3D;
+
+using ecs::Entity;
+
+using utils::RectPoints3D;
+using utils::log::Logger;
+using utils::log::program_log_file_name;
 using utils::fix_coords;
 using utils::texture::genRbo;
 using utils::texture::genTexture;
 using utils::data::mapBinaryTree;
-using ecs::Entity;
+
+using coll::buildBVH;
 
 size_t unique_id()
 {
@@ -140,10 +146,11 @@ void World::update(size_t delta)
     if (getGameState() == GameStates::PLAY
         && getPrevGameState() == GameStates::STOP) {
         setGameState(GameStates::PLAY);
-        init();
+//        init();
     }
 
     filter_entities();
+
     for (auto &system: m_systems)
         system.second->update(delta);
 }
@@ -151,13 +158,10 @@ void World::update(size_t delta)
 void World::init()
 {
     m_systems.clear();
-    createSystem<KeyboardSystem>();
-    createSystem<RenderSceneSystem>();
-    createSystem<AnimationSystem>();
-    createSystem<PhysicsSystem>();
-    createSystem<ParticleRenderSystem>();
     createSystem<RenderGuiSystem>();
+    createSystem<RenderSceneSystem>();
     createSystem<LidarSystem>();
+    createSystem<KeyboardSystem>();
 
     m_entities.clear();
     init_terrain();
@@ -190,6 +194,25 @@ void World::init_terrain()
 
 void World::init_scene()
 {
+    auto lidarEn = createEntity(unique_id());
+    lidarEn->activate();
+    lidarEn->addComponents<PositionComponent, LidarComponent>();
+    auto lidar_pos = lidarEn->getComponent<PositionComponent>();
+    lidar_pos->pos = Config::getVal<glm::vec3>("LaserPos");
+    auto lidarComp = lidarEn->getComponent<LidarComponent>();
+    lidarComp->yaw = Config::getVal<GLfloat>("LaserYaw");
+    lidarComp->pitch = Config::getVal<GLfloat>("LaserPitch");
+    lidarComp->length = Config::getVal<GLfloat>("RayLength");
+    lidarComp->freq = Config::getVal<vec2>("PrismFreq");
+    lidarComp->start_angle = Config::getVal<vec2>("PrismStartAngle");
+    lidarComp->density = Config::getVal<GLfloat>("DotDens");
+
+    Lidar lidar(lidarComp->length, lidar_pos->pos, {0.f, 1.f, 0.f},
+                lidarComp->yaw, lidarComp->pitch);
+    lidarComp->pattern_points = lidar.risleyPattern2(
+            lidarComp->freq, lidarComp->start_angle,
+            lidarComp->density);
+
     auto scene = createEntity(unique_id());
     scene->activate();
     scene->addComponent<SceneComponent>();
@@ -306,9 +329,9 @@ void World::init_sprites()
         pos_left->pos.x = i * 30.f + start_x;
         pos_left->pos.z = 0 + start_z;
         pos_left->pos.y = terrain->getAltitude({pos_left->pos.x, pos_left->pos.z});
-        auto tree = coll::buildBVH(sprite_left->sprite->getVertices()[0], min_rect);
+        auto tree = buildBVH(sprite_left->sprite->getVertices()[0], min_rect);
         left->getComponent<BVHComponent>()->vbh_tree = tree;
-        left->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVH(sprite_left->sprite->getVertices()[0], min_rect);
+        left->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(sprite_left->sprite->getVertices()[0], min_rect);
         auto material = left->getComponent<MaterialComponent>();
         material->ambient = vec3(1.f);
         material->diffuse = vec3(0.8f);
@@ -331,10 +354,10 @@ void World::init_sprites()
         pos_right->pos.x = i * 30.f + start_x;
         pos_right->pos.z = 30.f + start_z;
         pos_right->pos.y = terrain->getAltitude({pos_right->pos.x, pos_right->pos.z});
-        tree = coll::buildBVH(sprite_right->sprite->getVertices()[0], min_rect);
+        tree = buildBVH(sprite_right->sprite->getVertices()[0], min_rect);
         right->addComponent<BVHComponent>();
         right->getComponent<BVHComponent>()->vbh_tree = tree;
-        right->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVH(sprite_right->sprite->getVertices()[0], min_rect);
+        right->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(sprite_right->sprite->getVertices()[0], min_rect);
         mapBinaryTree(tree, [pos_right, palm_sprite](auto rect)
         {
             *rect = coll::AABBtoWorldSpace(*rect, pos_right->rot_axis,

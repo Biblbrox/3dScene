@@ -1,0 +1,187 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: scene 1.0\n"
+"Report-Msgid-Bugs-To: biblbroxxx@gmail.com\n"
+"POT-Creation-Date: 2021-07-09 23:47+0300\n"
+"PO-Revision-Date: 2021-07-09 HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Russian <LL@li.org>\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: src/systems/rendergui.cpp:334
+msgid "Application theme:"
+msgstr ""
+
+#: src/systems/rendergui.cpp:302
+msgid "Background color"
+msgstr "Цвет фона"
+
+#: src/systems/rendergui.cpp:310
+msgid "Cell border color"
+msgstr ""
+
+#: src/systems/rendergui.cpp:306
+msgid "Cell color"
+msgstr ""
+
+#: src/systems/rendergui.cpp:165
+msgid "Check collision"
+msgstr "Проверка коллизий"
+
+#: src/systems/rendergui.cpp:300
+msgid "Color Settings"
+msgstr "Настройки цвета"
+
+#: src/systems/rendergui.cpp:136
+msgid "Ctrl+O"
+msgstr ""
+
+#: src/systems/rendergui.cpp:244
+msgid "Dots density"
+msgstr "Плотность точек"
+
+#: src/systems/rendergui.cpp:337
+msgid "Drag sensitivity:"
+msgstr "Чувствительность d&d"
+
+#: src/systems/rendergui.cpp:159
+msgid "Draw Leafs"
+msgstr "Отрисовка листьев"
+
+#: src/systems/rendergui.cpp:161
+msgid "Draw Rays"
+msgstr "Отрисовка лучей"
+
+#: src/systems/rendergui.cpp:157
+msgid "Draw Textures"
+msgstr "Отрисовка текстур"
+
+#: src/systems/rendergui.cpp:163
+msgid "Draw bounding boxes"
+msgstr "Отрисовка aabb"
+
+#: src/systems/rendergui.cpp:255
+msgid "Draw pattern"
+msgstr "Отрисовка паттерна"
+
+#: src/systems/rendergui.cpp:274
+msgid "Edit mode"
+msgstr "Редактирование"
+
+#: src/systems/rendergui.cpp:314
+msgid "Enable color game(Need simulation restart)"
+msgstr ""
+
+#: src/systems/rendergui.cpp:167
+msgid "Enable lighting"
+msgstr ""
+
+#: src/systems/rendergui.cpp:271
+msgid "Inverse rotation"
+msgstr ""
+
+#: src/systems/rendergui.cpp:174
+msgid "Laser Settings"
+msgstr "Настройки лазера"
+
+#: src/systems/rendergui.cpp:198
+msgid "Laser pitch"
+msgstr "Тангаж"
+
+#: src/systems/rendergui.cpp:183
+msgid "Laser position"
+msgstr "Местоположение лидара"
+
+#: src/systems/rendergui.cpp:182
+msgid "Laser settings"
+msgstr "Настроки лидара"
+
+#: src/systems/rendergui.cpp:187
+msgid "Laser Yaw"
+msgstr "Рыскание"
+
+#: src/systems/rendergui.cpp:233
+msgid "Length of rays"
+msgstr "Длина лучей"
+
+#: src/systems/rendergui.cpp:261
+msgid "Light position"
+msgstr "Позиция источника света"
+
+#: src/systems/rendergui.cpp:289
+msgid "Load config"
+msgstr "Загрузить настройки"
+
+#: src/systems/rendergui.cpp:294
+msgid "Load simulation"
+msgstr "Загрузить симуляцию"
+
+#: src/systems/rendergui.cpp:329
+msgid "MSAA Samples"
+msgstr ""
+
+#: src/systems/rendergui.cpp:169
+msgid "Minimal rect fraction size"
+msgstr "Минимальный размер AABB"
+
+#: src/systems/rendergui.cpp:280
+msgid "Pause simulation"
+msgstr "Пауза"
+
+#: src/systems/rendergui.cpp:209
+msgid "Prism frequencies"
+msgstr "Частоты призм"
+
+#: src/systems/rendergui.cpp:221
+msgid "Prism start angle"
+msgstr "Начальные углы поворота призм"
+
+#: src/systems/rendergui.cpp:345
+msgid "Render"
+msgstr ""
+
+msgid "Camera position"
+msgstr "Местоположение камеры"
+
+#: src/systems/rendergui.cpp:286
+msgid "Save config"
+msgstr "Сохранить настройки"
+
+#: src/systems/rendergui.cpp:292
+msgid "Save simulation"
+msgstr "Сохранить симуляцию"
+
+#: src/systems/rendergui.cpp:136
+msgid "Show camera pos"
+msgstr "Показать местоположение камеры"
+
+#: src/systems/rendergui.cpp:277
+msgid "Start simulation"
+msgstr "Начать симуляцию"
+
+#: src/systems/rendergui.cpp:283
+msgid "Stop simulation"
+msgstr "Осановить симуляцию"
+
+#: src/systems/rendergui.cpp:265
+msgid "Tree level show"
+msgstr "Уровень BVH"
+
+#: src/systems/rendergui.cpp:319 src/systems/rendergui.cpp:324
+msgid "Video settings"
+msgstr "Настройки рендера"
+
+#: src/systems/rendergui.cpp:134
+msgid "View"
+msgstr "Вид"

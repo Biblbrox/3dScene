@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <boost/format.hpp>
+#include <boost/locale.hpp>
 
 #include "base.hpp"
 #include "game.hpp"
@@ -15,6 +16,11 @@
 
 using utils::log::program_log_file_name;
 using utils::log::Category;
+using boost::locale::generator;
+using boost::locale::translate;
+using boost::locale::gettext;
+
+using namespace boost::locale;
 
 int main(int argc, char *args[])
 {
@@ -27,6 +33,15 @@ int main(int argc, char *args[])
     try {
         Config::load("config.txt");
         Config::addVal("ConfigFile", "config.txt", "const char*");
+
+        generator gen;
+        // Specify location of dictionaries
+        gen.add_messages_path(getLocalePath(""));
+        gen.add_messages_domain("scene");
+        // Generate locales and imbue them to iostream
+        std::locale::global(gen(""));
+        std::cout.imbue(std::locale("ru_RU.UTF-8"));
+        std::cout << translate("Hello world") << std::endl;
         Game game;
         game.initOnceSDL2();
         game.initGL();
