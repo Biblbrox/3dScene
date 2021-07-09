@@ -109,6 +109,10 @@ World::World() : m_wasInit(false)
         Config::addVal("LaserPitch", 0.f, "float");
     if (!Config::hasKey("RayLength"))
         Config::addVal("RayLength", 10.f, "float");
+    if (!Config::hasKey("DotDens"))
+        Config::addVal("DotDens", 40.f, "float");
+    if (!Config::hasKey("DrawPattern"))
+        Config::addVal("DrawPattern", false, "bool");
 }
 
 World::~World()
@@ -373,7 +377,7 @@ void World::init_sprites()
         material->shininess = 32.f;
 
 
-        auto house = createEntity(unique_id());
+        /*auto house = createEntity(unique_id());
         house->activate();
         house->addComponents<SpriteComponent, PositionComponent,
                 SelectableComponent, BVHComponent, MaterialComponent>();
@@ -399,7 +403,7 @@ void World::init_sprites()
         material->ambient = vec3(1.f);
         material->diffuse = vec3(1.f);
         material->specular = vec3(0.5f);
-        material->shininess = 32.f;
+        material->shininess = 32.f;*/
     }
 }
 

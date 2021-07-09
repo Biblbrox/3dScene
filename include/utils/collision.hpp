@@ -182,7 +182,6 @@ namespace coll {
      * @return
      */
     constexpr std::pair<bool, glm::vec3>
-
     raycastAABB(const Ray& ray, utils::RectPoints3D rect) noexcept
     {
         GLfloat min_x = std::min(

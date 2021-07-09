@@ -15,9 +15,7 @@ def vpscatter(xdata, ydata, zdata):
 
     # Add a ViewBox to let the user zoom/rotate
     view = canvas.central_widget.add_view()
-    view.camera = 'turntable'
-    view.camera.fov = 45
-    view.camera.distance = 500
+    view.camera = 'arcball'
 
     # data
     n = xdata.size
@@ -27,8 +25,10 @@ def vpscatter(xdata, ydata, zdata):
     pos[:, 2] = zdata.ravel()
     # colors = np.ones((n, 4), dtype=np.float32)
     color_data = zdata
-    color_data = np.interp(color_data, (color_data.min(), color_data.max()), (0, 1))
-    colors = color.get_colormap("hsl").map(color_data).reshape(color_data.shape + (-1,))
+    color_data = np.interp(color_data, (color_data.min(), color_data.max()),
+                           (0, 1))
+    colors = color.get_colormap("hsl").map(color_data).reshape(
+        color_data.shape + (-1,))
 
     # plot
     p1 = Scatter3D(parent=view.scene)
@@ -38,5 +38,11 @@ def vpscatter(xdata, ydata, zdata):
     # run
     app.run()
 
+
+data[:, 0] /= np.max(data[:, 0])
+data[:, 1] /= np.max(data[:, 1])
+data[:, 2] /= np.max(data[:, 2])
+
+print(np.max(data[:, 2]))
 
 vpscatter(data[:, 0], data[:, 2], data[:, 1])

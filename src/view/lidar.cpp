@@ -107,7 +107,8 @@ std::vector<vec3> Lidar::pattern() const
     GLfloat Z = distance * Delta * (cos(Theta1) + cos(Theta2));
     GLfloat Y = distance * Delta * (sin(Theta1) + sin(Theta2));
 
-    while (t <= 40) {
+    GLfloat dot_dens = Config::getVal<GLfloat>("DotDens");
+    while (t <= dot_dens) {
         GLfloat rho = sqrt(Z * Z + Y * Y);
         dir_on_plane = cross(up, dir);
         GLfloat angle = (pi<GLfloat>() / 2.f - atan(Z / Y)) * 2.f - pi<GLfloat>();

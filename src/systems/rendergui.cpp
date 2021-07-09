@@ -193,6 +193,13 @@ void RenderGuiSystem::update_state(size_t delta)
 
                 ImGui::Text("Length of rays");
                 ImGui::InputFloat("##ray_length", &Config::getVal<GLfloat>("RayLength"));
+
+                ImGui::Text("Dots density");
+                ImGui::InputFloat("##dot_dens", &Config::getVal<GLfloat>("DotDens"));
+
+                ImGui::Text("Draw pattern");
+                ImGui::Checkbox("##draw_pattern", &Config::getVal<bool>("DrawPattern"));
+
                 ImGui::End();
             }
 
