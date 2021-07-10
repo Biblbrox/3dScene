@@ -23,10 +23,10 @@ void Sprite::addMesh(const std::string &objFile,
 {
     using namespace utils::texture;
 
-    std::string textureFile = "";
-    std::vector<glm::vec3> vertices;
-    std::vector<glm::vec2> uv;
-    std::vector<glm::vec3> normals;
+    std::string textureFile;
+    std::vector<vec3> vertices;
+    std::vector<vec2> uv;
+    std::vector<vec3> normals;
     std::vector<vec3u> indices;
     auto v = loadObj(objFile, textureFile, vertices, uv, normals, indices);
     m_vertices.push_back(vertices);
@@ -47,7 +47,7 @@ void Sprite::addMesh(const std::string &objFile,
     m_sizes.emplace_back(textureWidth, textureHeight, textureDepth);
 }
 
-glm::vec3 Sprite::getClip(GLuint idx) noexcept
+vec3 Sprite::getClip(GLuint idx) noexcept
 {
     assert(idx < m_sizes.size());
     return m_sizes[idx];
@@ -122,7 +122,7 @@ GLuint Sprite::getIdx() const noexcept
     return m_textureId;
 }
 
-glm::vec3 Sprite::getCurrentClip() const noexcept
+vec3 Sprite::getCurrentClip() const noexcept
 {
     return m_sizes[m_textureId];
 }

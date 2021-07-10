@@ -40,7 +40,8 @@ int main(int argc, char *args[])
         gen.add_messages_domain("scene");
         // Generate locales and imbue them to iostream
         std::locale::global(gen(""));
-        std::cout.imbue(std::locale("ru_RU.UTF-8"));
+        // Setup system locale
+        std::cout.imbue(std::locale(""));
         std::cout << translate("Hello world") << std::endl;
         Game game;
         game.initOnceSDL2();

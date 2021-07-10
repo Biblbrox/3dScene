@@ -44,9 +44,8 @@ void render::drawLinen(const std::vector<vec3>& points, bool adjacency)
     glDeleteVertexArrays(1, &VAO);
 }
 
-void render::drawTriangles(const std::vector<GLfloat>& points)
+void render::drawTriangles(const std::vector<vec3>& points)
 {
-    assert(points.size() % 3 == 0);
     auto vertices = points.data();
 
     GLuint verticesID = 0;
@@ -57,13 +56,13 @@ void render::drawTriangles(const std::vector<GLfloat>& points)
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, verticesID);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * points.size(), vertices,
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * points.size(), vertices,
                  GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnableVertexAttribArray(0);
 
-    glDrawArrays(GL_TRIANGLES, 0, points.size() * 3);
+    glDrawArrays(GL_TRIANGLES, 0, points.size());
     glDisableVertexAttribArray(0);
 
     glDeleteBuffers(1, &verticesID);
@@ -141,10 +140,10 @@ void render::renderTerrain(ShaderProgram& program, const Terrain& terrain)
     glBindVertexArray(0);
 }
 
-void render::drawVertices(ShaderProgram& program, const GLfloat* points,
-                          size_t size, const Texture &texture,
-                          const vec3& position,
-                          GLfloat angle, vec3 rot_axis, GLfloat sc)
+void render::drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
+                               size_t size, const Texture &texture,
+                               const vec3& position,
+                               GLfloat angle, vec3 rot_axis, GLfloat sc)
 {
     assert(texture.getVAO() != 0);
 
@@ -157,8 +156,8 @@ void render::drawVertices(ShaderProgram& program, const GLfloat* points,
     const GLfloat centerY = pos.y + half;
     const GLfloat centerZ = pos.z + half;
 
-    const vec3 scale = vec3 (texture.getWidth(), texture.getHeight(),
-                             texture.getDepth());
+    const vec3 scale = vec3(texture.getWidth(), texture.getHeight(),
+                            texture.getDepth());
 
     mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
                                   rot_axis);

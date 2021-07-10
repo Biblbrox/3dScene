@@ -25,16 +25,16 @@ namespace coll {
     using utils::RectPoints3D;
 
     /**
- * Build 2d rectangle from rect with corrected coords by
- * rotation angle
- * @param rect
- * @param alpha
- * @return
- */
+     * Build 2d rectangle from rect with corrected coords by
+     * rotation angle
+     * @param rect
+     * @param alpha
+     * @return
+     */
     utils::RectPoints2D
     buildRectPoints2d(const utils::Rect2D &rect, GLfloat alpha) noexcept;
 
-    std::vector<GLfloat>
+    std::vector<vec3>
     buildVerticesFromRect3D(utils::RectPoints3D rect);
 
 
@@ -205,8 +205,8 @@ namespace coll {
                 {rect.a.z, rect.b.z, rect.c.z, rect.d.z, rect.e.z,
                  rect.f.z, rect.g.z, rect.k.z});
 
-        vec3 ray_origin = ray.ray_origin;
-        vec3 ray_dir = ray.ray_dir;
+        vec3 ray_origin = ray.origin;
+        vec3 ray_dir = ray.dir;
 
         GLfloat tMinX = (min_x - ray_origin.x) / ray_dir.x;
         GLfloat tMaxX = (max_x - ray_origin.x) / ray_dir.x;

@@ -382,11 +382,11 @@ void World::init_sprites()
         car_pos->pos.z = rand.generateu(30.f, 40.f) + start_z;
         car_pos->pos.y = terrain->getAltitude({car_pos->pos.x, car_pos->pos.z});
         car_pos->angle = -glm::half_pi<GLfloat>();
-        car_pos->rot_axis = glm::vec3(0.f, 1.f, 0.f);
-        tree = coll::buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect);
+        car_pos->rot_axis = vec3(0.f, 1.f, 0.f);
+        tree = buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect);
         car->addComponent<BVHComponent>();
         car->getComponent<BVHComponent>()->vbh_tree = tree;
-        car->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect);
+        car->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect);
         mapBinaryTree(tree, [car_pos, car_sprite](auto rect)
         {
             *rect = coll::AABBtoWorldSpace(*rect, car_pos->rot_axis,

@@ -8,52 +8,22 @@ using utils::log::Logger;
 using utils::math::rotate_around;
 using std::sort;
 
-std::vector<GLfloat> coll::buildVerticesFromRect3D(RectPoints3D rect)
+std::vector<vec3> coll::buildVerticesFromRect3D(RectPoints3D rect)
 {
     auto[a, b, c, d, e, f, g, k] = rect;
     return {
             // Front plane
-            a.x, a.y, a.z,
-            b.x, b.y, b.z,
-            c.x, c.y, c.z,
-            a.x, a.y, a.z,
-            c.x, c.y, c.z,
-            d.x, d.y, d.z,
+            a, b, c, a, c, d,
             // Right plane
-            b.x, b.y, b.z,
-            e.x, e.y, e.z,
-            f.x, f.y, f.z,
-            b.x, b.y, b.z,
-            f.x, f.y, f.z,
-            c.x, c.y, c.z,
+            b, e, f, b, f, c,
             // Back plane
-            e.x, e.y, e.z,
-            k.x, k.y, k.z,
-            g.x, g.y, g.z,
-            e.x, e.y, e.z,
-            g.x, g.y, g.z,
-            f.x, f.y, f.z,
+            e, k, g, e, g, f,
             // Top plane
-            d.x, d.y, d.z,
-            c.x, c.y, c.z,
-            f.x, f.y, f.z,
-            d.x, d.y, d.z,
-            f.x, f.y, f.z,
-            g.x, g.y, g.z,
+            d, c, f, d, f, g,
             // Left plane
-            k.x, k.y, k.z,
-            a.x, a.y, a.z,
-            d.x, d.y, d.z,
-            k.x, k.y, k.z,
-            d.x, d.y, d.z,
-            g.x, g.y, g.z,
+            k, a, d, k, d, g,
             // Bottom plane
-            k.x, k.y, k.z,
-            e.x, e.y, e.z,
-            b.x, b.y, b.z,
-            k.x, k.y, k.z,
-            b.x, b.y, b.z,
-            a.x, a.y, a.z,
+            k, e, b, k, b, a
     };
 }
 
@@ -87,15 +57,14 @@ coll::findMeshBound(const std::vector<vec3> &mesh_vertices)
 /**
  * Return rectangular bounding box for given vertices
  * Result contain vertices grouped to triangle primitives
- * @param mesh_vertices
+ * @param vertices
  * @param angle
  * @param rot_axis
  * @return
  */
-RectPoints3D coll::buildAABB(const std::vector<vec3> &mesh_vertices) noexcept
+RectPoints3D coll::buildAABB(const std::vector<vec3> &vertices) noexcept
 {
-    auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(
-            mesh_vertices);
+    auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(vertices);
 
     // Front plane
     vec3 a = {min_x, min_y, min_z};
@@ -169,9 +138,9 @@ coll::AABBTransform(RectPoints3D rect,
                 position.z / texture.getDepth()};
 
     const GLfloat half = 1.f;
-    const GLfloat centerX = pos.x + half;
-    const GLfloat centerY = pos.y + half;
-    const GLfloat centerZ = pos.z + half;
+    const GLfloat centerX = position.x + half;
+    const GLfloat centerY = position.y + half;
+    const GLfloat centerZ = position.z + half;
 
     mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
                                   rot_axis);
@@ -393,7 +362,7 @@ std::pair<bool, vec3> coll::BVHAABBTraversal(TreePtr tree, const Ray& ray)
     if (intersections.empty())
         return {false, vec3(0)};
 
-    vec3 ray_origin = ray.ray_origin;
+    vec3 ray_origin = ray.origin;
     GLfloat closest_length = glm::length(intersections[0] - ray_origin);
     vec3 closest_hit = intersections[0];
     for (const auto & pos: intersections)

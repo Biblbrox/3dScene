@@ -28,12 +28,13 @@ namespace render
 
     void drawDots(const std::vector<vec3>& dots);
 
-    void drawTriangles(const std::vector<GLfloat> &points);
+    void drawTriangles(const std::vector<vec3> &points);
 
-    void drawVertices(ShaderProgram& program, const GLfloat* points,
-                      size_t size, const Texture &texture,
-                      const vec3& position, GLfloat angle = 0.f,
-                      vec3 rot_axis = {1.f, 0.f, 0.f}, GLfloat scale = 1.f);
+    void drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
+                           size_t size, const Texture &texture,
+                           const vec3& position, GLfloat angle = 0.f,
+                           vec3 rot_axis = {1.f, 0.f, 0.f}, GLfloat scale = 1.f);
+
 
     void drawVerticesVAO(ShaderProgram& program, const GLfloat* points,
                              size_t size, const Texture &texture,
