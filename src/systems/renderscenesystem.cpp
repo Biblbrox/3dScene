@@ -170,20 +170,22 @@ void RenderSceneSystem::drawBoundingBoxes()
         auto posComp = en->getComponent<PositionComponent>();
         auto sprite = en->getComponent<SpriteComponent>()->sprite;
         auto points = coll::buildAABB(sprite->getVertices()[0]);
+        auto tree = en->getComponent<BVHComponent>()->vbh_tree;
 
         auto draw_fun = [program, sprite, posComp](NodeDataPtr bound_rect) {
             program->setVec3("primColor", {0.8f, 0.1f, 0.1f});
             auto vert_vec = coll::buildVerticesFromRect3D(*bound_rect);
-            GLfloat* vertices = vert_vec.data();
-            render::drawVertices(*program, vertices, vert_vec.size(),
-                                 *sprite, posComp->pos, posComp->angle,
-                                 posComp->rot_axis);
+//            GLfloat* vertices = vert_vec.data();
+            render::drawTriangles(vert_vec);
+//            render::drawVerticesTrans(*program, vertices, vert_vec.size(),
+//                                      *sprite, posComp->pos, posComp->angle,
+//                                      posComp->rot_axis);
         };
 
         if (Config::getVal<bool>("DrawLeafs")) {
-            mapBinaryTreeLeafs(treeComp->vbh_tree_model, draw_fun);
+            mapBinaryTreeLeafs(treeComp->vbh_tree, draw_fun);
         } else {
-            mapBinaryTreeAtLevel(treeComp->vbh_tree_model, draw_fun,
+            mapBinaryTreeAtLevel(treeComp->vbh_tree, draw_fun,
                                  Config::getVal<int>("TreeLevelShow"));
         }
     }

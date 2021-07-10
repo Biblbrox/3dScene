@@ -12,13 +12,13 @@ using glm::normalize;
 
 struct Ray
 {
-    vec3 ray_dir;
-    vec3 ray_origin;
+    vec3 dir;
+    vec3 origin;
 };
 
 inline vec3 ray_point(const Ray& ray, GLfloat distance)
 {
-    return ray.ray_origin + normalize(ray.ray_dir) * distance;
+    return ray.origin + normalize(ray.dir) * distance;
 }
 
 class Lidar: public FpsCamera

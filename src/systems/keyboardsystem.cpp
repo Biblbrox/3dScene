@@ -12,6 +12,7 @@
 #include "components/terraincomponent.hpp"
 #include "utils/collision.hpp"
 #include "utils/logger.hpp"
+#include "render/render.hpp"
 #include "config.hpp"
 
 using glm::mat4;
@@ -102,7 +103,7 @@ void KeyboardSystem::update_state(size_t delta)
                         mapBinaryTree(bvh->vbh_tree, [pos, sprite, this](auto rect)
                         {
                             *rect = coll::AABBTransform(*rect, pos->rot_axis,
-                                                        pos->angle,
+                                                        0.f,
                                                         pos->pos - m_dragStartPos, *sprite);
                         });
                     }
