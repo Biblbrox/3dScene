@@ -221,7 +221,7 @@ coll::divideByLongestSize(const std::vector<vec3>& vertices)
     sort(sorted_y.begin(), sorted_y.end(), [](const vec3& v1, const vec3& v2){
         return v1.y < v2.y;
     });
-    std::sort(sorted_z.begin(), sorted_z.end(), [](const vec3& v1, const vec3& v2){
+    sort(sorted_z.begin(), sorted_z.end(), [](const vec3& v1, const vec3& v2){
         return v1.z < v2.z;
     });
 

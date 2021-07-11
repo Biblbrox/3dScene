@@ -1,8 +1,6 @@
 #include <boost/format.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
-#include <imgui.h>
-#include <imgui_impl_opengl3.h>
 
 #include "systems/renderscenesystem.hpp"
 #include "components/spritecomponent.hpp"
@@ -157,6 +155,7 @@ void RenderSceneSystem::drawBoundingBoxes()
 
     program->setInt("isPrimitive", true);
     program->setFloat("alpha", 0.6f);
+    program->setVec3("primColor", {0.8f, 0.1f, 0.1f});
 
     for (const auto&[key, en]: sprites) {
         auto treeComp = en->getComponent<BVHComponent>();
@@ -173,13 +172,8 @@ void RenderSceneSystem::drawBoundingBoxes()
         auto tree = en->getComponent<BVHComponent>()->vbh_tree;
 
         auto draw_fun = [program, sprite, posComp](NodeDataPtr bound_rect) {
-            program->setVec3("primColor", {0.8f, 0.1f, 0.1f});
             auto vert_vec = coll::buildVerticesFromRect3D(*bound_rect);
-//            GLfloat* vertices = vert_vec.data();
             render::drawTriangles(vert_vec);
-//            render::drawVerticesTrans(*program, vertices, vert_vec.size(),
-//                                      *sprite, posComp->pos, posComp->angle,
-//                                      posComp->rot_axis);
         };
 
         if (Config::getVal<bool>("DrawLeafs")) {

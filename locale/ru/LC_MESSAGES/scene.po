@@ -89,7 +89,7 @@ msgstr ""
 
 #: src/systems/rendergui.cpp:271
 msgid "Inverse rotation"
-msgstr ""
+msgstr "Инвертировать вращение"
 
 #: src/systems/rendergui.cpp:174
 msgid "Laser Settings"
