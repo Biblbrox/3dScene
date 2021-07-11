@@ -102,7 +102,7 @@ Lidar::risleyPattern2(const vec2& freq, const vec2& start_angle, GLfloat dens) c
     GLfloat Theta20 = start_angle[1];
     GLfloat Theta1 = (2 * pi<GLfloat>() * f1 * t  + Theta10) / 360;
     GLfloat Theta2 = (2 * pi<GLfloat>() * f2 * t  + Theta20) / 360;
-    GLfloat distance = 10.f;
+    GLfloat distance = Config::getVal<GLfloat>("ObjDistance");
     GLfloat Z = distance * Delta * (cos(Theta1) + cos(Theta2));
     GLfloat Y = distance * Delta * (sin(Theta1) + sin(Theta2));
 

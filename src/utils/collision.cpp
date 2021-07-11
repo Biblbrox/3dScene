@@ -340,9 +340,9 @@ coll::BVHAABBTraversalRec(TreePtr tree, const Ray& ray,
         if (instersect)
             intersections.push_back(pos);
     } else {
-        if (tree->m_left)
+        if (tree->m_left && raycastAABB(ray, *tree->m_left->m_data).first)
             BVHAABBTraversalRec(tree->m_left, ray, intersections);
-        if (tree->m_right)
+        if (tree->m_right && raycastAABB(ray, *tree->m_right->m_data).first)
             BVHAABBTraversalRec(tree->m_right, ray, intersections);
     }
 }

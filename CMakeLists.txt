@@ -41,12 +41,15 @@ add_library(imgui
         ${EXT_PATH}/imgui/imgui_tables.cpp ${EXT_PATH}/imgui/imgui_widgets.cpp
         # SDL2+OpenGL-specific files
         ${EXT_PATH}/imgui/backends/imgui_impl_sdl.cpp
-        ${EXT_PATH}/imgui/backends/imgui_impl_opengl3.cpp)
+        ${EXT_PATH}/imgui/backends/imgui_impl_opengl3.cpp
+        # ImGui misc path
+        ${EXT_PATH}/imgui/misc/cpp/imgui_stdlib.cpp)
 
 # Make SDL2 available to Imgui
 target_include_directories(imgui PUBLIC ${SDL2_INCLUDE_DIRS})
 # imgui/backends/ contains the SDL implementation
-target_include_directories(imgui PUBLIC ${EXT_PATH}/imgui/ ${EXT_PATH}/imgui/backends/)
+target_include_directories(imgui PUBLIC ${EXT_PATH}/imgui/ ${EXT_PATH}/imgui/backends/
+        ${EXT_PATH}/imgui/misc/cpp)
 # Configure Imgui to use OpengGL through SDL2
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<SDL_opengl.h>  GL_GLEXT_PROTOTYPES=1)
 

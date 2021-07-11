@@ -26,6 +26,7 @@ private:
     bool m_videoSettingsOpen;
     bool m_colorSettingsOpen;
     bool m_laserSettingsOpen;
+    bool m_exportSettingsOpen;
 
     ImFont* m_font;
 };
