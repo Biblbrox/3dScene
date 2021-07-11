@@ -1,6 +1,7 @@
 # Blender MTL File: 'human.blend'
 # Material Count: 1
 
+map_Kd lowpolypalmtexture.png
 newmtl Material.001
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000

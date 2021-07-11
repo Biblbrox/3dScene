@@ -2,14 +2,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/rotate_vector.hpp>
-#include <imgui_impl_sdl.h>
-#include <imgui.h>
+#include <imgui_stdlib.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_internal.h>
+#include <imgui_impl_sdl.h>
 
 #include "systems/renderguisystem.hpp"
 #include "components/lidarcomponent.hpp"
-#include "components/spritecomponent.hpp"
 #include "components/bvhcomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "utils/logger.hpp"
@@ -75,6 +74,8 @@ RenderGuiSystem::~RenderGuiSystem()
 
 void RenderGuiSystem::update_state(size_t delta)
 {
+    using namespace ImGui;
+
     auto screen_width = utils::getWindowWidth<GLfloat>(*Game::getWindow());
     auto screen_height = utils::getWindowHeight<GLfloat>(*Game::getWindow());
 
@@ -115,9 +116,9 @@ void RenderGuiSystem::update_state(size_t delta)
             break;
     }
 
-    ImGui::PushFont(m_font);
-    ImGui::SetNextWindowPos({0, 0});
-    ImGui::SetNextWindowSize({static_cast<float>(screen_width),
+    PushFont(m_font);
+    SetNextWindowPos({0, 0});
+    SetNextWindowSize({static_cast<float>(screen_width),
                               static_cast<float>(screen_height)});
     bool open = true;
     ImGui::Begin("GameWindow", &open, ImGuiWindowFlags_NoResize
@@ -128,53 +129,53 @@ void RenderGuiSystem::update_state(size_t delta)
                                       | ImGuiWindowFlags_MenuBar);
     {
 
-        ImGui::GetStyle().WindowRounding = 0.0f;// <- Set this on init or use ImGui::PushStyleVar()
-        ImGui::GetStyle().ChildRounding = 0.0f;
-        ImGui::GetStyle().FrameRounding = 0.0f;
-        ImGui::GetStyle().GrabRounding = 0.0f;
-        ImGui::GetStyle().PopupRounding = 0.0f;
-        ImGui::GetStyle().ScrollbarRounding = 0.0f;
+        GetStyle().WindowRounding = 0.0f;// <- Set this on init or use ImGui::PushStyleVar()
+        GetStyle().ChildRounding = 0.0f;
+        GetStyle().FrameRounding = 0.0f;
+        GetStyle().GrabRounding = 0.0f;
+        GetStyle().PopupRounding = 0.0f;
+        GetStyle().ScrollbarRounding = 0.0f;
 
-        ImGui::PushItemWidth(ImGui::GetFontSize() * -12);
-        if (ImGui::BeginMenuBar())
+        PushItemWidth(ImGui::GetFontSize() * -12);
+        if (BeginMenuBar())
         {
-            if (ImGui::BeginMenu(_("View")))
+            if (BeginMenu(_("View")))
             {
-                if (ImGui::MenuItem(_("Show camera pos"), _("Ctrl+O"))) {
+                if (MenuItem(_("Show camera pos"), _("Ctrl+O"))) {
                     Config::addVal("ShowCameraPos",
                                    !Config::getVal<bool>("ShowCameraPos"), "bool");
                 }
-                ImGui::EndMenu();
+                EndMenu();
             }
-            ImGui::EndMenuBar();
+            EndMenuBar();
         }
 
-        ImGui::Spacing();
-        ImGui::BeginTable("table1", 2, ImGuiTableFlags_Borders
+        Spacing();
+        BeginTable("table1", 2, ImGuiTableFlags_Borders
                                        | ImGuiTableFlags_Resizable
                                        | ImGuiTableFlags_NoHostExtendX
                                        | ImGuiTableFlags_NoHostExtendY,
                           {0, -1});
         {
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Settings");
-            ImGui::Separator();
+            TableNextRow();
+            TableSetColumnIndex(0);
+            Text("Settings");
+            Separator();
 
-            ImGui::Checkbox(_("Draw Textures"),
-                            &Config::getVal<bool>("DrawTextures"));
-            ImGui::Checkbox(_("Draw Leafs"),
-                            &Config::getVal<bool>("DrawLeafs"));
-            ImGui::Checkbox(_("Draw Rays"),
-                            &Config::getVal<bool>("DrawRays"));
-            ImGui::Checkbox(_("Draw bounding boxes"),
-                            &Config::getVal<bool>("DrawBoundingBoxes"));
-            ImGui::Checkbox(_("Check collision"),
-                            &Config::getVal<bool>("CheckCollision"));
-            ImGui::Checkbox(_("Enable lighting"), &Config::getVal<bool>("EnableLight"));
+            Checkbox(_("Draw Textures"),
+                     &Config::getVal<bool>("DrawTextures"));
+            Checkbox(_("Draw Leafs"),
+                     &Config::getVal<bool>("DrawLeafs"));
+            Checkbox(_("Draw Rays"),
+                     &Config::getVal<bool>("DrawRays"));
+            Checkbox(_("Draw bounding boxes"),
+                     &Config::getVal<bool>("DrawBoundingBoxes"));
+            Checkbox(_("Check collision"),
+                     &Config::getVal<bool>("CheckCollision"));
+            Checkbox(_("Enable lighting"), &Config::getVal<bool>("EnableLight"));
 
-            ImGui::Text(_("Minimal rect fraction size"));
-            ImGui::InputFloat3("##min_rect", glm::value_ptr(
+            Text(_("Minimal rect fraction size"));
+            InputFloat3("##min_rect", glm::value_ptr(
                     Config::getVal<glm::vec3>("MinRectSize")));
 
 
@@ -186,13 +187,21 @@ void RenderGuiSystem::update_state(size_t delta)
                 auto lidarComp = lidarEn->getComponent<LidarComponent>();
                 auto pos = lidarEn->getComponent<PositionComponent>();
 
-                ImGui::Begin(_("Laser settings"), &m_colorSettingsOpen);
-                ImGui::Text(_("Laser position"));
-                ImGui::InputFloat3("##laser_pos", glm::value_ptr(
-                        Config::getVal<glm::vec3>("LaserPos")));
+                Begin(_("Laser settings"), &m_laserSettingsOpen);
+                Text(_("Laser position"));
+                if (InputFloat3("##laser_pos", glm::value_ptr(
+                        Config::getVal<vec3>("LaserPos")))) {
+                    pos->pos = Config::getVal<vec3>("LaserPos");
+                    Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
+                                lidarComp->yaw, lidarComp->pitch);
 
-                ImGui::Text(_("Laser yaw"));
-                if (ImGui::InputFloat("##laser_yaw", &Config::getVal<GLfloat>("LaserYaw"))) {
+                    lidarComp->pattern_points = lidar.risleyPattern2(
+                            lidarComp->freq, lidarComp->start_angle,
+                            lidarComp->density);
+                }
+
+                Text(_("Laser yaw"));
+                if (InputFloat("##laser_yaw", &Config::getVal<GLfloat>("LaserYaw"))) {
                     lidarComp->yaw = Config::getVal<GLfloat>("LaserYaw");
                     Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                                 lidarComp->yaw, lidarComp->pitch);
@@ -202,8 +211,8 @@ void RenderGuiSystem::update_state(size_t delta)
                             lidarComp->density);
                 }
 
-                ImGui::Text(_("Laser pitch"));
-                if (ImGui::InputFloat("##laser_pitch", &Config::getVal<GLfloat>("LaserPitch"))) {
+                Text(_("Laser pitch"));
+                if (InputFloat("##laser_pitch", &Config::getVal<GLfloat>("LaserPitch"))) {
                     lidarComp->pitch = Config::getVal<GLfloat>("LaserPitch");
                     Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                                 lidarComp->yaw, lidarComp->pitch);
@@ -213,8 +222,8 @@ void RenderGuiSystem::update_state(size_t delta)
                             lidarComp->density);
                 }
 
-                ImGui::Text(_("Prism frequencies"));
-                if (ImGui::InputFloat2("##prism_freq", value_ptr(
+                Text(_("Prism frequencies"));
+                if (InputFloat2("##prism_freq", value_ptr(
                         Config::getVal<vec2>("PrismFreq")))) {
                     lidarComp->freq = Config::getVal<vec2>("PrismFreq");
                     Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
@@ -225,8 +234,8 @@ void RenderGuiSystem::update_state(size_t delta)
                             lidarComp->density);
                 }
 
-                ImGui::Text(_("Prism start angle"));
-                if (ImGui::InputFloat2("##prism_start_angle", glm::value_ptr(
+                Text(_("Prism start angle"));
+                if (InputFloat2("##prism_start_angle", glm::value_ptr(
                         Config::getVal<vec2>("PrismStartAngle")))) {
                     lidarComp->start_angle = Config::getVal<vec2>("PrismStartAngle");
                     Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
@@ -237,8 +246,20 @@ void RenderGuiSystem::update_state(size_t delta)
                             lidarComp->density);
                 }
 
-                ImGui::Text(_("Length of rays"));
-                if (ImGui::InputFloat("##ray_length", &Config::getVal<GLfloat>("RayLength"))) {
+                Text(_("Object distance"));
+                if (InputFloat("##obj_distance",
+                               &Config::getVal<GLfloat>("ObjDistance"))) {
+                    lidarComp->obj_distance = Config::getVal<GLfloat>("ObjDistance");
+                    Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
+                                lidarComp->yaw, lidarComp->pitch);
+
+                    lidarComp->pattern_points = lidar.risleyPattern2(
+                            lidarComp->freq, lidarComp->start_angle,
+                            lidarComp->density);
+                }
+
+                Text(_("Length of rays"));
+                if (InputFloat("##ray_length", &Config::getVal<GLfloat>("RayLength"))) {
                     lidarComp->length = Config::getVal<GLfloat>("RayLength");
                     Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                                 lidarComp->yaw, lidarComp->pitch);
@@ -248,8 +269,8 @@ void RenderGuiSystem::update_state(size_t delta)
                             lidarComp->density);
                 }
 
-                ImGui::Text(_("Dots density"));
-                if (ImGui::InputFloat("##dot_dens", &Config::getVal<GLfloat>("DotDens"))) {
+                Text(_("Dots density"));
+                if (InputFloat("##dot_dens", &Config::getVal<GLfloat>("DotDens"))) {
                     lidarComp->density = Config::getVal<GLfloat>("DotDens");
                     Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                                 lidarComp->yaw, lidarComp->pitch);
@@ -259,97 +280,102 @@ void RenderGuiSystem::update_state(size_t delta)
                             lidarComp->density);
                 }
 
-                ImGui::Text(_("Draw pattern"));
-                ImGui::Checkbox("##draw_pattern", &Config::getVal<bool>("DrawPattern"));
+                Text(_("Draw pattern"));
+                Checkbox("##draw_pattern", &Config::getVal<bool>("DrawPattern"));
 
-                ImGui::End();
+                End();
             }
 
-            ImGui::Text(_("Light position"));
-            ImGui::InputFloat3("##light_pos", glm::value_ptr(
-                    Config::getVal<glm::vec3>("LightPos")));
+            Text(_("Light position"));
+            InputFloat3("##light_pos", glm::value_ptr(
+             Config::getVal<glm::vec3>("LightPos")));
 
-            ImGui::Text(_("Tree level show"));
+            Text(_("Tree level show"));
 //            ImGui::SameLine();
-            ImGui::SliderInt("##tree_level",
+            SliderInt("##tree_level",
                              &Config::getVal<int>("TreeLevelShow"),
                              0, 100);
 
-            ImGui::Checkbox(_("Inverse rotation"),
-                            &Config::getVal<bool>("InverseRotation"));
+            Checkbox(_("Inverse rotation"),
+                     &Config::getVal<bool>("InverseRotation"));
 
-            if (ImGui::Checkbox(_("Edit mode"), &Config::getVal<bool>("EditMode")))
+            if (Checkbox(_("Edit mode"), &Config::getVal<bool>("EditMode")))
                 setGameState(GameStates::EDIT);
 
-            if (ImGui::Button(_("Start simulation")))
+            if (Button(_("Start simulation")))
                 setGameState(GameStates::PLAY);
 
-            if (ImGui::Button(_("Pause simulation")))
+            if (Button(_("Pause simulation")))
                 setGameState(GameStates::PAUSE);
 
-            if (ImGui::Button(_("Stop simulation")))
+            if (Button(_("Stop simulation")))
                 setGameState(GameStates::STOP);
 
-            if (ImGui::Button(_("Save config")))
+            if (Button(_("Save config")))
                 Config::save(Config::getVal<const char *>("ConfigFile"));
 
-            if (ImGui::Button(_("Load config")))
+            if (Button(_("Load config")))
                 Config::load(Config::getVal<const char *>("ConfigFile"));
 
-            if (ImGui::Button(_("Save simulation")));
+            if (Button(_("Save simulation")));
 
-            if (ImGui::Button(_("Load simulation")));
+            if (Button(_("Load simulation")));
 
-            if (ImGui::Button(_("Color Settings")))
+            if (Button(_("Color Settings")))
                 m_colorSettingsOpen = true;
 
             if (m_colorSettingsOpen) {
-                ImGui::Begin(_("Color settings"), &m_colorSettingsOpen);
-                ImGui::Separator();
-                ImGui::Text(_("Background color"));
-                ImGui::ColorPicker4("##Background color", glm::value_ptr(
+                Begin(_("Color settings"), &m_colorSettingsOpen);
+                Separator();
+                Text(_("Background color"));
+                ColorPicker4("##Background color", glm::value_ptr(
                         Config::getVal<vec4>("BackgroundColor")));
-                ImGui::Separator();
-                ImGui::Text(_("Cell color"));
-                ImGui::ColorPicker4("##Cell color", glm::value_ptr(
-                        Config::getVal<vec4>("CellColor")));
-                ImGui::Separator();
-                ImGui::Text(_("Cell border color"));
-                ImGui::ColorPicker4("##Cell border color", glm::value_ptr(
-                        Config::getVal<vec4>("CellBorderColor")));
-                ImGui::Separator();
-                ImGui::Checkbox(_("Enable color game(Need simulation restart)"),
-                                &Config::getVal<bool>("ColoredLife"));
-                ImGui::End();
+                End();
             }
 
-            if (ImGui::Button(_("Video settings")))
+            if (ImGui::Button(_("Export settings")))
+                m_exportSettingsOpen = true;
+
+            if (m_exportSettingsOpen) {
+                Begin(_("Настройки экспорта"), &m_exportSettingsOpen);
+                Text(_("Export file name"));
+                std::string& buffer = Config::getVal<std::string>("ExportFileName");
+                InputText("##Export file name", &buffer);
+
+                Text(_("Export data type"));
+                const char* items[] = {"Cartesian", "Polar"};
+                ListBox("##Export type", &Config::getVal<int>("ExportType"),
+                               items, 2);
+
+                End();
+            }
+
+            if (Button(_("Video settings")))
                 m_videoSettingsOpen = true;
 
             if (m_videoSettingsOpen) {
                 const char *items[] = {"Light", "Classic", "Dark"};
-                ImGui::Begin(_("Video settings"), &m_videoSettingsOpen);
+                Begin(_("Video settings"), &m_videoSettingsOpen);
                 bool msaaEnabled = Config::getVal<bool>("MSAA");
-                if (ImGui::Checkbox("Enable antialiasing(Need game restart)",
-                                    &Config::getVal<bool>("MSAA"))
+                if (Checkbox(_("Enable antialiasing(Need game restart)"),
+                             &Config::getVal<bool>("MSAA"))
                     || msaaEnabled) {
-                    ImGui::Text(_("MSAA Samples"));
-                    ImGui::SameLine();
-                    ImGui::InputInt("##msaa_samples",
+                    Text(_("MSAA Samples"));
+                    SameLine();
+                    InputInt("##msaa_samples",
                                     &Config::getVal<int>("MSAASamples"));
                 }
-                ImGui::Text(_("Application theme:"));
-                ImGui::SameLine();
-                ImGui::ListBox("", &Config::getVal<int>("Theme"), items, 3);
-                ImGui::Text(_("Drag sensitivity:"));
-                ImGui::SliderFloat("##mouse_sens",
-                                   &Config::getVal<GLfloat>("MouseSens"),
-                                   1, 100);
-                ImGui::End();
+                Text(_("Application theme:"));
+                SameLine();
+                ListBox("", &Config::getVal<int>("Theme"), items, 3);
+                Text(_("Drag sensitivity:"));
+                SliderFloat("##mouse_sens", &Config::getVal<GLfloat>("MouseSens"),
+                            1, 100);
+                End();
             }
 
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text(_("Render"));
+            TableSetColumnIndex(1);
+            Text(_("Render"));
             auto size = ImGui::GetContentRegionAvail();
             GLfloat image_height = size.x / m_aspectRatio;
             size.y = image_height;
@@ -367,20 +393,20 @@ void RenderGuiSystem::update_state(size_t delta)
         }
 
         if (Config::getVal<bool>("ShowCameraPos")) {
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(1);
+            TableNextRow();
+            TableSetColumnIndex(1);
             auto pos = FpsCamera::getInstance()->getPos();
             std::string camera_pos = _("Camera position");
-            ImGui::Text((format("%1$s: %2$.2f, %3$.2f, %4$.2f")
+            Text((format("%1$s: %2$.2f, %3$.2f, %4$.2f")
                          % camera_pos % pos.x % pos.y % pos.z).str().c_str());
         }
 
-        ImGui::EndTable();
+        EndTable();
     }
-    ImGui::End();
+    End();
 
-    ImGui::PopFont();
+    PopFont();
 
-    ImGui::Render();
+    Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

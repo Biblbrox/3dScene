@@ -18,10 +18,15 @@
 
 namespace coll {
 
+    using std::minmax;
+    using std::max;
+    using std::min;
+
     using glm::mat4;
     using glm::mat3;
     using glm::vec3;
     using glm::vec4;
+
     using utils::RectPoints3D;
 
     /**
@@ -55,27 +60,12 @@ namespace coll {
     constexpr RectPoints3D
     rebuildAABBinWorldSpace(const RectPoints3D& rect) noexcept
     {
-        using std::minmax;
-
         auto [min_x, max_x] = minmax({rect.a.x, rect.b.x, rect.c.x, rect.d.x,
                                       rect.e.x, rect.f.x, rect.g.x, rect.k.x});
-
-//        GLfloat min_x = std::min({rect.a.x, rect.b.x, rect.c.x, rect.d.x,
-//                                  rect.e.x, rect.f.x, rect.g.x, rect.k.x});
-//        GLfloat max_x = std::max({rect.a.x, rect.b.x, rect.c.x, rect.d.x,
-//                                  rect.e.x, rect.f.x, rect.g.x, rect.k.x});
         auto [min_y, max_y] = minmax({rect.a.y, rect.b.y, rect.c.y, rect.d.y,
                                       rect.e.y, rect.f.y, rect.g.y, rect.k.y});
-//        GLfloat min_y = std::min({rect.a.y, rect.b.y, rect.c.y, rect.d.y,
-//                                  rect.e.y, rect.f.y, rect.g.y, rect.k.y});
-//        GLfloat max_y = std::max({rect.a.y, rect.b.y, rect.c.y, rect.d.y,
-//                                  rect.e.y, rect.f.y, rect.g.y, rect.k.y});
         auto [min_z, max_z] = minmax({rect.a.z, rect.b.z, rect.c.z, rect.d.z,
                                       rect.e.z, rect.f.z, rect.g.z, rect.k.z});
-//        GLfloat min_z = std::min({rect.a.z, rect.b.z, rect.c.z, rect.d.z,
-//                                  rect.e.z, rect.f.z, rect.g.z, rect.k.z});
-//        GLfloat max_z = std::max({rect.a.z, rect.b.z, rect.c.z, rect.d.z,
-//                                  rect.e.z, rect.f.z, rect.g.z, rect.k.z});
 
         // Front plane
         vec3 a = {min_x, min_y, min_z};
@@ -190,29 +180,15 @@ namespace coll {
      * @param rect
      * @return
      */
-    constexpr std::pair<bool, glm::vec3>
-    raycastAABB(const Ray& ray, utils::RectPoints3D rect) noexcept
+    constexpr std::pair<bool, vec3>
+    raycastAABB(const Ray& ray, const utils::RectPoints3D& rect) noexcept
     {
-        GLfloat min_x = std::min(
-                {rect.a.x, rect.b.x, rect.c.x, rect.d.x, rect.e.x,
-                 rect.f.x, rect.g.x, rect.k.x});
-        GLfloat max_x = std::max(
-                {rect.a.x, rect.b.x, rect.c.x, rect.d.x, rect.e.x,
-                 rect.f.x, rect.g.x, rect.k.x});
-
-        GLfloat min_y = std::min(
-                {rect.a.y, rect.b.y, rect.c.y, rect.d.y, rect.e.y,
-                 rect.f.y, rect.g.y, rect.k.y});
-        GLfloat max_y = std::max(
-                {rect.a.y, rect.b.y, rect.c.y, rect.d.y, rect.e.y,
-                 rect.f.y, rect.g.y, rect.k.y});
-
-        GLfloat min_z = std::min(
-                {rect.a.z, rect.b.z, rect.c.z, rect.d.z, rect.e.z,
-                 rect.f.z, rect.g.z, rect.k.z});
-        GLfloat max_z = std::max(
-                {rect.a.z, rect.b.z, rect.c.z, rect.d.z, rect.e.z,
-                 rect.f.z, rect.g.z, rect.k.z});
+        auto [min_x, max_x] = minmax({rect.a.x, rect.b.x, rect.c.x, rect.d.x, rect.e.x,
+                                      rect.f.x, rect.g.x, rect.k.x});
+        auto [min_y, max_y] = minmax({rect.a.y, rect.b.y, rect.c.y, rect.d.y, rect.e.y,
+                                      rect.f.y, rect.g.y, rect.k.y});
+        auto [min_z, max_z] = minmax({rect.a.z, rect.b.z, rect.c.z, rect.d.z, rect.e.z,
+                                      rect.f.z, rect.g.z, rect.k.z});
 
         vec3 ray_origin = ray.origin;
         vec3 ray_dir = ray.dir;
@@ -226,18 +202,16 @@ namespace coll {
         GLfloat tMinZ = (min_z - ray_origin.z) / ray_dir.z;
         GLfloat tMaxZ = (max_z - ray_origin.z) / ray_dir.z;
 
-        GLfloat tmin = std::max(
-                std::max(std::min(tMinX, tMaxX), std::min(tMinY, tMaxY)),
-                std::min(tMinZ, tMaxZ));
-        GLfloat tmax = std::min(
-                std::min(std::max(tMinX, tMaxX), std::max(tMinY, tMaxY)),
-                std::max(tMinZ, tMaxZ));
+        GLfloat tmin = max(max(min(tMinX, tMaxX), min(tMinY, tMaxY)),
+                           min(tMinZ, tMaxZ));
+        GLfloat tmax = min(min(max(tMinX, tMaxX), max(tMinY, tMaxY)),
+                           max(tMinZ, tMaxZ));
 
         if (tmax < 0)
-            return {false, glm::vec3(-1.f)};
+            return {false, vec3(-1.f)};
 
         if (tmin > tmax)
-            return {false, glm::vec3(-1.f)};
+            return {false, vec3(-1.f)};
 
         if (tmin < 0)
             return {true, ray_origin + ray_dir * tmax};

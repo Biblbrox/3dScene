@@ -119,6 +119,12 @@ World::World() : m_wasInit(false)
         Config::addVal("DotDens", 40.f, "float");
     if (!Config::hasKey("DrawPattern"))
         Config::addVal("DrawPattern", false, "bool");
+    if (!Config::hasKey("ExportFileName"))
+        Config::addVal("ExportFileName", std::string("data.txt"), "string");
+    if (!Config::hasKey("ExportType"))
+        Config::addVal("ExportType", 0, "int");
+    if (!Config::hasKey("ObjDistance"))
+        Config::addVal("ObjDistance", 10.f, "float");
 }
 
 World::~World()
@@ -159,8 +165,8 @@ void World::init()
 {
     m_systems.clear();
     createSystem<RenderGuiSystem>();
-    createSystem<RenderSceneSystem>();
     createSystem<LidarSystem>();
+    createSystem<RenderSceneSystem>();
     createSystem<KeyboardSystem>();
 
     m_entities.clear();
@@ -278,16 +284,44 @@ void World::init_sprites()
     auto camera = FpsCamera::getInstance();
     camera->setPos({start_x, 200.f, start_z});
 
-    std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite;
+    std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite, man_sprite;
     car_sprite = std::make_shared<Sprite>();
     palm_sprite = std::make_shared<Sprite>();
     house_sprite = std::make_shared<Sprite>();
+    man_sprite = std::make_shared<Sprite>();
     car_sprite->addMesh(getResourcePath("ford_focus2.obj"), 2.f, 2.f, 2.f);
     car_sprite->generateDataBuffer();
     palm_sprite->addMesh(getResourcePath("lowpolypalm.obj"), 2.f, 2.f, 2.f);
     palm_sprite->generateDataBuffer();
     house_sprite->addMesh(getResourcePath("spah9lvl.obj"), 1.f, 1.f, 1.f);
     house_sprite->generateDataBuffer();
+    man_sprite->addMesh(getResourcePath("human_female.obj"), 10.f, 10.f, 10.f);
+    man_sprite->generateDataBuffer();
+
+    auto man_en = createEntity(unique_id());
+    man_en->activate();
+    man_en->addComponents<SpriteComponent, PositionComponent,
+            SelectableComponent, BVHComponent, MaterialComponent>();
+    auto man_sprite_comp = man_en->getComponent<SpriteComponent>();
+    man_sprite_comp->sprite = man_sprite;
+    auto pos_man = man_en->getComponent<PositionComponent>();
+    pos_man->pos.x = 40.f + start_x;
+    pos_man->pos.z = 0 + start_z;
+    pos_man->pos.y = terrain->getAltitude({pos_man->pos.x, pos_man->pos.z});
+    auto tree = buildBVH(man_sprite->getVertices()[0], min_rect / 10.f);
+    man_en->getComponent<BVHComponent>()->vbh_tree = tree;
+    man_en->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(man_sprite->getVertices()[0], min_rect / 10.f);
+    auto material = man_en->getComponent<MaterialComponent>();
+    material->ambient = vec3(1.f);
+    material->diffuse = vec3(0.8f);
+    material->specular = vec3(0.f);
+    material->shininess = 32.f;
+    mapBinaryTree(tree, [pos_man, man_sprite](auto rect)
+    {
+        *rect = coll::AABBtoWorldSpace(*rect, pos_man->rot_axis,
+                                       pos_man->angle, pos_man->pos,
+                                       *man_sprite);
+    });
 
     auto light_en = createEntity(unique_id());
     light_en->activate();
