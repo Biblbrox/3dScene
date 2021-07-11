@@ -42,7 +42,6 @@ int main(int argc, char *args[])
         std::locale::global(gen(""));
         // Setup system locale
         std::cout.imbue(std::locale(""));
-        std::cout << translate("Hello world") << std::endl;
         Game game;
         game.initOnceSDL2();
         game.initGL();

@@ -55,18 +55,27 @@ namespace coll {
     constexpr RectPoints3D
     rebuildAABBinWorldSpace(const RectPoints3D& rect) noexcept
     {
-        GLfloat min_x = std::min({rect.a.x, rect.b.x, rect.c.x, rect.d.x,
-                                  rect.e.x, rect.f.x, rect.g.x, rect.k.x});
-        GLfloat max_x = std::max({rect.a.x, rect.b.x, rect.c.x, rect.d.x,
-                                  rect.e.x, rect.f.x, rect.g.x, rect.k.x});
-        GLfloat min_y = std::min({rect.a.y, rect.b.y, rect.c.y, rect.d.y,
-                                  rect.e.y, rect.f.y, rect.g.y, rect.k.y});
-        GLfloat max_y = std::max({rect.a.y, rect.b.y, rect.c.y, rect.d.y,
-                                  rect.e.y, rect.f.y, rect.g.y, rect.k.y});
-        GLfloat min_z = std::min({rect.a.z, rect.b.z, rect.c.z, rect.d.z,
-                                  rect.e.z, rect.f.z, rect.g.z, rect.k.z});
-        GLfloat max_z = std::max({rect.a.z, rect.b.z, rect.c.z, rect.d.z,
-                                  rect.e.z, rect.f.z, rect.g.z, rect.k.z});
+        using std::minmax;
+
+        auto [min_x, max_x] = minmax({rect.a.x, rect.b.x, rect.c.x, rect.d.x,
+                                      rect.e.x, rect.f.x, rect.g.x, rect.k.x});
+
+//        GLfloat min_x = std::min({rect.a.x, rect.b.x, rect.c.x, rect.d.x,
+//                                  rect.e.x, rect.f.x, rect.g.x, rect.k.x});
+//        GLfloat max_x = std::max({rect.a.x, rect.b.x, rect.c.x, rect.d.x,
+//                                  rect.e.x, rect.f.x, rect.g.x, rect.k.x});
+        auto [min_y, max_y] = minmax({rect.a.y, rect.b.y, rect.c.y, rect.d.y,
+                                      rect.e.y, rect.f.y, rect.g.y, rect.k.y});
+//        GLfloat min_y = std::min({rect.a.y, rect.b.y, rect.c.y, rect.d.y,
+//                                  rect.e.y, rect.f.y, rect.g.y, rect.k.y});
+//        GLfloat max_y = std::max({rect.a.y, rect.b.y, rect.c.y, rect.d.y,
+//                                  rect.e.y, rect.f.y, rect.g.y, rect.k.y});
+        auto [min_z, max_z] = minmax({rect.a.z, rect.b.z, rect.c.z, rect.d.z,
+                                      rect.e.z, rect.f.z, rect.g.z, rect.k.z});
+//        GLfloat min_z = std::min({rect.a.z, rect.b.z, rect.c.z, rect.d.z,
+//                                  rect.e.z, rect.f.z, rect.g.z, rect.k.z});
+//        GLfloat max_z = std::max({rect.a.z, rect.b.z, rect.c.z, rect.d.z,
+//                                  rect.e.z, rect.f.z, rect.g.z, rect.k.z});
 
         // Front plane
         vec3 a = {min_x, min_y, min_z};
