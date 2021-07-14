@@ -21,6 +21,8 @@ public:
     void addMesh(const std::string& objFile,
                  GLfloat textureWidth,
                  GLfloat textureHeight, GLfloat textureDepth);
+
+    void addMesh(const std::string& objFile, const vec3& size);
     glm::vec3 getClip(GLuint idx) noexcept;
 
     GLuint getTriangleCount() const;
@@ -39,13 +41,17 @@ public:
     const std::vector<std::vector<vec2>>& getUv() const;
     const std::vector<std::vector<vec3>>& getNormals() const;
     const std::vector<std::vector<vec3u>>& getIndices() const;
+    const std::vector<std::vector<GLfloat>>& getVertexData() const;
+    const std::vector<std::string>& getObjFiles() const;
+    const std::vector<vec3>& getSizes() const;
+
 
     void generateDataBuffer() override;
     void freeVBO() noexcept final;
 
     GLuint getVAO() const override;
 protected:
-    std::vector<glm::vec3> m_sizes;
+    std::vector<vec3> m_sizes;
     GLuint* m_vao;
 //    GLuint m_texCount;
 //    GLuint m_curIdx = 0;
@@ -58,6 +64,8 @@ protected:
     std::vector<std::vector<vec3u>> m_indices;
 
     std::vector<GLuint> m_textureIds;
+
+    std::vector<std::string> m_objFiles;
 };
 
 #endif //SPRITE_HPP

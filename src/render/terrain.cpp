@@ -14,7 +14,8 @@ Terrain::Terrain(GLuint width, GLuint height, GLfloat step,
                  GLfloat scale)
         : m_width(width), m_height(height), m_step(step),
           m_heightMap(vector<vector<GLfloat>>(height, vector<GLfloat>(width))),
-          m_vao(0), m_scale(scale)
+          m_vao(0), m_scale(scale), m_heightImage(height_image),
+          m_textureFile(texture)
 {
     m_heightMap = vector<vector<GLfloat>>(height, vector<GLfloat>(width));
 
@@ -238,4 +239,14 @@ bool Terrain::isUnderGround(const vec3 &point) const
     GLfloat height = getAltitude({point.x, point.z});
 
     return point.y < height;
+}
+
+const std::string &Terrain::getHeightImage() const
+{
+    return m_heightImage;
+}
+
+const std::string &Terrain::getTextureFile() const
+{
+    return m_textureFile;
 }

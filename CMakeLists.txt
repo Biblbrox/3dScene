@@ -30,7 +30,7 @@ find_package(SDL2_mixer REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(GLM REQUIRED)
-find_package(Boost REQUIRED COMPONENTS locale)
+find_package(Boost REQUIRED COMPONENTS locale serialization)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 set(EXT_PATH "cmake_modules/")

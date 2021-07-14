@@ -86,6 +86,9 @@ void RenderSceneSystem::drawSprites()
         program->setInt("lighting", false);
     }
 
+    if (!Config::getVal<bool>("DrawVertices"))
+        return;
+
     const auto &sprites = getEntitiesByTags<PositionComponent, SpriteComponent>();
     for (const auto&[key, en]: sprites) {
         auto posComp = en->getComponent<PositionComponent>();

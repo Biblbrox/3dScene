@@ -232,7 +232,7 @@ coll::divideByLongestSize(const std::vector<vec3>& vertices)
     GLfloat z_length = std::abs(max_z - min_z);
     int longest_side = (x_length > y_length && x_length > z_length)
                        ? 0
-                       : (y_length > x_length && y_length > z_length) ? 1 : 2;
+                       : ((y_length > x_length && y_length > z_length) ? 1 : 2);
 
     GLfloat x_border = min_x + x_length / 2.f;
     GLfloat y_border = min_y + y_length / 2.f;
@@ -274,6 +274,7 @@ coll::divideByLongestSize(const std::vector<vec3>& vertices)
         left_part[left_part.size() - 1].z = right_part[0].z;
     }
 
+    Logger::info("left size: %d, right size: %d", left_part.size(), right_part.size());
     return {left_part, right_part};
 }
 
@@ -305,9 +306,17 @@ NodePtr coll::buildBVH(const VertData &mesh_vertices, vec3 min_rect) noexcept
             mesh_vertices);
 
     // Divide by longest side
-    GLfloat x_length = std::abs(std::abs(max_x) - std::abs(min_x));
-    GLfloat y_length = std::abs(std::abs(max_y) - std::abs(min_y));
-    GLfloat z_length = std::abs(std::abs(max_z) - std::abs(min_z));
+    GLfloat x_length = std::abs(max_x - min_x);
+    GLfloat y_length = std::abs(max_y - min_y);
+    GLfloat z_length = std::abs(max_z - min_z);
+    int longest_side = (x_length > y_length && x_length > z_length)
+                       ? 0
+                       : ((y_length > x_length && y_length > z_length) ? 1 : 2);
+
+    if ((longest_side == 0 && x_length <= min_rect.x)
+        || (longest_side == 1 && x_length <= min_rect.y)
+        || (longest_side == 2 && x_length <= min_rect.z))
+        return nullptr;
 
     if (x_length > min_rect.x || y_length > min_rect.y
         || z_length > min_rect.z) {

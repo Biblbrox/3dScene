@@ -3,8 +3,10 @@ import pyqtgraph.opengl as gl
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
+import sys
 
-data = np.loadtxt('../data.txt', delimiter=',')
+file_name = sys.argv[1]
+data = np.loadtxt(file_name, delimiter=',')
 
 data[:, [2, 1]] = data[:, [1, 2]]
 
@@ -24,8 +26,6 @@ data[:, 2] = data[:, 2] - max_z + (max_z - min_z)
 app = QtGui.QApplication([])
 w = gl.GLViewWidget()
 w.show()
-# g = gl.GLGridItem()
-# w.addItem(g)
 
 cmap = plt.get_cmap('jet')
 

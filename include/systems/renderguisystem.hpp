@@ -20,6 +20,7 @@ public:
     ~RenderGuiSystem();
 private:
     void update_state(size_t delta) override;
+    void export_settings();
 
     GLfloat m_aspectRatio;
 
@@ -27,6 +28,7 @@ private:
     bool m_colorSettingsOpen;
     bool m_laserSettingsOpen;
     bool m_exportSettingsOpen;
+    bool m_openExportDialog;
 
     ImFont* m_font;
 };

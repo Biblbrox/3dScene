@@ -17,6 +17,11 @@ Sprite::Sprite() : m_vao(nullptr)
 
 }
 
+void Sprite::addMesh(const std::string& objFile, const vec3& size)
+{
+    addMesh(objFile, size.x, size.y, size.z);
+}
+
 void Sprite::addMesh(const std::string &objFile,
                      GLfloat textureWidth, GLfloat textureHeight,
                      GLfloat textureDepth)
@@ -45,6 +50,7 @@ void Sprite::addMesh(const std::string &objFile,
     }
 
     m_sizes.emplace_back(textureWidth, textureHeight, textureDepth);
+    m_objFiles.push_back(objFile);
 }
 
 vec3 Sprite::getClip(GLuint idx) noexcept
@@ -181,5 +187,20 @@ const std::vector<std::vector<vec3u>> &Sprite::getIndices() const
 const std::vector<std::vector<vec3>> &Sprite::getNormals() const
 {
     return m_normals;
+}
+
+const std::vector<std::vector<GLfloat>> &Sprite::getVertexData() const
+{
+    return m_vertexData;
+}
+
+const std::vector<std::string> &Sprite::getObjFiles() const
+{
+    return m_objFiles;
+}
+
+const std::vector<vec3> &Sprite::getSizes() const
+{
+    return m_sizes;
 }
 

@@ -34,6 +34,8 @@ public:
     const std::vector<GLfloat>& getVertices() const;
 
 
+    const std::string& getTextureFile() const;
+    const std::string& getHeightImage() const;
     /**
      * Return altitude at point in world coordinates
      * @param point
@@ -58,6 +60,9 @@ private:
     GLuint m_vao;
 
     GLuint m_textureId;
+
+    std::string m_heightImage;
+    std::string m_textureFile;
 
     void computeIndices();
     vec3 computeNormal(int x, int z);

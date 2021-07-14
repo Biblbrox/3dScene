@@ -19,7 +19,8 @@ using glm::sqrt;
 using glm::asin;
 using glm::acos;
 
-LidarSystem::LidarSystem() : col_stream(getResourcePath("data.txt"),
+
+LidarSystem::LidarSystem() : col_stream(getResourcePath(Config::getVal<std::string>("DataFileTmp")),
                                         std::ios_base::app)
 {}
 
