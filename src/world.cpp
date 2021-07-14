@@ -63,8 +63,8 @@ size_t unique_id()
 
 World::World() : m_wasInit(false)
 {
-    if (!Config::hasKey("DrawTextures"))
-        Config::addVal("DrawTextures", false, "bool");
+    if (!Config::hasKey("DrawVertices"))
+        Config::addVal("DrawVertices", true, "bool");
     if (!Config::hasKey("DrawBoundingBoxes"))
         Config::addVal("DrawBoundingBoxes", false, "bool");
     if (!Config::hasKey("DrawRays"))
@@ -120,11 +120,13 @@ World::World() : m_wasInit(false)
     if (!Config::hasKey("DrawPattern"))
         Config::addVal("DrawPattern", false, "bool");
     if (!Config::hasKey("ExportFileName"))
-        Config::addVal("ExportFileName", std::string("data.txt"), "string");
+        Config::addVal("ExportFileName", std::string("out.txt"), "string");
     if (!Config::hasKey("ExportType"))
         Config::addVal("ExportType", 0, "int");
     if (!Config::hasKey("ObjDistance"))
         Config::addVal("ObjDistance", 10.f, "float");
+    if (!Config::hasKey("DataFileTmp"))
+        Config::addVal("DataFileTmp", std::string("data.txt"), "string");
 }
 
 World::~World()
@@ -298,6 +300,11 @@ void World::init_sprites()
     man_sprite->addMesh(getResourcePath("human_female.obj"), 10.f, 10.f, 10.f);
     man_sprite->generateDataBuffer();
 
+    vec3 min_rect_car = min_rect / 2.f;
+    vec3 min_rect_palm = min_rect / 2.f;
+    vec3 min_rect_man = min_rect / 10.f;
+    vec3 min_rect_house = min_rect;
+
     auto man_en = createEntity(unique_id());
     man_en->activate();
     man_en->addComponents<SpriteComponent, PositionComponent,
@@ -308,9 +315,9 @@ void World::init_sprites()
     pos_man->pos.x = 40.f + start_x;
     pos_man->pos.z = 0 + start_z;
     pos_man->pos.y = terrain->getAltitude({pos_man->pos.x, pos_man->pos.z});
-    auto tree = buildBVH(man_sprite->getVertices()[0], min_rect / 10.f);
+    auto tree = buildBVH(man_sprite->getVertices()[0], min_rect_man);
     man_en->getComponent<BVHComponent>()->vbh_tree = tree;
-    man_en->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(man_sprite->getVertices()[0], min_rect / 10.f);
+    man_en->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(man_sprite->getVertices()[0], min_rect_man);
     auto material = man_en->getComponent<MaterialComponent>();
     material->ambient = vec3(1.f);
     material->diffuse = vec3(0.8f);
@@ -363,9 +370,9 @@ void World::init_sprites()
         pos_left->pos.x = i * 30.f + start_x;
         pos_left->pos.z = 0 + start_z;
         pos_left->pos.y = terrain->getAltitude({pos_left->pos.x, pos_left->pos.z});
-        auto tree = buildBVH(sprite_left->sprite->getVertices()[0], min_rect);
+        auto tree = buildBVH(sprite_left->sprite->getVertices()[0], min_rect_palm);
         left->getComponent<BVHComponent>()->vbh_tree = tree;
-        left->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(sprite_left->sprite->getVertices()[0], min_rect);
+        left->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(sprite_left->sprite->getVertices()[0], min_rect_palm);
         auto material = left->getComponent<MaterialComponent>();
         material->ambient = vec3(1.f);
         material->diffuse = vec3(0.8f);
@@ -388,10 +395,10 @@ void World::init_sprites()
         pos_right->pos.x = i * 30.f + start_x;
         pos_right->pos.z = 30.f + start_z;
         pos_right->pos.y = terrain->getAltitude({pos_right->pos.x, pos_right->pos.z});
-        tree = buildBVH(sprite_right->sprite->getVertices()[0], min_rect);
+        tree = buildBVH(sprite_right->sprite->getVertices()[0], min_rect_palm);
         right->addComponent<BVHComponent>();
         right->getComponent<BVHComponent>()->vbh_tree = tree;
-        right->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(sprite_right->sprite->getVertices()[0], min_rect);
+        right->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(sprite_right->sprite->getVertices()[0], min_rect_palm);
         mapBinaryTree(tree, [pos_right, palm_sprite](auto rect)
         {
             *rect = coll::AABBtoWorldSpace(*rect, pos_right->rot_axis,
@@ -417,10 +424,10 @@ void World::init_sprites()
         car_pos->pos.y = terrain->getAltitude({car_pos->pos.x, car_pos->pos.z});
         car_pos->angle = -glm::half_pi<GLfloat>();
         car_pos->rot_axis = vec3(0.f, 1.f, 0.f);
-        tree = buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect);
+        tree = buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect_car);
         car->addComponent<BVHComponent>();
         car->getComponent<BVHComponent>()->vbh_tree = tree;
-        car->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect);
+        car->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect_car);
         mapBinaryTree(tree, [car_pos, car_sprite](auto rect)
         {
             *rect = coll::AABBtoWorldSpace(*rect, car_pos->rot_axis,
@@ -434,7 +441,7 @@ void World::init_sprites()
         material->shininess = 32.f;
 
 
-        /*auto house = createEntity(unique_id());
+        auto house = createEntity(unique_id());
         house->activate();
         house->addComponents<SpriteComponent, PositionComponent,
                 SelectableComponent, BVHComponent, MaterialComponent>();
@@ -446,10 +453,10 @@ void World::init_sprites()
         house_pos->pos.y = terrain->getAltitude({house_pos->pos.x, house_pos->pos.z});
         house_pos->angle = -glm::half_pi<GLfloat>();
         house_pos->rot_axis = vec3(0.f, 1.f, 0.f);
-        tree = coll::buildBVH(house_sprite_comp->sprite->getVertices()[0], min_rect);
+        tree = coll::buildBVH(house_sprite_comp->sprite->getVertices()[0], min_rect_house);
         house->addComponent<BVHComponent>();
         house->getComponent<BVHComponent>()->vbh_tree = tree;
-        house->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVH(house_sprite_comp->sprite->getVertices()[0], min_rect);
+        house->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVH(house_sprite_comp->sprite->getVertices()[0], min_rect_house);
         mapBinaryTree(tree, [house_pos, house_sprite](auto rect)
         {
             *rect = coll::AABBtoWorldSpace(*rect, house_pos->rot_axis,
@@ -460,7 +467,7 @@ void World::init_sprites()
         material->ambient = vec3(1.f);
         material->diffuse = vec3(1.f);
         material->specular = vec3(0.5f);
-        material->shininess = 32.f;*/
+        material->shininess = 32.f;
     }
 }
 

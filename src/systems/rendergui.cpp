@@ -6,12 +6,14 @@
 #include <imgui_impl_opengl3.h>
 #include <imgui_internal.h>
 #include <imgui_impl_sdl.h>
+#include <filesystem>
 
 #include "systems/renderguisystem.hpp"
 #include "components/lidarcomponent.hpp"
 #include "components/bvhcomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "utils/logger.hpp"
+#include "utils/fs.hpp"
 #include "sceneprogram.hpp"
 #include "game.hpp"
 #include "config.hpp"
@@ -20,21 +22,26 @@
 #include "view/fpscamera.hpp"
 #include "view/lidar.hpp"
 
+using std::string;
+
 using utils::log::Logger;
-using boost::format;
 using utils::log::program_log_file_name;
 using utils::log::Category;
-using glm::mat4;
-using glm::vec3;
-using glm::vec4;
-using glm::scale;
 using utils::math::operator/;
 using utils::texture::genRbo;
 using utils::texture::genTexture;
 
+using boost::format;
+
+using glm::mat4;
+using glm::vec3;
+using glm::vec4;
+using glm::scale;
+
 
 RenderGuiSystem::RenderGuiSystem() : m_videoSettingsOpen(false),
-                                     m_colorSettingsOpen(false)
+                                     m_colorSettingsOpen(false),
+                                     m_exportSettingsOpen(false)
 
 {
     // Setup Dear ImGui context
@@ -162,8 +169,8 @@ void RenderGuiSystem::update_state(size_t delta)
             Text("Settings");
             Separator();
 
-            Checkbox(_("Draw Textures"),
-                     &Config::getVal<bool>("DrawTextures"));
+            Checkbox(_("Draw Vertices"),
+                     &Config::getVal<bool>("DrawVertices"));
             Checkbox(_("Draw Leafs"),
                      &Config::getVal<bool>("DrawLeafs"));
             Checkbox(_("Draw Rays"),
@@ -291,7 +298,6 @@ void RenderGuiSystem::update_state(size_t delta)
              Config::getVal<glm::vec3>("LightPos")));
 
             Text(_("Tree level show"));
-//            ImGui::SameLine();
             SliderInt("##tree_level",
                              &Config::getVal<int>("TreeLevelShow"),
                              0, 100);
@@ -317,7 +323,10 @@ void RenderGuiSystem::update_state(size_t delta)
             if (Button(_("Load config")))
                 Config::load(Config::getVal<const char *>("ConfigFile"));
 
-            if (Button(_("Save simulation")));
+            if (Button(_("Save simulation"))) {
+                auto en = m_ecsManager->getEntities();
+                utils::fs::saveSimulationJson(getResourcePath("pos"), en);
+            }
 
             if (Button(_("Load simulation")));
 
@@ -336,19 +345,8 @@ void RenderGuiSystem::update_state(size_t delta)
             if (ImGui::Button(_("Export settings")))
                 m_exportSettingsOpen = true;
 
-            if (m_exportSettingsOpen) {
-                Begin(_("Настройки экспорта"), &m_exportSettingsOpen);
-                Text(_("Export file name"));
-                std::string& buffer = Config::getVal<std::string>("ExportFileName");
-                InputText("##Export file name", &buffer);
-
-                Text(_("Export data type"));
-                const char* items[] = {"Cartesian", "Polar"};
-                ListBox("##Export type", &Config::getVal<int>("ExportType"),
-                               items, 2);
-
-                End();
-            }
+            if (m_exportSettingsOpen)
+                export_settings();
 
             if (Button(_("Video settings")))
                 m_videoSettingsOpen = true;
@@ -409,4 +407,62 @@ void RenderGuiSystem::update_state(size_t delta)
 
     Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void RenderGuiSystem::export_settings()
+{
+    using namespace ImGui;
+
+    Begin(_("Настройки экспорта"), &m_exportSettingsOpen);
+    Text(_("Export file name"));
+    auto& buffer = Config::getVal<string>("ExportFileName");
+    InputText("##Export file name", &buffer);
+
+    Text(_("Export data type"));
+    const char* items[] = {"Cartesian", "Polar"};
+    ListBox("##Export type", &Config::getVal<int>("ExportType"), items, 2);
+
+    int type = Config::getVal<int>("ExportType");
+    string tmp_file = getResourcePath(Config::getVal<string>("DataFileTmp"));
+    string out_file = getResourcePath(Config::getVal<string>("ExportFileName"));
+
+    auto write_data = [this](const string& tmp_file, const string& out_file, int type) {
+        if (type == 0) {
+            utils::fs::saveLidarDataCart(tmp_file, out_file);
+        } else {
+            auto lidarEn = getEntitiesByTag<LidarComponent>().begin()->second;
+            auto pos = lidarEn->getComponent<PositionComponent>();
+            utils::fs::saveLidarDataSphere(tmp_file, out_file, pos->pos);
+        }
+    };
+
+
+    if (Button(_("Export"))) {
+        if (std::filesystem::exists(std::filesystem::absolute(out_file))) {
+            m_openExportDialog = true;
+        } else {
+            write_data(tmp_file, out_file, type);
+        }
+    }
+
+    if (m_openExportDialog) {
+        OpenPopup("Warning");
+        if (BeginPopupModal(_("Warning"), nullptr)) {
+            Text(_("File exists. Do you want to rewrite it?"));
+            if (Button(_("Yes"))) {
+                write_data(tmp_file, out_file, type);
+                m_openExportDialog = false;
+                ImGui::CloseCurrentPopup();
+            }
+
+            if (Button(_("No"))) {
+                m_openExportDialog = false;
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
+        }
+    }
+
+    End();
 }

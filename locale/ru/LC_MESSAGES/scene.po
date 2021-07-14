@@ -64,8 +64,8 @@ msgid "Draw Rays"
 msgstr "Отрисовка лучей"
 
 #: src/systems/rendergui.cpp:157
-msgid "Draw Textures"
-msgstr "Отрисовка текстур"
+msgid "Draw Vertices"
+msgstr "Отрисовка вершин"
 
 #: src/systems/rendergui.cpp:163
 msgid "Draw bounding boxes"
@@ -185,3 +185,16 @@ msgstr "Настройки рендера"
 #: src/systems/rendergui.cpp:134
 msgid "View"
 msgstr "Вид"
+
+msgid "File exists. Do you want to rewrite it?"
+msgstr "Файл существует. Вы хотите перезаписать его?"
+
+msgid "Warning"
+msgstr "Внимание"
+
+msgid "Export settings"
+msgstr "Настройки экспорта"
+
+
+
+

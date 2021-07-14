@@ -6,6 +6,7 @@
 #include "ecs/component.hpp"
 
 using glm::vec3;
+using glm::vec2;
 using std::vector;
 
 /**
