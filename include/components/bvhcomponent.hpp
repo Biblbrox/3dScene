@@ -8,8 +8,8 @@ using Tree = std::shared_ptr<utils::data::Node<size_t, utils::RectPoints3D>>;
 
 struct BVHComponent: ecs::Component
 {
-    Tree vbh_tree;
-    Tree vbh_tree_model;
+    Tree vbh_tree = nullptr;
+    Tree vbh_tree_model = nullptr;
 };
 
 #endif //BVHCOMPONENT_HPP

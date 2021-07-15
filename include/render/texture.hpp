@@ -3,6 +3,9 @@
 
 #include <string>
 #include <GL/glew.h>
+#include <glm/vec3.hpp>
+
+using glm::vec3;
 
 /**
  * Texture class.
@@ -18,6 +21,7 @@ public:
     virtual GLuint getWidth() const noexcept;
     virtual GLuint getHeight() const noexcept;
     virtual GLuint getDepth() const noexcept;
+    virtual vec3 getSize() const noexcept;
 
     virtual GLuint getTriangleCount() const = 0;
 

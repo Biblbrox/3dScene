@@ -6,7 +6,7 @@
 
 struct SpriteComponent : ecs::Component
 {
-    std::shared_ptr<Sprite> sprite;
+    std::shared_ptr<Sprite> sprite = nullptr;
 };
 
 #endif //MOONLANDER_SPRITECOMPONENT_HPP

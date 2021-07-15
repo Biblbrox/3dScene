@@ -110,7 +110,7 @@ namespace coll {
      * @param rot_axis
      * @return
      */
-    inline utils::RectPoints3D
+    utils::RectPoints3D
     buildOBB(const std::vector<vec3> &mesh_vertices) noexcept;
 
     std::array<std::vector<vec3>, 2>
@@ -131,6 +131,15 @@ namespace coll {
      * @return
      */
     NodePtr buildBVH(const VertData &mesh_vertices, vec3 min_rect) noexcept;
+
+    /**
+    * Build top-down BVH tree until min_rect condition not required in
+    * one of axis.
+    * division is step original mesh divided by
+    * @param mesh_vertices
+    * @return
+    */
+    NodePtr buildBVHOBB(const VertData &mesh_vertices, vec3 min_rect) noexcept;
 
 
     using TreePtr = std::shared_ptr<utils::data::Node<size_t, utils::RectPoints3D>>;

@@ -43,3 +43,8 @@ Texture::~Texture()
     freeTexture();
 }
 
+vec3 Texture::getSize() const noexcept
+{
+    return {m_textureWidth, m_textureHeight, m_textureDepth};
+}
+

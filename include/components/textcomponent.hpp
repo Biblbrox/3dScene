@@ -8,7 +8,7 @@
 
 struct TextComponent : ecs::Component
 {
-    std::shared_ptr<TextTexture> texture;
+    std::shared_ptr<TextTexture> texture = nullptr;
 };
 
 #endif //MOONLANDER_TEXTCOMPONENT_HPP

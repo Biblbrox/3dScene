@@ -7,13 +7,14 @@
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <GL/glew.h>
+#include <Eigen/Eigenvalues>
 
 using glm::vec2;
 using glm::vec3;
 
 namespace utils::math {
 
-    inline glm::vec3 viewportToNDC(const glm::vec2& pos, const glm::vec2& clip)
+    constexpr vec3 viewportToNDC(const vec2& pos, const vec2& clip)
     {
         GLfloat width = clip.x;
         GLfloat height = clip.y;
@@ -54,32 +55,40 @@ namespace utils::math {
         return ray_world;
     }
 
+    inline glm::vec3 computeCentroid(const std::vector<vec3>& points)
+    {
+        glm::vec3 means{0.f};
+        for (auto point : points) {
+            means[0] += point.x;
+            means[1] += point.y;
+            means[2] += point.z;
+        }
+
+        means /= points.size();
+
+        return means;
+    }
+
     /**
      * Build covariance matrix from set of points
      * @param points
      * @return
      */
-    inline glm::mat3 build_covarience_matrix(const std::vector<vec3>& points)
+    inline Eigen::Matrix3f build_covarience_matrix(const std::vector<vec3>& points)
     {
-//        glm::mat3 cov{0.f};
-//        glm::vec3 means{0.f};
-//        for (int i = 0; i < points.size(); ++i) {
-//            means[0] += points[i].x;
-//            means[1] += points[i].y;
-//            means[2] += points[i].z;
-//        }
-//
-//        means /= points.size();
-//
-//        for (int i = 0; i < 3; ++i)
-//            for (int j = 0; j < 3; ++j)
-//                for (int k = 0; k < points.size(); ++k)
-//                    cov[i][j] += (points[k + i] - means[i])
-//                                 * (points[k + j] - means[j]);
-//
-//        cov /= points.size() - 1;
-//
-//        return cov;
+        Eigen::Matrix3f cov;
+
+        glm::vec3 means = computeCentroid(points);
+
+        for (int i = 0; i < 3; ++i)
+            for (int j = 0; j < 3; ++j)
+                for (int k = 0; k < points.size(); ++k)
+                    cov(i,j) += (points[k + i][i] - means[i])
+                                 * (points[k + j][j] - means[j]);
+
+        cov /= points.size() - 1;
+
+        return cov;
     }
 
     constexpr unsigned int power_two(unsigned int val) noexcept

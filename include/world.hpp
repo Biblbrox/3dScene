@@ -33,6 +33,7 @@ public:
 
     void init() override;
     void update(size_t delta) override;
+    void init_from_file(const std::string& file);
 
 private:
     utils::Fps m_fps;

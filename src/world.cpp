@@ -8,6 +8,7 @@
 #include "world.hpp"
 #include "config.hpp"
 #include "game.hpp"
+#include "utils/fs.hpp"
 #include "utils/math.hpp"
 #include "utils/datastructs.hpp"
 #include "utils/collision.hpp"
@@ -286,11 +287,13 @@ void World::init_sprites()
     auto camera = FpsCamera::getInstance();
     camera->setPos({start_x, 200.f, start_z});
 
-    std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite, man_sprite;
+    std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite, man_sprite,
+            chair_sprite;
     car_sprite = std::make_shared<Sprite>();
     palm_sprite = std::make_shared<Sprite>();
     house_sprite = std::make_shared<Sprite>();
     man_sprite = std::make_shared<Sprite>();
+    chair_sprite = std::make_shared<Sprite>();
     car_sprite->addMesh(getResourcePath("ford_focus2.obj"), 2.f, 2.f, 2.f);
     car_sprite->generateDataBuffer();
     palm_sprite->addMesh(getResourcePath("lowpolypalm.obj"), 2.f, 2.f, 2.f);
@@ -299,11 +302,39 @@ void World::init_sprites()
     house_sprite->generateDataBuffer();
     man_sprite->addMesh(getResourcePath("human_female.obj"), 10.f, 10.f, 10.f);
     man_sprite->generateDataBuffer();
+    chair_sprite->addMesh(getResourcePath("Wooden_Chair/Wooden_Chair.obj"), 10.f, 10.f, 10.f);
+    chair_sprite->generateDataBuffer();
 
     vec3 min_rect_car = min_rect / 2.f;
     vec3 min_rect_palm = min_rect / 2.f;
     vec3 min_rect_man = min_rect / 10.f;
     vec3 min_rect_house = min_rect;
+    vec3 min_rect_chair = min_rect / 5.f;
+
+    auto chair_en = createEntity(unique_id());
+    chair_en->activate();
+    chair_en->addComponents<SpriteComponent, PositionComponent,
+            SelectableComponent, BVHComponent, MaterialComponent>();
+    auto chair_sprite_comp = chair_en->getComponent<SpriteComponent>();
+    chair_sprite_comp->sprite = chair_sprite;
+    auto pos_chair = chair_en->getComponent<PositionComponent>();
+    pos_chair->pos.x = 40.f + start_x;
+    pos_chair->pos.z = 400.f + start_z;
+    pos_chair->pos.y = terrain->getAltitude({pos_chair->pos.x, pos_chair->pos.z});
+    auto tree = buildBVH(chair_sprite->getVertices()[0], min_rect_chair);
+    chair_en->getComponent<BVHComponent>()->vbh_tree = tree;
+    chair_en->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(
+            chair_sprite->getVertices()[0], min_rect_chair);
+    auto material = chair_en->getComponent<MaterialComponent>();
+    material->ambient = vec3(1.f);
+    material->diffuse = vec3(0.8f);
+    material->specular = vec3(0.f);
+    material->shininess = 32.f;
+    mapBinaryTree(tree, [pos_chair, chair_sprite](auto rect) {
+        *rect = coll::AABBtoWorldSpace(*rect, pos_chair->rot_axis,
+                                       pos_chair->angle, pos_chair->pos,
+                                       *chair_sprite);
+    });
 
     auto man_en = createEntity(unique_id());
     man_en->activate();
@@ -315,10 +346,10 @@ void World::init_sprites()
     pos_man->pos.x = 40.f + start_x;
     pos_man->pos.z = 0 + start_z;
     pos_man->pos.y = terrain->getAltitude({pos_man->pos.x, pos_man->pos.z});
-    auto tree = buildBVH(man_sprite->getVertices()[0], min_rect_man);
+    tree = buildBVH(man_sprite->getVertices()[0], min_rect_man);
     man_en->getComponent<BVHComponent>()->vbh_tree = tree;
     man_en->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(man_sprite->getVertices()[0], min_rect_man);
-    auto material = man_en->getComponent<MaterialComponent>();
+    material = man_en->getComponent<MaterialComponent>();
     material->ambient = vec3(1.f);
     material->diffuse = vec3(0.8f);
     material->specular = vec3(0.f);
@@ -370,9 +401,9 @@ void World::init_sprites()
         pos_left->pos.x = i * 30.f + start_x;
         pos_left->pos.z = 0 + start_z;
         pos_left->pos.y = terrain->getAltitude({pos_left->pos.x, pos_left->pos.z});
-        auto tree = buildBVH(sprite_left->sprite->getVertices()[0], min_rect_palm);
+        auto tree = coll::buildBVHOBB(sprite_left->sprite->getVertices()[0], min_rect_palm);
         left->getComponent<BVHComponent>()->vbh_tree = tree;
-        left->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(sprite_left->sprite->getVertices()[0], min_rect_palm);
+        left->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVHOBB(sprite_left->sprite->getVertices()[0], min_rect_palm);
         auto material = left->getComponent<MaterialComponent>();
         material->ambient = vec3(1.f);
         material->diffuse = vec3(0.8f);
@@ -474,4 +505,18 @@ void World::init_sprites()
 void World::deallocate_scene()
 {
 
+}
+
+void World::init_from_file(const std::string &file)
+{
+    m_systems.clear();
+    createSystem<RenderGuiSystem>();
+    createSystem<LidarSystem>();
+    createSystem<RenderSceneSystem>();
+    createSystem<KeyboardSystem>();
+
+    m_entities.clear();
+    init_terrain();
+    init_sprites();
+    init_scene();
 }

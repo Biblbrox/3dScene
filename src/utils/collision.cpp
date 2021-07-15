@@ -6,7 +6,28 @@
 using utils::RectPoints3D;
 using utils::log::Logger;
 using utils::math::rotate_around;
+using utils::math::computeCentroid;
+using utils::math::build_covarience_matrix;
+
 using std::sort;
+using glm::mat4;
+using glm::vec4;
+
+static RectPoints3D rectTransform(const RectPoints3D& in, const mat4& transform)
+{
+    RectPoints3D rect = in;
+
+    rect.a = transform * vec4(rect.a, 1.f);
+    rect.b = transform * vec4(rect.b, 1.f);
+    rect.c = transform * vec4(rect.c, 1.f);
+    rect.d = transform * vec4(rect.d, 1.f);
+    rect.e = transform * vec4(rect.e, 1.f);
+    rect.f = transform * vec4(rect.f, 1.f);
+    rect.g = transform * vec4(rect.g, 1.f);
+    rect.k = transform * vec4(rect.k, 1.f);
+
+    return rect;
+}
 
 std::vector<vec3> coll::buildVerticesFromRect3D(RectPoints3D rect)
 {
@@ -34,6 +55,7 @@ coll::findMeshBound(const std::vector<vec3> &mesh_vertices)
     min_x = max_x = mesh_vertices[0].x;
     min_y = max_y = mesh_vertices[0].y;
     min_z = max_z = mesh_vertices[0].z;
+
     for (auto vert: mesh_vertices) {
         if (vert.x < min_x)
             min_x = vert.x;
@@ -96,18 +118,14 @@ coll::AABBtoWorldSpace(RectPoints3D rect,
                        const vec3& rot_axis, GLfloat angle,
                        const vec3& position, const Texture& texture) noexcept
 {
-
-    vec3 pos = {position.x / texture.getWidth(),
-                position.y / texture.getHeight(),
-                position.z / texture.getDepth()};
+    vec3 pos = position / texture.getSize();
 
     const GLfloat half = 1.f;
     const GLfloat centerX = pos.x + half;
     const GLfloat centerY = pos.y + half;
     const GLfloat centerZ = pos.z + half;
 
-    const vec3 scale = vec3(texture.getWidth(), texture.getHeight(),
-                            texture.getDepth());
+    const vec3 scale = texture.getSize();
 
     mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
                                   rot_axis);
@@ -115,14 +133,7 @@ coll::AABBtoWorldSpace(RectPoints3D rect,
     mat4 scaling = glm::scale(mat4(1.f), scale);
     mat4 transform = scaling * rotation * translation;
 
-    rect.a = transform * vec4(rect.a, 1.f);
-    rect.b = transform * vec4(rect.b, 1.f);
-    rect.c = transform * vec4(rect.c, 1.f);
-    rect.d = transform * vec4(rect.d, 1.f);
-    rect.e = transform * vec4(rect.e, 1.f);
-    rect.f = transform * vec4(rect.f, 1.f);
-    rect.g = transform * vec4(rect.g, 1.f);
-    rect.k = transform * vec4(rect.k, 1.f);
+    rect = rectTransform(rect, transform);
 
     return rebuildAABBinWorldSpace(rect);
 }
@@ -132,10 +143,7 @@ coll::AABBTransform(RectPoints3D rect,
                     const vec3& rot_axis, GLfloat angle,
                     const vec3& position, const Texture& texture) noexcept
 {
-
-    vec3 pos = {position.x / texture.getWidth(),
-                position.y / texture.getHeight(),
-                position.z / texture.getDepth()};
+    vec3 pos = position / texture.getSize();
 
     const GLfloat half = 1.f;
     const GLfloat centerX = position.x + half;
@@ -147,14 +155,7 @@ coll::AABBTransform(RectPoints3D rect,
     mat4 translation = translate(mat4(1.f), position);
     mat4 transform = rotation * translation;
 
-    rect.a = transform * vec4(rect.a, 1.f);
-    rect.b = transform * vec4(rect.b, 1.f);
-    rect.c = transform * vec4(rect.c, 1.f);
-    rect.d = transform * vec4(rect.d, 1.f);
-    rect.e = transform * vec4(rect.e, 1.f);
-    rect.f = transform * vec4(rect.f, 1.f);
-    rect.g = transform * vec4(rect.g, 1.f);
-    rect.k = transform * vec4(rect.k, 1.f);
+    rect = rectTransform(rect, transform);
 
     return rebuildAABBinWorldSpace(rect);
 }
@@ -169,38 +170,22 @@ coll::AABBTransform(RectPoints3D rect,
  */
 RectPoints3D coll::buildOBB(const std::vector<vec3> &mesh_vertices) noexcept
 {
-    assert(mesh_vertices.size() % 3 == 0
-           && "Vertices count must be power of 3");
-    // Build covarience matrix
-    glm::mat3 cov_glm = utils::math::build_covarience_matrix(mesh_vertices);
-    Eigen::Matrix3f cov;
-    cov << cov_glm[0][0], cov_glm[0][1], cov_glm[0][2],
-            cov_glm[1][0], cov_glm[1][1], cov_glm[1][2],
-            cov_glm[2][0], cov_glm[2][1], cov_glm[2][2];
-    // Find eigen vectors
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eigensolver(cov);
-    if (eigensolver.info() != Eigen::Success) {
-        // TODO: throw error
-    }
-    auto eigen_vectors = eigensolver.eigenvectors();
-    //std::cout << eigen_vectors;
+    using namespace Eigen;
 
-    auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(
-            mesh_vertices);
+    Matrix3f covariance = build_covarience_matrix(mesh_vertices);
+    SelfAdjointEigenSolver<Matrix3f> eigen_solver(covariance, Eigen::ComputeEigenvectors);
+    Eigen::Matrix3f eigenVectors = eigen_solver.eigenvectors();
+    // This line is necessary for proper orientation in some cases.
+    // The numbers come out the same without it, but
+    // the signs are different and the box doesn't get correctly oriented in some cases.
+//    eigenVectors.col(2) = eigenVectors.col(0).cross(eigenVectors.col(1));
 
-    // Front plane
-    vec3 a = {min_x, min_y, min_z};
-    vec3 b = {max_x, min_y, min_z};
-    vec3 c = {max_x, max_y, min_z};
-    vec3 d = {min_x, max_y, min_z};
+    vec3 r = normalize(vec3(eigenVectors.col(0).x(), eigenVectors.col(0).y(), eigenVectors.col(0).z()));
+    vec3 u = normalize(vec3(eigenVectors.col(1).x(), eigenVectors.col(1).y(), eigenVectors.col(1).z()));
+    vec3 f = normalize(vec3(eigenVectors.col(2).x(), eigenVectors.col(2).y(), eigenVectors.col(2).z()));
 
-    // Right plane
-    vec3 e = {max_x, min_y, max_z};
-    vec3 f = {max_x, max_y, max_z};
+    
 
-    // Back plane
-    vec3 g = {min_x, max_y, max_z};
-    vec3 k = {min_x, min_y, max_z};
 
     return {a, b, c, d, e, f, g, k};
 }
@@ -254,7 +239,7 @@ coll::divideByLongestSize(const std::vector<vec3>& vertices)
             else
                 right_part.push_back(i);
         }
-    } else if (longest_side == 2) { // divide by z side
+    } else { // divide by z side
         for (auto & i : sorted_z) {
             if (i.z < z_border)
                 left_part.push_back(i);
@@ -274,7 +259,6 @@ coll::divideByLongestSize(const std::vector<vec3>& vertices)
         left_part[left_part.size() - 1].z = right_part[0].z;
     }
 
-    Logger::info("left size: %d, right size: %d", left_part.size(), right_part.size());
     return {left_part, right_part};
 }
 
@@ -314,14 +298,57 @@ NodePtr coll::buildBVH(const VertData &mesh_vertices, vec3 min_rect) noexcept
                        : ((y_length > x_length && y_length > z_length) ? 1 : 2);
 
     if ((longest_side == 0 && x_length <= min_rect.x)
-        || (longest_side == 1 && x_length <= min_rect.y)
-        || (longest_side == 2 && x_length <= min_rect.z))
+        || (longest_side == 1 && y_length <= min_rect.y)
+        || (longest_side == 2 && z_length <= min_rect.z))
         return nullptr;
 
     if (x_length > min_rect.x || y_length > min_rect.y
         || z_length > min_rect.z) {
         node->m_left = buildBVH(left_part, min_rect);
         node->m_right = buildBVH(right_part, min_rect);
+        return node;
+    }
+
+    return nullptr;
+}
+
+/**
+* Build top-down BVH tree until min_rect condition not required in
+* one of axis.
+* division is step original mesh divided by
+* @param mesh_vertices
+* @return
+*/
+NodePtr coll::buildBVHOBB(const VertData &mesh_vertices, vec3 min_rect) noexcept
+{
+    NodePtr node = std::make_shared<Node>();
+    node->m_data = std::make_shared<NodeData>(coll::buildOBB(mesh_vertices));
+
+    auto[left_part, right_part] = divideByLongestSize(mesh_vertices);
+
+    if (left_part.size() <= 1 && right_part.size() <= 1)
+        return nullptr;
+
+    auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(
+            mesh_vertices);
+
+    // Divide by longest side
+    GLfloat x_length = std::abs(max_x - min_x);
+    GLfloat y_length = std::abs(max_y - min_y);
+    GLfloat z_length = std::abs(max_z - min_z);
+    int longest_side = (x_length > y_length && x_length > z_length)
+                       ? 0
+                       : ((y_length > x_length && y_length > z_length) ? 1 : 2);
+
+    if ((longest_side == 0 && x_length <= min_rect.x)
+        || (longest_side == 1 && y_length <= min_rect.y)
+        || (longest_side == 2 && z_length <= min_rect.z))
+        return nullptr;
+
+    if (x_length > min_rect.x || y_length > min_rect.y
+        || z_length > min_rect.z) {
+        node->m_left = buildBVHOBB(left_part, min_rect);
+        node->m_right = buildBVHOBB(right_part, min_rect);
         return node;
     }
 

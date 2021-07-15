@@ -12,10 +12,10 @@ using glm::vec3;
  */
 struct MaterialComponent: ecs::Component
 {
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
-    GLfloat shininess;
+    vec3 ambient = vec3(0.f);
+    vec3 diffuse = vec3(0.f);
+    vec3 specular = vec3(0.f);
+    GLfloat shininess = 0.f;
 };
 
 
