@@ -325,10 +325,12 @@ void RenderGuiSystem::update_state(size_t delta)
 
             if (Button(_("Save simulation"))) {
                 auto en = m_ecsManager->getEntities();
-                utils::fs::saveSimulationJson(getResourcePath("pos"), en);
+                utils::fs::saveSimJson(getResourcePath("pos"), en);
             }
 
-            if (Button(_("Load simulation")));
+            if (Button(_("Load simulation"))) {
+//                utils::fs::saveSimJson(getResourcePath("pos"));
+            }
 
             if (Button(_("Color Settings")))
                 m_colorSettingsOpen = true;

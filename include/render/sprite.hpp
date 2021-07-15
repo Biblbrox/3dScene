@@ -50,8 +50,10 @@ public:
     void freeVBO() noexcept final;
 
     GLuint getVAO() const override;
-protected:
+
+    std::vector<std::string> m_objFiles;
     std::vector<vec3> m_sizes;
+protected:
     GLuint* m_vao;
 //    GLuint m_texCount;
 //    GLuint m_curIdx = 0;
@@ -65,7 +67,6 @@ protected:
 
     std::vector<GLuint> m_textureIds;
 
-    std::vector<std::string> m_objFiles;
 };
 
 #endif //SPRITE_HPP

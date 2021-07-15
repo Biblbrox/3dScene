@@ -12,10 +12,10 @@ using glm::vec3;
  */
 struct LightComponent: ecs::Component
 {
-    vec3 pos;
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
+    vec3 pos = vec3(0.f);
+    vec3 ambient = vec3(0.f);
+    vec3 diffuse = vec3(0.f);
+    vec3 specular = vec3(0.f);
 };
 
 #endif //LIGHTCOMPONENT_HPP

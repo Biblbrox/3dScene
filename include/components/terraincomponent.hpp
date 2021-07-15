@@ -6,7 +6,7 @@
 
 struct TerrainComponent : ecs::Component
 {
-    std::shared_ptr<Terrain> terrain;
+    std::shared_ptr<Terrain> terrain = nullptr;
 };
 
 #endif //TERRAINCOMPONENT_HPP

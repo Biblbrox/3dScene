@@ -8,14 +8,14 @@
  */
 struct SceneComponent: ecs::Component
 {
-    GLuint sceneBuffer;
-    GLuint sceneBufferMSAA;
+    GLuint sceneBuffer = 0;
+    GLuint sceneBufferMSAA = 0;
 
     // MSAA
-    GLuint samples;
-    bool isMsaa;
-    GLuint textureMSAA;
-    GLuint texture;
+    GLuint samples = 0;
+    bool isMsaa = false;
+    GLuint textureMSAA = 0;
+    GLuint texture = 0;
 };
 
 #endif //SCENECOMPONENT_HPP

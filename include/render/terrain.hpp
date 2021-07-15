@@ -44,12 +44,14 @@ public:
     GLfloat getAltitude(const vec2& point) const;
     bool isUnderGround(const vec3& point) const;
 
-private:
+    // Need for serialization
     GLuint m_width;
-
     GLuint m_height;
     GLfloat m_step;
+    std::string m_heightImage;
     GLfloat m_scale;
+    std::string m_textureFile;
+private:
 
     std::vector<std::vector<GLfloat>> m_heightMap;
     std::vector<GLuint> m_indices;
@@ -60,9 +62,6 @@ private:
     GLuint m_vao;
 
     GLuint m_textureId;
-
-    std::string m_heightImage;
-    std::string m_textureFile;
 
     void computeIndices();
     vec3 computeNormal(int x, int z);

@@ -55,11 +55,11 @@ namespace utils
         return {coords.x + camPos.x, coords.y + camPos.y};
     }
 
-    template<typename T>
-    constexpr size_t type_id() noexcept
-    {
-        return typeid(T).hash_code();
-    }
+//    template<typename T>
+//    constexpr size_t type_id() noexcept
+//    {
+//        return typeid(T).hash_code();
+//    }
 
     /**
      * Divide clip by multiple small clips.
