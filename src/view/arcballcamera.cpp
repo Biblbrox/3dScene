@@ -7,7 +7,7 @@
 #include "config.hpp"
 #include "utils/math.hpp"
 
-using utils::math::sgn;
+using math::sgn;
 
 std::shared_ptr<ArcballCamera> ArcballCamera::instance = nullptr;
 

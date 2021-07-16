@@ -27,7 +27,7 @@ using std::string;
 using utils::log::Logger;
 using utils::log::program_log_file_name;
 using utils::log::Category;
-using utils::math::operator/;
+using math::operator/;
 using utils::texture::genRbo;
 using utils::texture::genTexture;
 
@@ -329,7 +329,7 @@ void RenderGuiSystem::update_state(size_t delta)
             }
 
             if (Button(_("Load simulation"))) {
-//                utils::fs::saveSimJson(getResourcePath("pos"));
+                utils::fs::loadSimJson(getResourcePath("pos"));
             }
 
             if (Button(_("Color Settings")))

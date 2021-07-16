@@ -12,6 +12,8 @@
 #include "components/terraincomponent.hpp"
 #include "utils/collision.hpp"
 #include "utils/logger.hpp"
+#include "utils/bvh/aabb.hpp"
+#include "utils/bvh/obb.hpp"
 #include "render/render.hpp"
 #include "config.hpp"
 
@@ -20,9 +22,8 @@ using glm::mat3;
 using glm::vec4;
 using glm::vec3;
 using utils::log::Logger;
-using utils::math::viewportToWorld;
+using math::viewportToWorld;
 using coll::BVHAABBTraversal;
-using coll::AABBtoWorldSpace;
 using utils::data::mapBinaryTree;
 
 void KeyboardSystem::update_state(size_t delta)
@@ -102,9 +103,8 @@ void KeyboardSystem::update_state(size_t delta)
                         auto sprite = m_draggedObj->getComponent<SpriteComponent>()->sprite;
                         mapBinaryTree(bvh->vbh_tree, [pos, sprite, this](auto rect)
                         {
-                            *rect = coll::AABBTransform(*rect, pos->rot_axis,
-                                                        0.f,
-                                                        pos->pos - m_dragStartPos, *sprite);
+                            *rect = AABBTransform(*rect, pos->rot_axis, 0.f,
+                                                  pos->pos - m_dragStartPos, *sprite);
                         });
                     }
                     m_draggedObj = nullptr;

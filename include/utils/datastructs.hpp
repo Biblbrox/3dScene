@@ -2,12 +2,13 @@
 #define DATASTRUCTS_HPP
 
 #include <GL/glew.h>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
+#include <glm/glm.hpp>
 #include <memory>
 
 using glm::vec2;
 using glm::vec3;
+using glm::vec4;
+using glm::mat4;
 
 namespace utils::data {
     template<typename K, typename T>
@@ -92,6 +93,22 @@ namespace utils
 		vec3 g;
 		vec3 k;
 	};
+
+    inline RectPoints3D rectTransform(const RectPoints3D& in, const mat4& transform)
+    {
+        RectPoints3D rect = in;
+
+        rect.a = transform * vec4(rect.a, 1.f);
+        rect.b = transform * vec4(rect.b, 1.f);
+        rect.c = transform * vec4(rect.c, 1.f);
+        rect.d = transform * vec4(rect.d, 1.f);
+        rect.e = transform * vec4(rect.e, 1.f);
+        rect.f = transform * vec4(rect.f, 1.f);
+        rect.g = transform * vec4(rect.g, 1.f);
+        rect.k = transform * vec4(rect.k, 1.f);
+
+        return rect;
+    }
 };
 
 #endif // DATASTRUCTS_HPP
