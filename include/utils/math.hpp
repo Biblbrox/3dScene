@@ -12,7 +12,37 @@
 using glm::vec2;
 using glm::vec3;
 
-namespace utils::math {
+namespace math {
+
+    inline
+    std::array<GLfloat, 6> findBounds(const std::vector<vec3> &points)
+    {
+        GLfloat min_x, max_x, min_y, max_y, min_z, max_z;
+        min_x = max_x = points[0].x;
+        min_y = max_y = points[0].y;
+        min_z = max_z = points[0].z;
+
+        for (auto vert: points) {
+            if (vert.x < min_x)
+                min_x = vert.x;
+            if (vert.x > max_x)
+                max_x = vert.x;
+
+            if (vert.y < min_y)
+                min_y = vert.y;
+            if (vert.y > max_y)
+                max_y = vert.y;
+
+            if (vert.z < min_z)
+                min_z = vert.z;
+            if (vert.z > max_z)
+                max_z = vert.z;
+        }
+
+        return {min_x, max_x, min_y, max_y, min_z, max_z};
+    }
+
+
 
     constexpr vec3 viewportToNDC(const vec2& pos, const vec2& clip)
     {

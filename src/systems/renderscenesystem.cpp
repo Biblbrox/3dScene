@@ -10,6 +10,7 @@
 #include "components/scenecomponent.hpp"
 #include "components/terraincomponent.hpp"
 #include "components/lightcomponent.hpp"
+#include "utils/bvh/aabb.hpp"
 #include "render/render.hpp"
 #include "utils/logger.hpp"
 #include "exceptions/glexception.hpp"
@@ -28,7 +29,7 @@ using utils::log::Category;
 using glm::mat4;
 using glm::vec3;
 using glm::scale;
-using utils::math::operator/;
+using math::operator/;
 using utils::texture::genRbo;
 using utils::texture::genTexture;
 
@@ -171,7 +172,7 @@ void RenderSceneSystem::drawBoundingBoxes()
 
         auto posComp = en->getComponent<PositionComponent>();
         auto sprite = en->getComponent<SpriteComponent>()->sprite;
-        auto points = coll::buildAABB(sprite->getVertices()[0]);
+        auto points = buildAABB(sprite->getVertices()[0]);
         auto tree = en->getComponent<BVHComponent>()->vbh_tree;
 
         auto draw_fun = [program, sprite, posComp](NodeDataPtr bound_rect) {

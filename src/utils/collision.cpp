@@ -2,32 +2,20 @@
 
 #include "utils/collision.hpp"
 #include "utils/logger.hpp"
+#include "utils/bvh/aabb.hpp"
+#include "utils/bvh/obb.hpp"
 
 using utils::RectPoints3D;
 using utils::log::Logger;
-using utils::math::rotate_around;
-using utils::math::computeCentroid;
-using utils::math::build_covarience_matrix;
+using math::rotate_around;
+using math::computeCentroid;
+using math::build_covarience_matrix;
+using math::findBounds;
 
 using std::sort;
 using glm::mat4;
 using glm::vec4;
-
-static RectPoints3D rectTransform(const RectPoints3D& in, const mat4& transform)
-{
-    RectPoints3D rect = in;
-
-    rect.a = transform * vec4(rect.a, 1.f);
-    rect.b = transform * vec4(rect.b, 1.f);
-    rect.c = transform * vec4(rect.c, 1.f);
-    rect.d = transform * vec4(rect.d, 1.f);
-    rect.e = transform * vec4(rect.e, 1.f);
-    rect.f = transform * vec4(rect.f, 1.f);
-    rect.g = transform * vec4(rect.g, 1.f);
-    rect.k = transform * vec4(rect.k, 1.f);
-
-    return rect;
-}
+using glm::dot;
 
 std::vector<vec3> coll::buildVerticesFromRect3D(RectPoints3D rect)
 {
@@ -48,152 +36,10 @@ std::vector<vec3> coll::buildVerticesFromRect3D(RectPoints3D rect)
     };
 }
 
-std::array<GLfloat, 6>
-coll::findMeshBound(const std::vector<vec3> &mesh_vertices)
-{
-    GLfloat min_x, max_x, min_y, max_y, min_z, max_z;
-    min_x = max_x = mesh_vertices[0].x;
-    min_y = max_y = mesh_vertices[0].y;
-    min_z = max_z = mesh_vertices[0].z;
-
-    for (auto vert: mesh_vertices) {
-        if (vert.x < min_x)
-            min_x = vert.x;
-        if (vert.x > max_x)
-            max_x = vert.x;
-
-        if (vert.y < min_y)
-            min_y = vert.y;
-        if (vert.y > max_y)
-            max_y = vert.y;
-
-        if (vert.z < min_z)
-            min_z = vert.z;
-        if (vert.z > max_z)
-            max_z = vert.z;
-    }
-
-    return {min_x, max_x, min_y, max_y, min_z, max_z};
-}
-
-/**
- * Return rectangular bounding box for given vertices
- * Result contain vertices grouped to triangle primitives
- * @param vertices
- * @param angle
- * @param rot_axis
- * @return
- */
-RectPoints3D coll::buildAABB(const std::vector<vec3> &vertices) noexcept
-{
-    auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(vertices);
-
-    // Front plane
-    vec3 a = {min_x, min_y, min_z};
-    vec3 b = {max_x, min_y, min_z};
-    vec3 c = {max_x, max_y, min_z};
-    vec3 d = {min_x, max_y, min_z};
-
-    // Right plane
-    vec3 e = {max_x, min_y, max_z};
-    vec3 f = {max_x, max_y, max_z};
-
-    // Back plane
-    vec3 g = {min_x, max_y, max_z};
-    vec3 k = {min_x, min_y, max_z};
-
-    return {a, b, c, d, e, f, g, k};
-}
-
-/**
-* Return rectangular bounding box for given vertices
-* Result contain vertices grouped to triangle primitives
-* @param mesh_vertices
-* @param angle
-* @param rot_axis
-* @return
-*/
-RectPoints3D
-coll::AABBtoWorldSpace(RectPoints3D rect,
-                       const vec3& rot_axis, GLfloat angle,
-                       const vec3& position, const Texture& texture) noexcept
-{
-    vec3 pos = position / texture.getSize();
-
-    const GLfloat half = 1.f;
-    const GLfloat centerX = pos.x + half;
-    const GLfloat centerY = pos.y + half;
-    const GLfloat centerZ = pos.z + half;
-
-    const vec3 scale = texture.getSize();
-
-    mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
-                                  rot_axis);
-    mat4 translation = translate(mat4(1.f), pos);
-    mat4 scaling = glm::scale(mat4(1.f), scale);
-    mat4 transform = scaling * rotation * translation;
-
-    rect = rectTransform(rect, transform);
-
-    return rebuildAABBinWorldSpace(rect);
-}
-
-RectPoints3D
-coll::AABBTransform(RectPoints3D rect,
-                    const vec3& rot_axis, GLfloat angle,
-                    const vec3& position, const Texture& texture) noexcept
-{
-    vec3 pos = position / texture.getSize();
-
-    const GLfloat half = 1.f;
-    const GLfloat centerX = position.x + half;
-    const GLfloat centerY = position.y + half;
-    const GLfloat centerZ = position.z + half;
-
-    mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
-                                  rot_axis);
-    mat4 translation = translate(mat4(1.f), position);
-    mat4 transform = rotation * translation;
-
-    rect = rectTransform(rect, transform);
-
-    return rebuildAABBinWorldSpace(rect);
-}
-
-/**
- * Return rectangular oriented bounding box for given vertices
- * Result contain vertices grouped to triangle primitives
- * @param mesh_vertices
- * @param angle
- * @param rot_axis
- * @return
- */
-RectPoints3D coll::buildOBB(const std::vector<vec3> &mesh_vertices) noexcept
-{
-    using namespace Eigen;
-
-    Matrix3f covariance = build_covarience_matrix(mesh_vertices);
-    SelfAdjointEigenSolver<Matrix3f> eigen_solver(covariance, Eigen::ComputeEigenvectors);
-    Eigen::Matrix3f eigenVectors = eigen_solver.eigenvectors();
-    // This line is necessary for proper orientation in some cases.
-    // The numbers come out the same without it, but
-    // the signs are different and the box doesn't get correctly oriented in some cases.
-//    eigenVectors.col(2) = eigenVectors.col(0).cross(eigenVectors.col(1));
-
-    vec3 r = normalize(vec3(eigenVectors.col(0).x(), eigenVectors.col(0).y(), eigenVectors.col(0).z()));
-    vec3 u = normalize(vec3(eigenVectors.col(1).x(), eigenVectors.col(1).y(), eigenVectors.col(1).z()));
-    vec3 f = normalize(vec3(eigenVectors.col(2).x(), eigenVectors.col(2).y(), eigenVectors.col(2).z()));
-
-    
-
-
-    return {a, b, c, d, e, f, g, k};
-}
-
 std::array<std::vector<vec3>, 2>
 coll::divideByLongestSize(const std::vector<vec3>& vertices)
 {
-    auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(vertices);
+    auto[min_x, max_x, min_y, max_y, min_z, max_z] = findBounds(vertices);
 
     std::vector<vec3> sorted_x;
     std::vector<vec3> sorted_y;
@@ -279,14 +125,14 @@ using VertDataPtr = std::shared_ptr<VertData>;
 NodePtr coll::buildBVH(const VertData &mesh_vertices, vec3 min_rect) noexcept
 {
     NodePtr node = std::make_shared<Node>();
-    node->m_data = std::make_shared<NodeData>(coll::buildAABB(mesh_vertices));
+    node->m_data = std::make_shared<NodeData>(buildAABB(mesh_vertices));
 
     auto[left_part, right_part] = divideByLongestSize(mesh_vertices);
 
     if (left_part.size() <= 1 && right_part.size() <= 1)
         return nullptr;
 
-    auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(
+    auto[min_x, max_x, min_y, max_y, min_z, max_z] = findBounds(
             mesh_vertices);
 
     // Divide by longest side
@@ -322,14 +168,14 @@ NodePtr coll::buildBVH(const VertData &mesh_vertices, vec3 min_rect) noexcept
 NodePtr coll::buildBVHOBB(const VertData &mesh_vertices, vec3 min_rect) noexcept
 {
     NodePtr node = std::make_shared<Node>();
-    node->m_data = std::make_shared<NodeData>(coll::buildOBB(mesh_vertices));
+    node->m_data = std::make_shared<NodeData>(buildOBB(mesh_vertices));
 
     auto[left_part, right_part] = divideByLongestSize(mesh_vertices);
 
     if (left_part.size() <= 1 && right_part.size() <= 1)
         return nullptr;
 
-    auto[min_x, max_x, min_y, max_y, min_z, max_z] = findMeshBound(
+    auto[min_x, max_x, min_y, max_y, min_z, max_z] = findBounds(
             mesh_vertices);
 
     // Divide by longest side

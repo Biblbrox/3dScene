@@ -30,6 +30,7 @@ public:
     GLuint getWidth() const noexcept override;
     GLuint getHeight() const noexcept override;
     GLuint getDepth() const noexcept override;
+    vec3 getSize() const noexcept override;
     GLuint getTextureID() const override;
 
     glm::vec3 getCurrentClip() const noexcept;

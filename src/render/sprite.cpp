@@ -204,3 +204,8 @@ const std::vector<vec3> &Sprite::getSizes() const
     return m_sizes;
 }
 
+vec3 Sprite::getSize() const noexcept
+{
+    return m_sizes[m_textureId];
+}
+

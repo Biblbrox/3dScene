@@ -10,6 +10,7 @@ struct BVHComponent: ecs::Component
 {
     Tree vbh_tree = nullptr;
     Tree vbh_tree_model = nullptr;
+    vec3 min_rect = {0.1f, 0.1f, 0.1f};
 };
 
 #endif //BVHCOMPONENT_HPP

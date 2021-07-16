@@ -9,6 +9,8 @@
 #include "config.hpp"
 #include "game.hpp"
 #include "utils/fs.hpp"
+#include "utils/bvh/aabb.hpp"
+#include "utils/bvh/obb.hpp"
 #include "utils/math.hpp"
 #include "utils/datastructs.hpp"
 #include "utils/collision.hpp"
@@ -26,9 +28,7 @@
 #include "systems/renderguisystem.hpp"
 #include "systems/keyboardsystem.hpp"
 #include "systems/lidarsystem.hpp"
-#include "systems/animationsystem.hpp"
 #include "systems/physicssystem.hpp"
-#include "systems/particlerendersystem.hpp"
 #include "utils/random.hpp"
 #include "exceptions/sdlexception.hpp"
 #include "render/terrain.hpp"
@@ -321,9 +321,9 @@ void World::init_sprites()
     pos_chair->pos.x = 40.f + start_x;
     pos_chair->pos.z = 400.f + start_z;
     pos_chair->pos.y = terrain->getAltitude({pos_chair->pos.x, pos_chair->pos.z});
-    auto tree = buildBVH(chair_sprite->getVertices()[0], min_rect_chair);
+    auto tree = coll::buildBVHOBB(chair_sprite->getVertices()[0], min_rect_chair);
     chair_en->getComponent<BVHComponent>()->vbh_tree = tree;
-    chair_en->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(
+    chair_en->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVHOBB(
             chair_sprite->getVertices()[0], min_rect_chair);
     auto material = chair_en->getComponent<MaterialComponent>();
     material->ambient = vec3(1.f);
@@ -331,9 +331,9 @@ void World::init_sprites()
     material->specular = vec3(0.f);
     material->shininess = 32.f;
     mapBinaryTree(tree, [pos_chair, chair_sprite](auto rect) {
-        *rect = coll::AABBtoWorldSpace(*rect, pos_chair->rot_axis,
-                                       pos_chair->angle, pos_chair->pos,
-                                       *chair_sprite);
+        *rect = OBBtoWorldSpace(*rect, pos_chair->rot_axis,
+                                pos_chair->angle, pos_chair->pos,
+                                *chair_sprite);
     });
 
     auto man_en = createEntity(unique_id());
@@ -346,9 +346,9 @@ void World::init_sprites()
     pos_man->pos.x = 40.f + start_x;
     pos_man->pos.z = 0 + start_z;
     pos_man->pos.y = terrain->getAltitude({pos_man->pos.x, pos_man->pos.z});
-    tree = buildBVH(man_sprite->getVertices()[0], min_rect_man);
+    tree = coll::buildBVHOBB(man_sprite->getVertices()[0], min_rect_man);
     man_en->getComponent<BVHComponent>()->vbh_tree = tree;
-    man_en->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(man_sprite->getVertices()[0], min_rect_man);
+    man_en->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVHOBB(man_sprite->getVertices()[0], min_rect_man);
     material = man_en->getComponent<MaterialComponent>();
     material->ambient = vec3(1.f);
     material->diffuse = vec3(0.8f);
@@ -356,9 +356,9 @@ void World::init_sprites()
     material->shininess = 32.f;
     mapBinaryTree(tree, [pos_man, man_sprite](auto rect)
     {
-        *rect = coll::AABBtoWorldSpace(*rect, pos_man->rot_axis,
-                                       pos_man->angle, pos_man->pos,
-                                       *man_sprite);
+        *rect = OBBtoWorldSpace(*rect, pos_man->rot_axis,
+                                pos_man->angle, pos_man->pos,
+                                *man_sprite);
     });
 
     auto light_en = createEntity(unique_id());
@@ -411,9 +411,9 @@ void World::init_sprites()
         material->shininess = 32.f;
         mapBinaryTree(tree, [pos_left, palm_sprite](auto rect)
         {
-            *rect = coll::AABBtoWorldSpace(*rect, pos_left->rot_axis,
-                                           pos_left->angle, pos_left->pos,
-                                           *palm_sprite);
+            *rect = OBBtoWorldSpace(*rect, pos_left->rot_axis,
+                                    pos_left->angle, pos_left->pos,
+                                    *palm_sprite);
         });
 
         auto right = createEntity(unique_id());
@@ -426,15 +426,15 @@ void World::init_sprites()
         pos_right->pos.x = i * 30.f + start_x;
         pos_right->pos.z = 30.f + start_z;
         pos_right->pos.y = terrain->getAltitude({pos_right->pos.x, pos_right->pos.z});
-        tree = buildBVH(sprite_right->sprite->getVertices()[0], min_rect_palm);
+        tree = coll::buildBVHOBB(sprite_right->sprite->getVertices()[0], min_rect_palm);
         right->addComponent<BVHComponent>();
         right->getComponent<BVHComponent>()->vbh_tree = tree;
-        right->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(sprite_right->sprite->getVertices()[0], min_rect_palm);
+        right->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVHOBB(sprite_right->sprite->getVertices()[0], min_rect_palm);
         mapBinaryTree(tree, [pos_right, palm_sprite](auto rect)
         {
-            *rect = coll::AABBtoWorldSpace(*rect, pos_right->rot_axis,
-                                           pos_right->angle, pos_right->pos,
-                                           *palm_sprite);
+            *rect = OBBtoWorldSpace(*rect, pos_right->rot_axis,
+                                    pos_right->angle, pos_right->pos,
+                                    *palm_sprite);
         });
 
         material = right->getComponent<MaterialComponent>();
@@ -455,15 +455,15 @@ void World::init_sprites()
         car_pos->pos.y = terrain->getAltitude({car_pos->pos.x, car_pos->pos.z});
         car_pos->angle = -glm::half_pi<GLfloat>();
         car_pos->rot_axis = vec3(0.f, 1.f, 0.f);
-        tree = buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect_car);
+        tree = coll::buildBVHOBB(car_sprite_comp->sprite->getVertices()[0], min_rect_car);
         car->addComponent<BVHComponent>();
         car->getComponent<BVHComponent>()->vbh_tree = tree;
-        car->getComponent<BVHComponent>()->vbh_tree_model = buildBVH(car_sprite_comp->sprite->getVertices()[0], min_rect_car);
+        car->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVHOBB(car_sprite_comp->sprite->getVertices()[0], min_rect_car);
         mapBinaryTree(tree, [car_pos, car_sprite](auto rect)
         {
-            *rect = coll::AABBtoWorldSpace(*rect, car_pos->rot_axis,
-                                           car_pos->angle, car_pos->pos,
-                                           *car_sprite);
+            *rect = OBBtoWorldSpace(*rect, car_pos->rot_axis,
+                                    car_pos->angle, car_pos->pos,
+                                    *car_sprite);
         });
         material = car->getComponent<MaterialComponent>();
         material->ambient = vec3(1.f);
@@ -484,15 +484,15 @@ void World::init_sprites()
         house_pos->pos.y = terrain->getAltitude({house_pos->pos.x, house_pos->pos.z});
         house_pos->angle = -glm::half_pi<GLfloat>();
         house_pos->rot_axis = vec3(0.f, 1.f, 0.f);
-        tree = coll::buildBVH(house_sprite_comp->sprite->getVertices()[0], min_rect_house);
+        tree = coll::buildBVHOBB(house_sprite_comp->sprite->getVertices()[0], min_rect_house);
         house->addComponent<BVHComponent>();
         house->getComponent<BVHComponent>()->vbh_tree = tree;
-        house->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVH(house_sprite_comp->sprite->getVertices()[0], min_rect_house);
+        house->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVHOBB(house_sprite_comp->sprite->getVertices()[0], min_rect_house);
         mapBinaryTree(tree, [house_pos, house_sprite](auto rect)
         {
-            *rect = coll::AABBtoWorldSpace(*rect, house_pos->rot_axis,
-                                           house_pos->angle, house_pos->pos,
-                                           *house_sprite);
+            *rect = OBBtoWorldSpace(*rect, house_pos->rot_axis,
+                                    house_pos->angle, house_pos->pos,
+                                    *house_sprite);
         });
         material = house->getComponent<MaterialComponent>();
         material->ambient = vec3(1.f);

@@ -27,7 +27,7 @@ namespace utils::fs
     using ecs::Entity;
 
     void saveSimSerial(const std::string &file_name,
-                       ecs::ComponentMap& entities);
+                       std::unordered_map<size_t, std::shared_ptr<Entity>>& entities);
 
     std::vector<ecs::Entity> loadSimSerial(const std::string& file_name);
 
