@@ -68,7 +68,11 @@ void KeyboardSystem::update_state(size_t delta)
 
                     vec3 dir = viewportToWorld(mouse_pos * sens, viewport_size,
                                                projection, view);
-                    Ray ray = {Vector3(dir.x, dir.y, dir.z), Vector3(camera->getPos().x, camera->getPos().y, camera->getPos().z)};
+                    Ray ray;
+                    ray.origin = Vector3(camera->getPos().x, camera->getPos().y, camera->getPos().z);
+                    ray.direction = Vector3(dir.x, dir.y, dir.z);
+                    ray.tmin = 0;
+                    ray.tmax = 100000;
                     auto terrain_en = getEntitiesByTag<TerrainComponent>().begin()->second;
                     auto terrain = terrain_en->getComponent<TerrainComponent>()->terrain;
                     auto [col, pos_on_ter] = coll::rayTerrainIntersection(*terrain, ray, 0, 10000.f, 1000);
@@ -98,15 +102,15 @@ void KeyboardSystem::update_state(size_t delta)
                     m_draggedObj->getComponent<SelectableComponent>()->dragged = false;
                     m_dragEnabled = false;
                     auto bvh = m_draggedObj->getComponent<BVHComponent>();
-//                    if (bvh) { // Update aabb positions in world space
-//                        auto pos = m_draggedObj->getComponent<PositionComponent>();
-//                        auto sprite = m_draggedObj->getComponent<SpriteComponent>()->sprite;
-//                        mapBinaryTree(bvh->vbh_tree, [pos, sprite, this](auto rect)
-//                        {
-//                            *rect = AABBTransform(*rect, pos->rot_axis, 0.f,
-//                                                  pos->pos - m_dragStartPos, *sprite);
-//                        });
-//                    }
+                    if (bvh) { // Update aabb positions in world space
+                        auto sprite = m_draggedObj->getComponent<SpriteComponent>()->sprite;
+                        auto pos = m_draggedObj->getComponent<PositionComponent>();
+                        auto triangles = sprite->getTriangles()[0];
+                        mat4 transform = math::createTransform(pos->pos, pos->angle, pos->rot_axis, sprite->getSize());
+                        triangles = math::transformTriangles(triangles, transform);
+                        bvh->bvh_tree = coll::buildBVH(triangles);
+                        bvh->triangles = std::make_shared<std::vector<Triangle>>(triangles);
+                    }
                     m_draggedObj = nullptr;
                 }
                 break;
@@ -174,16 +178,34 @@ void KeyboardSystem::processMouseDrag()
         auto bvh_comp = en->getComponent<BVHComponent>();
         auto sprite_comp = en->getComponent<SpriteComponent>();
 
+        Ray ray;
+        ray.origin = Vector3(origin.x, origin.y, origin.z);
+        ray.direction = Vector3(ray_world.x, ray_world.y, ray_world.z);
+        ray.tmin = 0;
+        ray.tmax = 100000;
+
+        auto triangles = bvh_comp->triangles;
+        auto bvh = bvh_comp->bvh_tree;
+        bvh::ClosestPrimitiveIntersector<Bvh, Triangle> primitive_intersector(*bvh, triangles->data());
+        bvh::SingleRayTraverser<Bvh> traverser(*bvh);
+
+        auto hit = traverser.traverse(ray, primitive_intersector);
+        if (hit) {
+//            auto triangle_index = hit->primitive_index;
+//            auto intersection = hit->intersection;
+//            vec3 col_pos = pos->pos + dir * intersection.t;
+            m_dragEnabled = true;
+            m_draggedObj = en;
+            m_dragStartPos = en->getComponent<PositionComponent>()->pos;
+            m_draggedObj->getComponent<SelectableComponent>()->dragged = true;
+            break;
+        }
+
+
 //        auto coll = BVHAABBTraversal(bvh_comp->vbh_tree, {ray_world, origin});
 //
 //        if (coll.first) {
-//            m_dragEnabled = true;
-//            m_draggedObj = en;
-//            m_dragStartPos = en->getComponent<PositionComponent>()->pos;
-//            m_draggedObj->getComponent<SelectableComponent>()->dragged = true;
-//            Logger::info("collision occurred, pos: %1$.3f, %2$.3f, %3$.3f",
-//                         coll.second.x, coll.second.y, coll.second.z);
-//            break;
+//
 //        }
     }
 }
