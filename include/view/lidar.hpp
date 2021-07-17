@@ -3,6 +3,14 @@
 
 #include <GL/glew.h>
 #include <glm/vec3.hpp>
+#include <bvh/bvh.hpp>
+#include <bvh/vector.hpp>
+#include <bvh/triangle.hpp>
+#include <bvh/ray.hpp>
+#include <bvh/sweep_sah_builder.hpp>
+#include <bvh/single_ray_traverser.hpp>
+#include <bvh/primitive_intersectors.hpp>
+
 
 #include "fpscamera.hpp"
 
@@ -10,15 +18,23 @@ using glm::vec3;
 using glm::vec2;
 using glm::normalize;
 
-struct Ray
-{
-    vec3 dir;
-    vec3 origin;
-};
+using Scalar   = float;
+using Vector3  = bvh::Vector3<Scalar>;
+using Triangle = bvh::Triangle<Scalar>;
+using Ray      = bvh::Ray<Scalar>;
+using Tree = bvh::Bvh<Scalar>;
+using TreePtr = std::shared_ptr<bvh::Bvh<Scalar>>;
 
+//struct Ray
+//{
+//    vec3 dir;
+//    vec3 origin;
+//};
+//
 inline vec3 ray_point(const Ray& ray, GLfloat distance)
 {
-    return ray.origin + normalize(ray.dir) * distance;
+    Vector3 pos = ray.origin + normalize(ray.direction) * distance;
+    return {pos[0], pos[1], pos[2]};
 }
 
 class Lidar: public FpsCamera

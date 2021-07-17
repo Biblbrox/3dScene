@@ -1,9 +1,23 @@
 #ifndef SPRITE_HPP
 #define SPRITE_HPP
 
+#include <bvh/bvh.hpp>
+#include <bvh/vector.hpp>
+#include <bvh/triangle.hpp>
+#include <bvh/ray.hpp>
+#include <bvh/sweep_sah_builder.hpp>
+#include <bvh/single_ray_traverser.hpp>
+#include <bvh/primitive_intersectors.hpp>
+
 #include "texture.hpp"
 #include "utils/texture.hpp"
 #include "utils/utils.hpp"
+
+using Scalar   = float;
+using Vector3  = bvh::Vector3<Scalar>;
+using Triangle = bvh::Triangle<Scalar>;
+//using Ray      = bvh::Ray<Scalar>;
+using Bvh      = bvh::Bvh<Scalar>;
 
 /**
  * Sprite class.
@@ -39,6 +53,7 @@ public:
     void setIdx(GLuint idx);
 
     const std::vector<std::vector<vec3>>& getVertices() const;
+    std::vector<std::vector<Triangle>> getTriangles() const;
     const std::vector<std::vector<vec2>>& getUv() const;
     const std::vector<std::vector<vec3>>& getNormals() const;
     const std::vector<std::vector<vec3u>>& getIndices() const;
@@ -65,8 +80,10 @@ protected:
     std::vector<std::vector<vec2>> m_uv;
     std::vector<std::vector<vec3>> m_normals;
     std::vector<std::vector<vec3u>> m_indices;
+    std::vector<std::vector<Triangle>> m_triangles;
 
     std::vector<GLuint> m_textureIds;
+
 
 };
 
