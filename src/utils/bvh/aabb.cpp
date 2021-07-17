@@ -71,6 +71,33 @@ AABBtoWorldSpace(RectPoints3D rect,
     return rebuildAABBinWorldSpace(rect);
 }
 
+Tree::Node
+NodeToWorldSpace(Tree::Node node,
+                 const vec3& rot_axis, GLfloat angle,
+                 const vec3& position, const Texture& texture) noexcept
+{
+    vec3 pos = position / texture.getSize();
+
+    const GLfloat half = 1.f;
+    const GLfloat centerX = pos.x + half;
+    const GLfloat centerY = pos.y + half;
+    const GLfloat centerZ = pos.z + half;
+
+    const vec3 scale = texture.getSize();
+
+    mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
+                                  rot_axis);
+    mat4 translation = translate(mat4(1.f), pos);
+    mat4 scaling = glm::scale(mat4(1.f), scale);
+    mat4 transform = scaling * rotation * translation;
+
+    node = utils::nodeTransform(node, transform);
+
+    return node;
+//    return rebuildAABBinWorldSpace(node);
+}
+
+
 
 RectPoints3D AABBTransform(RectPoints3D rect,
                            const vec3& rot_axis, GLfloat angle,

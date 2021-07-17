@@ -9,12 +9,27 @@
 #include <GL/glew.h>
 #include <Eigen/Eigenvalues>
 
+#include <bvh/bvh.hpp>
+#include <bvh/vector.hpp>
+#include <bvh/triangle.hpp>
+#include <bvh/ray.hpp>
+#include <bvh/sweep_sah_builder.hpp>
+#include <bvh/single_ray_traverser.hpp>
+#include <bvh/primitive_intersectors.hpp>
+
 #include "utils/math.hpp"
 #include "render/texture.hpp"
 #include "sceneprogram.hpp"
 #include "utils/datastructs.hpp"
 #include "render/terrain.hpp"
 #include "view/lidar.hpp"
+
+using Scalar   = float;
+using Vector3  = bvh::Vector3<Scalar>;
+using Triangle = bvh::Triangle<Scalar>;
+using Ray      = bvh::Ray<Scalar>;
+using Tree = bvh::Bvh<Scalar>;
+using TreePtr = std::shared_ptr<bvh::Bvh<Scalar>>;
 
 namespace coll {
 
@@ -42,20 +57,6 @@ namespace coll {
     std::vector<vec3>
     buildVerticesFromRect3D(utils::RectPoints3D rect);
 
-
-    std::array<GLfloat, 6>
-    findMeshBound(const std::vector<vec3> &mesh_vertices);
-
-    std::array<std::vector<vec3>, 2>
-    divideByLongestSize(const std::vector<vec3>& mesh_vertices);
-
-    using NodeData = utils::RectPoints3D;
-    using Node = utils::data::Node<size_t, NodeData>;
-    using NodePtr = std::shared_ptr<Node>;
-
-    using VertData = std::vector<vec3>;
-    using VertDataPtr = std::shared_ptr<vec3>;
-
     /**
      * Build top-down BVH tree until min_rect condition not required in
      * one of axis.
@@ -63,24 +64,11 @@ namespace coll {
      * @param mesh_vertices
      * @return
      */
-    NodePtr buildBVH(const VertData &mesh_vertices, vec3 min_rect) noexcept;
+    TreePtr buildBVH(const std::vector<Triangle>& triangles) noexcept;
 
-    /**
-    * Build top-down BVH tree until min_rect condition not required in
-    * one of axis.
-    * division is step original mesh divided by
-    * @param mesh_vertices
-    * @return
-    */
-    NodePtr buildBVHOBB(const VertData &mesh_vertices, vec3 min_rect) noexcept;
+    std::pair<bool, vec3>
+    BVHCollision(TreePtr tree, const Ray& ray, const std::vector<Triangle>& triangles);
 
-
-    using TreePtr = std::shared_ptr<utils::data::Node<size_t, utils::RectPoints3D>>;
-
-    std::pair<bool, glm::vec3> BVHAABBTraversal(TreePtr tree, const Ray& ray);
-
-    void BVHAABBTraversalRec(TreePtr tree, const Ray& ray,
-                             std::vector<vec3>& intersections);
 
     /**
      * Check whether first line (p11, p12) intersect with second (p21, p22)
@@ -121,7 +109,7 @@ namespace coll {
      * @param rect
      * @return
      */
-    constexpr std::pair<bool, vec3>
+    inline std::pair<bool, vec3>
     raycastAABB(const Ray& ray, const utils::RectPoints3D& rect) noexcept
     {
         auto [min_x, max_x] = minmax({rect.a.x, rect.b.x, rect.c.x, rect.d.x, rect.e.x,
@@ -131,8 +119,8 @@ namespace coll {
         auto [min_z, max_z] = minmax({rect.a.z, rect.b.z, rect.c.z, rect.d.z, rect.e.z,
                                       rect.f.z, rect.g.z, rect.k.z});
 
-        vec3 ray_origin = ray.origin;
-        vec3 ray_dir = ray.dir;
+        vec3 ray_origin = vec3(ray.origin[0], ray.origin[1], ray.origin[2]);
+        vec3 ray_dir = vec3(ray.direction[0], ray.direction[1], ray.direction[2]);
 
         GLfloat tMinX = (min_x - ray_origin.x) / ray_dir.x;
         GLfloat tMaxX = (max_x - ray_origin.x) / ray_dir.x;

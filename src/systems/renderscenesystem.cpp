@@ -66,23 +66,26 @@ void RenderSceneSystem::drawSprites()
 
         program->setVec3("viewPos", camera->getPos());
 
-        auto lightEn = getEntitiesByTag<LightComponent>().begin()->second;
-        auto light = lightEn->getComponent<LightComponent>();
-        light->pos = Config::getVal<vec3>("LightPos");
-        program->setInt("lighting", true);
-        program->setVec3("light.position", light->pos);
-        program->setVec3("light.ambient", light->ambient);
-        program->setVec3("light.diffuse", light->diffuse);
-        program->setVec3("light.specular", light->specular);
+        if (!getEntitiesByTag<LightComponent>().empty()) {
+            auto lightEn = getEntitiesByTag<LightComponent>().begin()->second;
+            auto light = lightEn->getComponent<LightComponent>();
+            light->pos = Config::getVal<vec3>("LightPos");
+            program->setInt("lighting", true);
+            program->setVec3("light.position", light->pos);
+            program->setVec3("light.ambient", light->ambient);
+            program->setVec3("light.diffuse", light->diffuse);
+            program->setVec3("light.specular", light->specular);
 
-        auto lightSprite = lightEn->getComponent<SpriteComponent>()->sprite;
-        auto sprite_vert_vec = lightSprite->getVertices()[lightSprite->getIdx()];
-        float* light_vertices = &sprite_vert_vec[0].x;
-        program->setInt("isPrimitive", true);
-        program->setFloat("alpha", 1.f);
-        program->setVec3("primColor", {1.f, 1.f, 1.f});
-        render::drawVerticesVAO(*program, light_vertices, sprite_vert_vec.size(),
+            auto lightSprite = lightEn->getComponent<SpriteComponent>()->sprite;
+            auto sprite_vert_vec = lightSprite->getVertices()[lightSprite->getIdx()];
+            float *light_vertices = &sprite_vert_vec[0].x;
+            program->setInt("isPrimitive", true);
+            program->setFloat("alpha", 1.f);
+            program->setVec3("primColor", {1.f, 1.f, 1.f});
+            render::drawVerticesVAO(*program, light_vertices,
+                                    sprite_vert_vec.size(),
                                     *lightSprite, light->pos);
+        }
     } else {
         program->setInt("lighting", false);
     }
@@ -153,46 +156,46 @@ void RenderSceneSystem::drawSprites()
 
 void RenderSceneSystem::drawBoundingBoxes()
 {
-    using NodeDataPtr = std::shared_ptr<utils::RectPoints3D>;
-    auto program = SceneProgram::getInstance();
-    const auto &sprites = getEntitiesByTag<SpriteComponent>();
-
-    program->setInt("isPrimitive", true);
-    program->setFloat("alpha", 0.6f);
-    program->setVec3("primColor", {0.8f, 0.1f, 0.1f});
-
-    for (const auto&[key, en]: sprites) {
-        auto treeComp = en->getComponent<BVHComponent>();
-        auto lightComp = en->getComponent<LightComponent>();
-        if (lightComp) // Do not draw bb for light source
-            continue;
-
-        if (!treeComp)
-            continue;
-
-        auto posComp = en->getComponent<PositionComponent>();
-        auto sprite = en->getComponent<SpriteComponent>()->sprite;
-        auto points = buildAABB(sprite->getVertices()[0]);
-        auto tree = en->getComponent<BVHComponent>()->vbh_tree;
-
-        auto draw_fun = [program, sprite, posComp](NodeDataPtr bound_rect) {
-            auto vert_vec = coll::buildVerticesFromRect3D(*bound_rect);
-            render::drawTriangles(vert_vec);
-        };
-
-        if (Config::getVal<bool>("DrawLeafs")) {
-            mapBinaryTreeLeafs(treeComp->vbh_tree, draw_fun);
-        } else {
-            mapBinaryTreeAtLevel(treeComp->vbh_tree, draw_fun,
-                                 Config::getVal<int>("TreeLevelShow"));
-        }
-    }
-
-    if (GLenum error = glGetError(); error != GL_NO_ERROR)
-        throw GLException(
-                (format("\n\tRender while drawing bounding boxes: %1%\n")
-                 % glewGetErrorString(error)).str(),
-                program_log_file_name(), Category::INTERNAL_ERROR);
+//    using NodeDataPtr = std::shared_ptr<utils::RectPoints3D>;
+//    auto program = SceneProgram::getInstance();
+//    const auto &sprites = getEntitiesByTag<SpriteComponent>();
+//
+//    program->setInt("isPrimitive", true);
+//    program->setFloat("alpha", 0.6f);
+//    program->setVec3("primColor", {0.8f, 0.1f, 0.1f});
+//
+//    for (const auto&[key, en]: sprites) {
+//        auto treeComp = en->getComponent<BVHComponent>();
+//        auto lightComp = en->getComponent<LightComponent>();
+//        if (lightComp) // Do not draw bb for light source
+//            continue;
+//
+//        if (!treeComp)
+//            continue;
+//
+//        auto posComp = en->getComponent<PositionComponent>();
+//        auto sprite = en->getComponent<SpriteComponent>()->sprite;
+//        auto points = buildAABB(sprite->getVertices()[0]);
+//        auto tree = en->getComponent<BVHComponent>()->vbh_tree;
+//
+//        auto draw_fun = [program, sprite, posComp](NodeDataPtr bound_rect) {
+//            auto vert_vec = coll::buildVerticesFromRect3D(*bound_rect);
+//            render::drawTriangles(vert_vec);
+//        };
+//
+//        if (Config::getVal<bool>("DrawLeafs")) {
+//            mapBinaryTreeLeafs(treeComp->vbh_tree, draw_fun);
+//        } else {
+//            mapBinaryTreeAtLevel(treeComp->vbh_tree, draw_fun,
+//                                 Config::getVal<int>("TreeLevelShow"));
+//        }
+//    }
+//
+//    if (GLenum error = glGetError(); error != GL_NO_ERROR)
+//        throw GLException(
+//                (format("\n\tRender while drawing bounding boxes: %1%\n")
+//                 % glewGetErrorString(error)).str(),
+//                program_log_file_name(), Category::INTERNAL_ERROR);
 }
 
 void RenderSceneSystem::update_state(size_t delta)

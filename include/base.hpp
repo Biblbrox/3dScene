@@ -4,6 +4,13 @@
 #include <GL/glew.h>
 #include <glm/vec3.hpp>
 #include <boost/locale.hpp>
+#include <bvh/bvh.hpp>
+#include <bvh/vector.hpp>
+#include <bvh/triangle.hpp>
+#include <bvh/ray.hpp>
+#include <bvh/sweep_sah_builder.hpp>
+#include <bvh/single_ray_traverser.hpp>
+#include <bvh/primitive_intersectors.hpp>
 
 using glm::vec;
 
@@ -65,6 +72,12 @@ inline int get_thread_count()
 
 typedef vec<3, GLuint> vec3u;
 
+typedef float Scalar;
+typedef bvh::Vector3<Scalar> Vector3;
+typedef bvh::Triangle<Scalar> Triangle;
+typedef bvh::Ray<Scalar> Ray;
+typedef bvh::Bvh<Scalar> Tree;
+typedef std::shared_ptr<bvh::Bvh<Scalar>> TreePtr;
 
 #define _(String) (boost::locale::gettext(String)).c_str()
 

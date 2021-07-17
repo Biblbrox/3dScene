@@ -23,7 +23,7 @@ using glm::vec4;
 using glm::vec3;
 using utils::log::Logger;
 using math::viewportToWorld;
-using coll::BVHAABBTraversal;
+//using coll::BVHAABBTraversal;
 using utils::data::mapBinaryTree;
 
 void KeyboardSystem::update_state(size_t delta)
@@ -68,7 +68,7 @@ void KeyboardSystem::update_state(size_t delta)
 
                     vec3 dir = viewportToWorld(mouse_pos * sens, viewport_size,
                                                projection, view);
-                    Ray ray = {dir, camera->getPos()};
+                    Ray ray = {Vector3(dir.x, dir.y, dir.z), Vector3(camera->getPos().x, camera->getPos().y, camera->getPos().z)};
                     auto terrain_en = getEntitiesByTag<TerrainComponent>().begin()->second;
                     auto terrain = terrain_en->getComponent<TerrainComponent>()->terrain;
                     auto [col, pos_on_ter] = coll::rayTerrainIntersection(*terrain, ray, 0, 10000.f, 1000);
@@ -98,15 +98,15 @@ void KeyboardSystem::update_state(size_t delta)
                     m_draggedObj->getComponent<SelectableComponent>()->dragged = false;
                     m_dragEnabled = false;
                     auto bvh = m_draggedObj->getComponent<BVHComponent>();
-                    if (bvh) { // Update aabb positions in world space
-                        auto pos = m_draggedObj->getComponent<PositionComponent>();
-                        auto sprite = m_draggedObj->getComponent<SpriteComponent>()->sprite;
-                        mapBinaryTree(bvh->vbh_tree, [pos, sprite, this](auto rect)
-                        {
-                            *rect = AABBTransform(*rect, pos->rot_axis, 0.f,
-                                                  pos->pos - m_dragStartPos, *sprite);
-                        });
-                    }
+//                    if (bvh) { // Update aabb positions in world space
+//                        auto pos = m_draggedObj->getComponent<PositionComponent>();
+//                        auto sprite = m_draggedObj->getComponent<SpriteComponent>()->sprite;
+//                        mapBinaryTree(bvh->vbh_tree, [pos, sprite, this](auto rect)
+//                        {
+//                            *rect = AABBTransform(*rect, pos->rot_axis, 0.f,
+//                                                  pos->pos - m_dragStartPos, *sprite);
+//                        });
+//                    }
                     m_draggedObj = nullptr;
                 }
                 break;
@@ -174,17 +174,17 @@ void KeyboardSystem::processMouseDrag()
         auto bvh_comp = en->getComponent<BVHComponent>();
         auto sprite_comp = en->getComponent<SpriteComponent>();
 
-        auto coll = BVHAABBTraversal(bvh_comp->vbh_tree, {ray_world, origin});
-
-        if (coll.first) {
-            m_dragEnabled = true;
-            m_draggedObj = en;
-            m_dragStartPos = en->getComponent<PositionComponent>()->pos;
-            m_draggedObj->getComponent<SelectableComponent>()->dragged = true;
-            Logger::info("collision occurred, pos: %1$.3f, %2$.3f, %3$.3f",
-                         coll.second.x, coll.second.y, coll.second.z);
-            break;
-        }
+//        auto coll = BVHAABBTraversal(bvh_comp->vbh_tree, {ray_world, origin});
+//
+//        if (coll.first) {
+//            m_dragEnabled = true;
+//            m_draggedObj = en;
+//            m_dragStartPos = en->getComponent<PositionComponent>()->pos;
+//            m_draggedObj->getComponent<SelectableComponent>()->dragged = true;
+//            Logger::info("collision occurred, pos: %1$.3f, %2$.3f, %3$.3f",
+//                         coll.second.x, coll.second.y, coll.second.z);
+//            break;
+//        }
     }
 }
 

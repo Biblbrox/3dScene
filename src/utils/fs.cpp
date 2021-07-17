@@ -223,11 +223,30 @@ void utils::fs::saveSimJson(const std::string &file_name,
         j["Entities"].push_back(en_obj);
     }
     std::cout << j.dump() << std::endl;
+
+    std::ofstream out(file_name, std::ios::out);
+    out << j.dump();
+
+    out.close();
 }
 
 std::vector<ecs::Entity> utils::fs::loadSimJson(const std::string &file_name)
 {
+    if (!std::filesystem::exists(file_name)) {
+        // Throw error
+    }
 
+    std::ifstream ifs(file_name);
+
+    json j = json::parse(ifs);
+
+    for (auto en: j["Entities"]) {
+
+    }
+
+    std::cout << j["Entities"].size() << "\n";
+
+    ifs.close();
 }
 
 

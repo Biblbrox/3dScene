@@ -9,10 +9,33 @@
 #include <GL/glew.h>
 #include <Eigen/Eigenvalues>
 
+#include "base.hpp"
+
 using glm::vec2;
 using glm::vec3;
+using glm::vec4;
+using glm::mat4;
 
 namespace math {
+
+    /**
+ * Rotate world around point v
+ * @param m
+ * @param v
+ * @param angle
+ * @return
+ */
+    inline glm::mat4
+    rotate_around(const glm::mat4 &m, const glm::vec3 &v, GLfloat angle,
+                  const glm::vec3& rot_axis = glm::vec3(1.f, 0.f, 0.f))
+    {
+        glm::mat4 tr1 = glm::translate(m, v);
+        glm::mat4 ro = glm::rotate(tr1, angle, rot_axis);
+        glm::mat4 tr2 = glm::translate(ro, -v);
+
+        return tr2;
+    }
+
 
     inline
     std::array<GLfloat, 6> findBounds(const std::vector<vec3> &points)
@@ -42,7 +65,59 @@ namespace math {
         return {min_x, max_x, min_y, max_y, min_z, max_z};
     }
 
+    inline mat4 createTransform(const vec3& position, GLfloat angle,
+                                const vec3& rot_axis, const vec3& sizes)
+    {
+        vec3 pos = position / sizes;
 
+        const GLfloat half = 1.f;
+        const GLfloat centerX = pos.x + half;
+        const GLfloat centerY = pos.y + half;
+        const GLfloat centerZ = pos.z + half;
+
+        const vec3 scale = sizes;
+
+        mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
+                                      rot_axis);
+        mat4 translation = translate(mat4(1.f), pos);
+        mat4 scaling = glm::scale(mat4(1.f), scale);
+        mat4 transform = scaling * rotation * translation;
+
+        return transform;
+    }
+
+    inline std::vector<vec3> transformVertices(const std::vector<vec3>& vertices,
+                                               const mat4& transform)
+    {
+        std::vector<vec3> res;
+        res.reserve(vertices.size());
+        for (const vec3& v: vertices) {
+            res.push_back(transform * vec4(v, 1.f));
+        }
+
+        return res;
+    }
+
+    inline std::vector<Triangle> transformTriangles(const std::vector<Triangle>& triangles,
+                                                    const mat4& transform)
+    {
+        std::vector<Triangle> res;
+        res.reserve(triangles.size());
+        for (const Triangle& v: triangles) {
+            vec3 a = vec3(v.p0[0], v.p0[1], v.p0[2]);
+            vec3 b = vec3(v.p1()[0], v.p1()[1], v.p1()[2]);
+            vec3 c = vec3(v.p2()[0], v.p2()[1], v.p2()[2]);
+            a = transform * vec4(a, 1.f);
+            b = transform * vec4(b, 1.f);
+            c = transform * vec4(c, 1.f);
+
+            res.push_back(Triangle(Vector3(a.x, a.y, a.z),
+                                   Vector3(b.x, b.y, b.z),
+                                   Vector3(c.x, c.y, c.z)));
+        }
+
+        return res;
+    }
 
     constexpr vec3 viewportToNDC(const vec2& pos, const vec2& clip)
     {
@@ -169,24 +244,6 @@ namespace math {
     constexpr auto cantor_pairing(T arg, Args... args)
     {
         return cantor_pairing(arg, cantor_pairing(args...));
-    }
-
-    /**
-     * Rotate world around point v
-     * @param m
-     * @param v
-     * @param angle
-     * @return
-     */
-    inline glm::mat4
-    rotate_around(const glm::mat4 &m, const glm::vec3 &v, GLfloat angle,
-                  const glm::vec3& rot_axis = glm::vec3(1.f, 0.f, 0.f))
-    {
-        glm::mat4 tr1 = glm::translate(m, v);
-        glm::mat4 ro = glm::rotate(tr1, angle, rot_axis);
-        glm::mat4 tr2 = glm::translate(ro, -v);
-
-        return tr2;
     }
 
     template <typename T>

@@ -146,17 +146,17 @@ namespace boost::serialization
     template<class Archive>
     void serialize(Archive &ar, BVHComponent &bvh, const unsigned int version)
     {
-        using Nd = std::shared_ptr<utils::RectPoints3D>;
-
-        auto tree = bvh.vbh_tree;
-        auto tree_model = bvh.vbh_tree_model;
-
-        auto ser = [&ar, version](Nd &node) {
-            boost::serialization::serialize(ar, *node, version);
-        };
-
-        utils::data::mapBinaryTree(tree, ser);
-        utils::data::mapBinaryTree(tree_model, ser);
+//        using Nd = std::shared_ptr<utils::RectPoints3D>;
+//
+//        auto tree = bvh.vbh_tree;
+//        auto tree_model = bvh.vbh_tree_model;
+//
+//        auto ser = [&ar, version](Nd &node) {
+//            boost::serialization::serialize(ar, *node, version);
+//        };
+//
+//        utils::data::mapBinaryTree(tree, ser);
+//        utils::data::mapBinaryTree(tree_model, ser);
     }
 
     template<class Archive>

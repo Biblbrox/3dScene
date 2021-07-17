@@ -84,16 +84,36 @@ void LidarSystem::drawLidarIntersect()
             auto pos_comp = en->getComponent<PositionComponent>();
             auto sprite_comp = en->getComponent<SpriteComponent>();
 
-            auto coll = coll::BVHAABBTraversal(bvh_comp->vbh_tree, {dir, pos->pos});
+            auto triangles = bvh_comp->triangles;
+            auto bvh = bvh_comp->bvh_tree;
+            bvh::ClosestPrimitiveIntersector<Bvh, Triangle> primitive_intersector(*bvh, triangles->data());
+            bvh::SingleRayTraverser<Bvh> traverser(*bvh);
 
-            if (coll.first) {
-                Logger::info("collision occurred, pos: %1$.3f, %2$.3f, %3$.3f",
-                             coll.second.x, coll.second.y, coll.second.z);
-
-                col_stream << coll.second.x << ", " << coll.second.y << ", "
-                           << coll.second.z << "\n";
-                coll_dots.emplace_back(coll.second);
+            Ray ray;
+            ray.direction = Vector3(dir.x, dir.y, dir.z);
+            ray.origin = Vector3(pos->pos.x, pos->pos.y, pos->pos.z);
+            ray.tmin = 0;
+            ray.tmax = 100000;
+            auto hit = traverser.traverse(ray, primitive_intersector);
+            if (hit) {
+                auto triangle_index = hit->primitive_index;
+                auto intersection = hit->intersection;
+                vec3 col_pos = pos->pos + dir * intersection.t;
+                col_stream << col_pos.x << ", " << col_pos.y << ", "
+                           << col_pos.z << "\n";
+                col_stream.flush();
             }
+
+//            auto coll = coll::BVHAABBTraversal(bvh_comp->vbh_tree, {dir, pos->pos});
+//
+//            if (coll.first) {
+//                Logger::info("collision occurred, pos: %1$.3f, %2$.3f, %3$.3f",
+//                             coll.second.x, coll.second.y, coll.second.z);
+//
+//                col_stream << coll.second.x << ", " << coll.second.y << ", "
+//                           << coll.second.z << "\n";
+//                coll_dots.emplace_back(coll.second);
+//            }
         }
     }
     Logger::info("nans: %lu", nans);
