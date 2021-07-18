@@ -130,6 +130,8 @@ void Sprite::freeVBO() noexcept
 Sprite::~Sprite()
 {
     freeVBO();
+    for (unsigned int & m_textureId : m_textureIds)
+        glDeleteTextures(1, &m_textureId);
 }
 
 GLuint Sprite::getVAO() const

@@ -70,7 +70,7 @@ size_t unique_id()
     return idx++;
 }
 
-World::World() : m_wasInit(false)
+World::World() : m_wasInit(false), m_initFromFile(false)
 {
     if (!Config::hasKey("DrawVertices"))
         Config::addVal("DrawVertices", true, "bool");
@@ -140,15 +140,30 @@ World::World() : m_wasInit(false)
 
 World::~World()
 {
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
-    ImGui::DestroyContext();
+    deallocate_scene();
+    deallocate_imgui();
 }
+
+
+void World::deallocate_imgui()
+{
+    if (m_wasInit) {
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplSDL2_Shutdown();
+        ImGui::DestroyContext();
+    }
+}
+
 
 void World::update(size_t delta)
 {
     if constexpr (debug)
         m_fps.update();
+
+    if (m_initFromFile) {
+        init_from_file(m_initFile);
+        m_initFromFile = false;
+    }
 
     if (getGameState() == GameStates::STOP
         && getPrevGameState() != GameStates::STOP) {
@@ -168,17 +183,27 @@ void World::update(size_t delta)
 
     filter_entities();
 
-    for (auto &system: m_systems)
-        system.second->update(delta);
+    for (auto &[key, system]: m_systems)
+        system->update(delta);
 }
 
 void World::init()
 {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     m_systems.clear();
+
+
+    if (!m_wasInit) {
+//        deallocate_imgui();
+        init_imgui();
+    }
     createSystem<RenderGuiSystem>();
     createSystem<LidarSystem>();
     createSystem<RenderSceneSystem>();
     createSystem<KeyboardSystem>();
+
+    if (m_wasInit)
+        deallocate_scene();
 
     m_entities.clear();
     init_terrain();
@@ -186,6 +211,56 @@ void World::init()
     init_scene();
 
     m_wasInit = true;
+}
+
+
+void World::init(const std::string& init_file)
+{
+    m_initFromFile = true;
+    m_initFile = init_file;
+}
+
+void World::init_from_file(const std::string& init_file)
+{
+    auto entities = utils::fs::loadSimJson(init_file);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    m_systems.clear();
+
+    if (!m_wasInit) {
+//        deallocate_imgui();
+        init_imgui();
+    }
+    createSystem<RenderGuiSystem>();
+    createSystem<LidarSystem>();
+    createSystem<RenderSceneSystem>();
+    createSystem<KeyboardSystem>();
+
+    if (m_wasInit)
+        deallocate_scene();
+
+    m_entities.clear();
+    for (auto& en: entities) {
+        auto e = std::make_shared<ecs::Entity>(en);
+        e->activate();
+        m_entities.emplace(unique_id(), e);
+    }
+
+    init_scene();
+    m_wasInit = true;
+    m_initFromFile = false;
+}
+
+
+void World::init_imgui()
+{
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL2_InitForOpenGL(Game::getWindow(), Game::getGLContext());
+    ImGui_ImplOpenGL3_Init();
 }
 
 void World::filter_entities()
@@ -211,6 +286,79 @@ void World::init_terrain()
 
 void World::init_scene()
 {
+    m_sceneID = unique_id();
+    auto scene = createEntity(m_sceneID);
+    scene->activate();
+    scene->addComponent<SceneComponent>();
+    auto scene_comp = scene->getComponent<SceneComponent>();
+
+    GLuint* scene_fb = &scene_comp->sceneBuffer;
+    GLuint* scene_fbmsaa = &scene_comp->sceneBufferMSAA;
+    GLuint* textureMSAA = &scene_comp->textureMSAA;
+    GLuint* texture = &scene_comp->texture;
+    GLuint* rbo = &scene_comp->rbo;
+
+    int screen_width = utils::getWindowWidth<GLuint>(*Game::getWindow());
+    int screen_height = utils::getWindowHeight<GLuint>(*Game::getWindow());
+
+    bool msaa = Config::getVal<bool>("MSAA");
+    if (msaa) {
+        // Generate multisampled framebuffer
+        glGenFramebuffers(1, scene_fbmsaa);
+        glBindFramebuffer(GL_FRAMEBUFFER, *scene_fbmsaa);
+        // Create multisampled texture attachment
+        *textureMSAA = genTexture(screen_width, screen_height, true);
+        *rbo = genRbo(screen_width, screen_height, true);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D_MULTISAMPLE, *textureMSAA, 0);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                  GL_RENDERBUFFER, *rbo);
+        CHECK_FRAMEBUFFER_COMPLETE();
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // Generate intermediate framebuffer
+        glGenFramebuffers(1, scene_fb);
+        glBindFramebuffer(GL_FRAMEBUFFER, *scene_fb);
+        // Create color attachment texture
+        *texture = genTexture(screen_width, screen_height);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, *texture, 0);
+    } else {
+        // Generate not multisampled buffer
+        glGenFramebuffers(1, scene_fb);
+        glBindFramebuffer(GL_FRAMEBUFFER, *scene_fb);
+        // Create color texture attachment
+        *texture = genTexture(screen_width, screen_height);
+        *rbo = genRbo(screen_width, screen_height);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, *texture, 0);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                  GL_RENDERBUFFER, *rbo);
+    }
+
+    CHECK_FRAMEBUFFER_COMPLETE();
+}
+
+void World::deallocate_scene()
+{
+    auto scene_en = m_entities[m_sceneID];
+    auto scene = scene_en->getComponent<SceneComponent>();
+    if (scene->sceneBuffer != 0)
+        glDeleteFramebuffers(1, &scene->sceneBuffer);
+    if (scene->texture != 0)
+        glDeleteTextures(1, &scene->texture);
+    if (scene->rbo != 0)
+        glDeleteRenderbuffers(1, &scene->rbo);
+    if (scene->isMsaa) {
+        if (scene->sceneBufferMSAA != 0)
+            glDeleteFramebuffers(1, &scene->sceneBufferMSAA);
+        if (scene->textureMSAA != 0)
+            glDeleteTextures(1, &scene->textureMSAA);
+    }
+}
+
+void World::init_sprites()
+{
     auto lidarEn = createEntity(unique_id());
     lidarEn->activate();
     lidarEn->addComponents<PositionComponent, LidarComponent>();
@@ -230,59 +378,7 @@ void World::init_scene()
             lidarComp->freq, lidarComp->start_angle,
             lidarComp->density);
 
-    auto scene = createEntity(unique_id());
-    scene->activate();
-    scene->addComponent<SceneComponent>();
-    auto scene_comp = scene->getComponent<SceneComponent>();
 
-    GLuint* scene_fb = &scene_comp->sceneBuffer;
-    GLuint* scene_fbmsaa = &scene_comp->sceneBufferMSAA;
-    GLuint* textureMSAA = &scene_comp->textureMSAA;
-    GLuint* texture = &scene_comp->texture;
-
-    int screen_width = utils::getWindowWidth<GLuint>(*Game::getWindow());
-    int screen_height = utils::getWindowHeight<GLuint>(*Game::getWindow());
-
-    bool msaa = Config::getVal<bool>("MSAA");
-    if (msaa) {
-        // Generate multisampled framebuffer
-        glGenFramebuffers(1, scene_fbmsaa);
-        glBindFramebuffer(GL_FRAMEBUFFER, *scene_fbmsaa);
-        // Create multisampled texture attachment
-        *textureMSAA = genTexture(screen_width, screen_height, true);
-        GLuint rbo = genRbo(screen_width, screen_height, true);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D_MULTISAMPLE, *textureMSAA, 0);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                                  GL_RENDERBUFFER, rbo);
-        CHECK_FRAMEBUFFER_COMPLETE();
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        // Generate intermediate framebuffer
-        glGenFramebuffers(1, scene_fb);
-        glBindFramebuffer(GL_FRAMEBUFFER, *scene_fb);
-        // Create color attachment texture
-        *texture = genTexture(screen_width, screen_height);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D, *texture, 0);
-    } else {
-        // Generate not multisampled buffer
-        glGenFramebuffers(1, scene_fb);
-        glBindFramebuffer(GL_FRAMEBUFFER, *scene_fb);
-        // Create color texture attachment
-        *texture = genTexture(screen_width, screen_height);
-        GLuint rbo = genRbo(screen_width, screen_height);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D, *texture, 0);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                                  GL_RENDERBUFFER, rbo);
-    }
-
-    CHECK_FRAMEBUFFER_COMPLETE();
-}
-
-void World::init_sprites()
-{
     utils::Random rand;
     auto min_rect = Config::getVal<glm::vec3>("MinRectSize");
 
@@ -297,6 +393,9 @@ void World::init_sprites()
 
     vec3 man_size = {10.f, 10.f, 10.f};
     vec3 chair_size = {10.f, 10.f, 10.f};
+    vec3 palm_size = {2.f, 2.f, 2.f};
+    vec3 car_size = {2.f, 2.f, 2.f};
+    vec3 house_size = {1.f, 1.f, 1.f};
     std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite, man_sprite,
             chair_sprite;
     car_sprite = std::make_shared<Sprite>();
@@ -304,22 +403,17 @@ void World::init_sprites()
     house_sprite = std::make_shared<Sprite>();
     man_sprite = std::make_shared<Sprite>();
     chair_sprite = std::make_shared<Sprite>();
-//    car_sprite->addMesh(getResourcePath("ford_focus2.obj"), 2.f, 2.f, 2.f);
-//    car_sprite->generateDataBuffer();
-//    palm_sprite->addMesh(getResourcePath("lowpolypalm.obj"), 2.f, 2.f, 2.f);
-//    palm_sprite->generateDataBuffer();
-//    house_sprite->addMesh(getResourcePath("spah9lvl.obj"), 1.f, 1.f, 1.f);
-//    house_sprite->generateDataBuffer();
+    car_sprite->addMesh(getResourcePath("ford_focus2.obj"), car_size);
+    car_sprite->generateDataBuffer();
+    palm_sprite->addMesh(getResourcePath("lowpolypalm.obj"), palm_size);
+    palm_sprite->generateDataBuffer();
+    house_sprite->addMesh(getResourcePath("spah9lvl.obj"), house_size);
+    house_sprite->generateDataBuffer();
     man_sprite->addMesh(getResourcePath("human_female.obj"), man_size);
     man_sprite->generateDataBuffer();
-    chair_sprite->addMesh(getResourcePath("Wooden_Chair/Wooden_Chair.obj"), chair_size);
+    chair_sprite->addMesh(getResourcePath("Wooden_Chair/Wooden_Chair.obj"),
+                          chair_size);
     chair_sprite->generateDataBuffer();
-
-    vec3 min_rect_car = min_rect / 2.f;
-    vec3 min_rect_palm = min_rect / 2.f;
-    vec3 min_rect_man = min_rect / 100.f;
-    vec3 min_rect_house = min_rect;
-    vec3 min_rect_chair = min_rect / 100.f;
 
     auto chair_en = createEntity(unique_id());
     chair_en->activate();
@@ -330,12 +424,16 @@ void World::init_sprites()
     auto pos_chair = chair_en->getComponent<PositionComponent>();
     pos_chair->pos.x = 40.f + start_x;
     pos_chair->pos.z = 400.f + start_z;
-    pos_chair->pos.y = terrain->getAltitude({pos_chair->pos.x, pos_chair->pos.z});
+    pos_chair->pos.y = terrain->getAltitude(
+            {pos_chair->pos.x, pos_chair->pos.z});
     auto triangles = chair_sprite->getTriangles()[0];
-    mat4 chair_transform = math::createTransform(pos_chair->pos, 0, {0.f, 1.f, 1.f}, chair_size);
+    mat4 chair_transform = math::createTransform(pos_chair->pos, 0,
+                                                 {0.f, 1.f, 1.f}, chair_size);
     triangles = math::transformTriangles(triangles, chair_transform);
-    chair_en->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(triangles);
-    chair_en->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(triangles);
+    chair_en->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(
+            triangles);
+    chair_en->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(
+            triangles);
     auto material = chair_en->getComponent<MaterialComponent>();
     material->ambient = vec3(1.f);
     material->diffuse = vec3(0.8f);
@@ -353,10 +451,12 @@ void World::init_sprites()
     pos_man->pos.z = 300 + start_z;
     pos_man->pos.y = terrain->getAltitude({pos_man->pos.x, pos_man->pos.z});
     triangles = man_sprite->getTriangles()[0];
-    mat4 man_transform = math::createTransform(pos_man->pos, 0, {0.f, 1.f, 1.f}, man_size);
+    mat4 man_transform = math::createTransform(pos_man->pos, 0, {0.f, 1.f, 1.f},
+                                               man_size);
     triangles = math::transformTriangles(triangles, man_transform);
     man_en->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(triangles);
-    man_en->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(triangles);
+    man_en->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(
+            triangles);
     material = man_en->getComponent<MaterialComponent>();
     material->ambient = vec3(1.f);
     material->diffuse = vec3(0.8f);
@@ -392,132 +492,103 @@ void World::init_sprites()
 //                  });
 
     for (size_t i = 0; i < 5; ++i) {
-//        auto left = createEntity(unique_id());
-//        left->activate();
-//        left->addComponents<SpriteComponent, PositionComponent,
-//                SelectableComponent, BVHComponent, MaterialComponent>();
-//        auto sprite_left = left->getComponent<SpriteComponent>();
-//        sprite_left->sprite = palm_sprite;
-//        auto pos_left = left->getComponent<PositionComponent>();
-//        pos_left->pos.x = i * 30.f + start_x;
-//        pos_left->pos.z = 0 + start_z;
-//        pos_left->pos.y = terrain->getAltitude({pos_left->pos.x, pos_left->pos.z});
-//        auto tree = coll::buildBVHAABB(sprite_left->sprite->getVertices()[0], min_rect_palm);
-//        left->getComponent<BVHComponent>()->vbh_tree = tree;
-//        left->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVHAABB(sprite_left->sprite->getVertices()[0], min_rect_palm);
-//        auto material = left->getComponent<MaterialComponent>();
-//        material->ambient = vec3(1.f);
-//        material->diffuse = vec3(0.8f);
-//        material->specular = vec3(0.f);
-//        material->shininess = 32.f;
-//        mapBinaryTree(tree, [pos_left, palm_sprite](auto rect)
-//        {
-//            *rect = AABBtoWorldSpace(*rect, pos_left->rot_axis,
-//                                    pos_left->angle, pos_left->pos,
-//                                    *palm_sprite);
-//        });
-//
-//        auto right = createEntity(unique_id());
-//        right->activate();
-//        right->addComponents<SpriteComponent, PositionComponent,
-//                SelectableComponent, BVHComponent, MaterialComponent>();
-//        auto sprite_right = right->getComponent<SpriteComponent>();
-//        sprite_right->sprite = palm_sprite;
-//        auto pos_right = right->getComponent<PositionComponent>();
-//        pos_right->pos.x = i * 30.f + start_x;
-//        pos_right->pos.z = 30.f + start_z;
-//        pos_right->pos.y = terrain->getAltitude({pos_right->pos.x, pos_right->pos.z});
-//        tree = coll::buildBVHAABB(sprite_right->sprite->getVertices()[0], min_rect_palm);
-//        right->addComponent<BVHComponent>();
-//        right->getComponent<BVHComponent>()->vbh_tree = tree;
-//        right->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVHAABB(sprite_right->sprite->getVertices()[0], min_rect_palm);
-//        mapBinaryTree(tree, [pos_right, palm_sprite](auto rect)
-//        {
-//            *rect = AABBtoWorldSpace(*rect, pos_right->rot_axis,
-//                                    pos_right->angle, pos_right->pos,
-//                                    *palm_sprite);
-//        });
-//
-//        material = right->getComponent<MaterialComponent>();
-//        material->ambient = vec3(1.f);
-//        material->diffuse = vec3(0.8f);
-//        material->specular = vec3(0.f);
-//        material->shininess = 32.f;
-//
-//        auto car = createEntity(unique_id());
-//        car->activate();
-//        car->addComponents<SpriteComponent, PositionComponent,
-//                SelectableComponent, BVHComponent, MaterialComponent>();
-//        auto car_sprite_comp = car->getComponent<SpriteComponent>();
-//        car_sprite_comp->sprite = car_sprite;
-//        auto car_pos = car->getComponent<PositionComponent>();
-//        car_pos->pos.x = i * 30.f + start_x;
-//        car_pos->pos.z = rand.generateu(30.f, 40.f) + start_z;
-//        car_pos->pos.y = terrain->getAltitude({car_pos->pos.x, car_pos->pos.z});
-//        car_pos->angle = -glm::half_pi<GLfloat>();
-//        car_pos->rot_axis = vec3(0.f, 1.f, 0.f);
-//        tree = coll::buildBVHAABB(car_sprite_comp->sprite->getVertices()[0], min_rect_car);
-//        car->addComponent<BVHComponent>();
-//        car->getComponent<BVHComponent>()->vbh_tree = tree;
-//        car->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVHAABB(car_sprite_comp->sprite->getVertices()[0], min_rect_car);
-//        mapBinaryTree(tree, [car_pos, car_sprite](auto rect)
-//        {
-//            *rect = AABBtoWorldSpace(*rect, car_pos->rot_axis,
-//                                    car_pos->angle, car_pos->pos,
-//                                    *car_sprite);
-//        });
-//        material = car->getComponent<MaterialComponent>();
-//        material->ambient = vec3(1.f);
-//        material->diffuse = vec3(1.f);
-//        material->specular = vec3(0.5f);
-//        material->shininess = 32.f;
-//
-//
-//        auto house = createEntity(unique_id());
-//        house->activate();
-//        house->addComponents<SpriteComponent, PositionComponent,
-//                SelectableComponent, BVHComponent, MaterialComponent>();
-//        auto house_sprite_comp = house->getComponent<SpriteComponent>();
-//        house_sprite_comp->sprite = house_sprite;
-//        auto house_pos = house->getComponent<PositionComponent>();
-//        house_pos->pos.x = i * 30.f + start_x;
-//        house_pos->pos.z = rand.generateu(30.f, 40.f) + start_z;
-//        house_pos->pos.y = terrain->getAltitude({house_pos->pos.x, house_pos->pos.z});
-//        house_pos->angle = -glm::half_pi<GLfloat>();
-//        house_pos->rot_axis = vec3(0.f, 1.f, 0.f);
-//        tree = coll::buildBVHAABB(house_sprite_comp->sprite->getVertices()[0], min_rect_house);
-//        house->addComponent<BVHComponent>();
-//        house->getComponent<BVHComponent>()->vbh_tree = tree;
-//        house->getComponent<BVHComponent>()->vbh_tree_model = coll::buildBVHAABB(house_sprite_comp->sprite->getVertices()[0], min_rect_house);
-//        mapBinaryTree(tree, [house_pos, house_sprite](auto rect)
-//        {
-//            *rect = AABBtoWorldSpace(*rect, house_pos->rot_axis,
-//                                    house_pos->angle, house_pos->pos,
-//                                    *house_sprite);
-//        });
-//        material = house->getComponent<MaterialComponent>();
-//        material->ambient = vec3(1.f);
-//        material->diffuse = vec3(1.f);
-//        material->specular = vec3(0.5f);
-//        material->shininess = 32.f;
+        auto left = createEntity(unique_id());
+        left->activate();
+        left->addComponents<SpriteComponent, PositionComponent,
+                SelectableComponent, BVHComponent, MaterialComponent>();
+        auto sprite_left = left->getComponent<SpriteComponent>();
+        sprite_left->sprite = palm_sprite;
+        auto pos_left = left->getComponent<PositionComponent>();
+        pos_left->pos.x = i * 30.f + start_x;
+        pos_left->pos.z = 0 + start_z;
+        pos_left->pos.y = terrain->getAltitude({pos_left->pos.x, pos_left->pos.z});
+        triangles = palm_sprite->getTriangles()[0];
+        mat4 palm_transform = math::createTransform(pos_left->pos, pos_left->angle, pos_left->rot_axis,
+                                                    palm_size);
+        triangles = math::transformTriangles(triangles, palm_transform);
+        left->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(triangles);
+        left->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(
+                triangles);
+        material = left->getComponent<MaterialComponent>();
+        material->ambient = vec3(1.f);
+        material->diffuse = vec3(0.8f);
+        material->specular = vec3(0.f);
+        material->shininess = 32.f;
+
+        auto right = createEntity(unique_id());
+        right->activate();
+        right->addComponents<SpriteComponent, PositionComponent,
+                SelectableComponent, BVHComponent, MaterialComponent>();
+        auto sprite_right = right->getComponent<SpriteComponent>();
+        sprite_right->sprite = palm_sprite;
+        auto pos_right = right->getComponent<PositionComponent>();
+        pos_right->pos.x = i * 30.f + start_x;
+        pos_right->pos.z = 30.f + start_z;
+        pos_right->pos.y = terrain->getAltitude({pos_right->pos.x, pos_right->pos.z});
+        triangles = palm_sprite->getTriangles()[0];
+        palm_transform = math::createTransform(pos_right->pos, pos_right->angle, pos_right->rot_axis,
+                                               palm_size);
+        triangles = math::transformTriangles(triangles, palm_transform);
+        right->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(triangles);
+        right->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(
+                triangles);
+
+        material = right->getComponent<MaterialComponent>();
+        material->ambient = vec3(1.f);
+        material->diffuse = vec3(0.8f);
+        material->specular = vec3(0.f);
+        material->shininess = 32.f;
+
+        auto car = createEntity(unique_id());
+        car->activate();
+        car->addComponents<SpriteComponent, PositionComponent,
+                SelectableComponent, BVHComponent, MaterialComponent>();
+        auto car_sprite_comp = car->getComponent<SpriteComponent>();
+        car_sprite_comp->sprite = car_sprite;
+        auto car_pos = car->getComponent<PositionComponent>();
+        car_pos->pos.x = i * 30.f + start_x;
+        car_pos->pos.z = rand.generateu(30.f, 40.f) + start_z;
+        car_pos->pos.y = terrain->getAltitude({car_pos->pos.x, car_pos->pos.z});
+        car_pos->angle = -glm::half_pi<GLfloat>();
+        car_pos->rot_axis = vec3(0.f, 1.f, 0.f);
+        triangles = palm_sprite->getTriangles()[0];
+        auto car_transform = math::createTransform(car_pos->pos, car_pos->angle,
+                                                   car_pos->rot_axis, car_size);
+        triangles = math::transformTriangles(triangles, car_transform);
+        car->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(triangles);
+        car->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(
+                triangles);
+        material = car->getComponent<MaterialComponent>();
+        material->ambient = vec3(1.f);
+        material->diffuse = vec3(1.f);
+        material->specular = vec3(0.5f);
+        material->shininess = 32.f;
+
+
+        auto house = createEntity(unique_id());
+        house->activate();
+        house->addComponents<SpriteComponent, PositionComponent,
+                SelectableComponent, BVHComponent, MaterialComponent>();
+        auto house_sprite_comp = house->getComponent<SpriteComponent>();
+        house_sprite_comp->sprite = house_sprite;
+        auto house_pos = house->getComponent<PositionComponent>();
+        house_pos->pos.x = i * 30.f + start_x;
+        house_pos->pos.z = rand.generateu(30.f, 40.f) + start_z;
+        house_pos->pos.y = terrain->getAltitude({house_pos->pos.x, house_pos->pos.z});
+        house_pos->angle = -glm::half_pi<GLfloat>();
+        house_pos->rot_axis = vec3(0.f, 1.f, 0.f);
+        triangles = palm_sprite->getTriangles()[0];
+        auto house_transform = math::createTransform(house_pos->pos, house_pos->angle,
+                                                     house_pos->rot_axis, house_size);
+        triangles = math::transformTriangles(triangles, house_transform);
+        house->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(triangles);
+        house->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(
+                triangles);
+        material = house->getComponent<MaterialComponent>();
+        material->ambient = vec3(1.f);
+        material->diffuse = vec3(1.f);
+        material->specular = vec3(0.5f);
+        material->shininess = 32.f;
     }
 }
 
-void World::deallocate_scene()
-{
-
-}
-
-void World::init_from_file(const std::string &file)
-{
-    m_systems.clear();
-    createSystem<RenderGuiSystem>();
-    createSystem<LidarSystem>();
-    createSystem<RenderSceneSystem>();
-    createSystem<KeyboardSystem>();
-
-    m_entities.clear();
-    init_terrain();
-    init_sprites();
-    init_scene();
-}

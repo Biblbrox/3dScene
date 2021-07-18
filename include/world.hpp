@@ -32,8 +32,8 @@ public:
     ~World();
 
     void init() override;
+    void init(const std::string& init_file) override;
     void update(size_t delta) override;
-    void init_from_file(const std::string& file);
 
 private:
     utils::Fps m_fps;
@@ -41,8 +41,11 @@ private:
     void init_sprites();
     void init_scene();
     void init_terrain();
+    void init_imgui();
+    void init_from_file(const std::string& json_file);
 
     void deallocate_scene();
+    void deallocate_imgui();
 
     /**
      * Remove all entities that not alive
@@ -51,7 +54,11 @@ private:
 
 
     bool m_wasInit;
+    bool m_initFromFile;
     GLuint m_terrainID;
+    GLuint m_sceneID;
+
+    std::string m_initFile;
 };
 
 #endif //MOONLANDER_WORLD_HPP

@@ -41,12 +41,10 @@ using glm::scale;
 
 RenderGuiSystem::RenderGuiSystem() : m_videoSettingsOpen(false),
                                      m_colorSettingsOpen(false),
-                                     m_exportSettingsOpen(false)
+                                     m_exportSettingsOpen(false),
+                                     m_laserSettingsOpen(false)
 
 {
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
@@ -59,15 +57,17 @@ RenderGuiSystem::RenderGuiSystem() : m_videoSettingsOpen(false),
     style.Alpha = 1.0f;
     style.AntiAliasedLines = false;
 
-    io.Fonts->ClearFonts();
-    m_font = io.Fonts->AddFontFromFileTTF(
-            getResourcePath("fonts/NotoSans-hinted/NotoSans-Medium.ttf").c_str(), 15.f,
-            NULL, ImGui::GetIO().Fonts->GetGlyphRangesCyrillic());
-    io.Fonts->Build();
-
-    // Setup Platform/Renderer backends
-    ImGui_ImplSDL2_InitForOpenGL(Game::getWindow(), Game::getGLContext());
-    ImGui_ImplOpenGL3_Init();
+    if (!io.Fonts->IsBuilt()) {
+        io.Fonts->ClearFonts();
+        m_font = io.Fonts->AddFontFromFileTTF(
+                getResourcePath(
+                        "fonts/NotoSans-hinted/NotoSans-Medium.ttf").c_str(),
+                15.f,
+                NULL, ImGui::GetIO().Fonts->GetGlyphRangesCyrillic());
+        io.Fonts->Build();
+    } else {
+        m_font = io.Fonts->Fonts[0];
+    }
 
     int screen_width = utils::getWindowWidth<GLuint>(*Game::getWindow());
     int screen_height = utils::getWindowHeight<GLuint>(*Game::getWindow());
@@ -99,7 +99,7 @@ void RenderGuiSystem::update_state(size_t delta)
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
     program->useScreenProgram();
@@ -127,6 +127,7 @@ void RenderGuiSystem::update_state(size_t delta)
     SetNextWindowPos({0, 0});
     SetNextWindowSize({static_cast<float>(screen_width),
                               static_cast<float>(screen_height)});
+    bool loadSimulation = false;
     bool open = true;
     ImGui::Begin("GameWindow", &open, ImGuiWindowFlags_NoResize
                                       | ImGuiWindowFlags_NoScrollbar
@@ -329,7 +330,7 @@ void RenderGuiSystem::update_state(size_t delta)
             }
 
             if (Button(_("Load simulation"))) {
-                utils::fs::loadSimJson(getResourcePath("pos"));
+                loadSimulation = true;
             }
 
             if (Button(_("Color Settings")))
@@ -409,6 +410,11 @@ void RenderGuiSystem::update_state(size_t delta)
 
     Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    if (loadSimulation) {
+        m_ecsManager->init(getResourcePath("pos"));
+        loadSimulation = false;
+    }
 }
 
 void RenderGuiSystem::export_settings()

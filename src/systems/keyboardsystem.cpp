@@ -176,6 +176,9 @@ void KeyboardSystem::processMouseDrag()
                     SelectableComponent>();
     for (const auto&[key, en]: entities) {
         auto bvh_comp = en->getComponent<BVHComponent>();
+        if (!bvh_comp)
+            continue;
+
         auto sprite_comp = en->getComponent<SpriteComponent>();
 
         Ray ray;

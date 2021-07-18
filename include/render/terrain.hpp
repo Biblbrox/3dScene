@@ -16,6 +16,7 @@ public:
     explicit Terrain(GLuint width, GLuint height, GLfloat step,
                      const std::string& height_image, const std::string& texture,
                      GLfloat scale);
+    ~Terrain();
 
     GLuint getTextureID() const;
     GLuint getVAO() const;

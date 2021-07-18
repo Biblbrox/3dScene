@@ -308,6 +308,8 @@ utils::fs::loadSimJson(const std::string &file_name)
                 sprite_comp->sprite->generateDataBuffer();
             } else if (comp.contains("BVHComponent")) {
                 entity.addComponent<BVHComponent>();
+            } else if (comp.contains("SceneComponent")) {
+                continue;
             } else if (comp.contains("LidarComponent")) {
                 json json_lidar = comp["LidarComponent"];
                 GLfloat yaw = json_lidar[0]["yaw"].get<GLfloat>();
@@ -381,8 +383,8 @@ utils::fs::loadSimJson(const std::string &file_name)
             auto sprite = en.getComponent<SpriteComponent>()->sprite;
             auto pos = en.getComponent<PositionComponent>();
             auto triangles = sprite->getTriangles()[0];
-            mat4 chair_transform = math::createTransform(pos->pos, pos->angle, pos->rot_axis, sprite->getSize());
-            triangles = math::transformTriangles(triangles, chair_transform);
+            mat4 transform = math::createTransform(pos->pos, pos->angle, pos->rot_axis, sprite->getSize());
+            triangles = math::transformTriangles(triangles, transform);
             bvh->bvh_tree = coll::buildBVH(triangles);
             bvh->triangles = std::make_shared<std::vector<Triangle>>(triangles);
         }

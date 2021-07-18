@@ -16,6 +16,8 @@ struct SceneComponent: ecs::Component
     bool isMsaa = false;
     GLuint textureMSAA = 0;
     GLuint texture = 0;
+
+    GLuint rbo = 0;
 };
 
 #endif //SCENECOMPONENT_HPP
