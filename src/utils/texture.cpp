@@ -34,7 +34,7 @@ utils::texture::loadObj(const std::string& file,
     if (!std::filesystem::exists(file))
         throw FSException((format("File %s doesn't exists") % file).str(),
                           program_log_file_name(),
-                              utils::log::Category::FS_ERROR);
+                          utils::log::Category::FS_ERROR);
 
     std::ifstream obj(file);
     std::string line;
@@ -132,11 +132,6 @@ GLuint utils::texture::loadTexture(const std::string &file,
                                    GLuint *textureHeight) {
     using namespace utils::texture;
 
-    static std::string old_file;
-    static GLuint old_texture;
-    if (!old_file.empty() && old_file == file)
-        return old_texture;
-
     SDL_Surface* surface = loadSurface(file);
 
     GLenum texture_format = getSurfaceFormatInfo(*surface);
@@ -154,9 +149,6 @@ GLuint utils::texture::loadTexture(const std::string &file,
             tw, th, texture_format);
 
     SDL_FreeSurface(surface);
-
-    old_file = file;
-    old_texture = textureId;
 
     return textureId;
 }

@@ -53,6 +53,8 @@ void Terrain::sampleHeightMapImage(const std::string& height_image)
             m_heightMap[i][j] = h;
         }
     }
+
+    SDL_FreeSurface(image);
 }
 
 void Terrain::generateMesh()
@@ -165,6 +167,7 @@ void Terrain::generateBuffers()
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
@@ -249,4 +252,9 @@ const std::string &Terrain::getHeightImage() const
 const std::string &Terrain::getTextureFile() const
 {
     return m_textureFile;
+}
+
+Terrain::~Terrain()
+{
+    glDeleteVertexArrays(1, &m_vao);
 }
