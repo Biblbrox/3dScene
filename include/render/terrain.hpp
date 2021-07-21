@@ -13,7 +13,7 @@ using glm::vec2;
 class Terrain
 {
 public:
-    explicit Terrain(GLuint width, GLuint height, GLfloat step,
+    explicit Terrain(GLuint width, GLuint depth, GLfloat step,
                      const std::string& height_image, const std::string& texture,
                      GLfloat scale);
     ~Terrain();
@@ -47,7 +47,7 @@ public:
 
     // Need for serialization
     GLuint m_width;
-    GLuint m_height;
+    GLuint m_depth;
     GLfloat m_step;
     std::string m_heightImage;
     GLfloat m_scale;

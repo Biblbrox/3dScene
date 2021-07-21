@@ -135,6 +135,8 @@ void render::renderTerrain(ShaderProgram& program, const Terrain& terrain)
 {
     glBindTexture(GL_TEXTURE_2D, terrain.getTextureID());
     glBindVertexArray(terrain.getVAO());
+    if (Config::getVal<bool>("EnableLight"))
+        program.setMat3("NormalMatrix", mat3(1.f));
     glDrawElements(GL_TRIANGLE_STRIP, terrain.getIndices().size(), GL_UNSIGNED_INT, nullptr);
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);

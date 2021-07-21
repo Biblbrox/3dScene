@@ -48,7 +48,8 @@ add_library(imgui
         ${EXT_PATH}/imgui/backends/imgui_impl_sdl.cpp
         ${EXT_PATH}/imgui/backends/imgui_impl_opengl3.cpp
         # ImGui misc path
-        ${EXT_PATH}/imgui/misc/cpp/imgui_stdlib.cpp)
+        ${EXT_PATH}/imgui/misc/cpp/imgui_stdlib.cpp
+        ${EXT_PATH}/ImGuiFileDialog/ImGuiFileDialog.cpp)
 
 # Make SDL2 available to Imgui
 target_include_directories(imgui PUBLIC ${SDL2_INCLUDE_DIRS})
@@ -60,7 +61,8 @@ target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<SDL_ope
 
 include_directories(${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIR}
         ${SDL2_TTF_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS}
-        ${GLM_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} ${PCL_INCLUDE_DIRS})
+        ${GLM_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} ${PCL_INCLUDE_DIRS}
+        ${EXT_PATH}/ImGuiFileDialog/)
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 

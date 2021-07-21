@@ -30,6 +30,10 @@ private:
     bool m_exportSettingsOpen;
     bool m_openExportDialog;
 
+    // Files to load simulation
+    std::string m_simFile;
+    std::string m_simPath;
+
     ImFont* m_font;
 };
 

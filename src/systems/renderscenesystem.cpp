@@ -115,7 +115,6 @@ void RenderSceneSystem::drawSprites()
 
         auto selComp = en->getComponent<SelectableComponent>();
         if (getGameState() == GameStates::EDIT && selComp && selComp->dragged) {
-
             glStencilFunc(GL_ALWAYS, 1, 0xFF); // all fragments should pass the stencil test
             glStencilMask(0xFF); // enable writing to the stencil buffer
 
@@ -128,7 +127,6 @@ void RenderSceneSystem::drawSprites()
 
             program->setInt("isPrimitive", true);
             program->setVec3("primColor", {0.f, 0.f, 1.f});
-
             program->setFloat("alpha", 0.55f);
 
             render::drawTexture(*program, *sprite, posComp->pos, posComp->angle,
