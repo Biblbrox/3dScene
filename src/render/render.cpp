@@ -133,13 +133,21 @@ void render::drawTexture(ShaderProgram& program, const Texture &texture,
 
 void render::renderTerrain(ShaderProgram& program, const Terrain& terrain)
 {
+    program.setInt("DrawTerrain", true);
+    program.setMat4("HeightMapScaleMatrix", glm::scale(mat4(1.f), terrain.getScale()));
+
     glBindTexture(GL_TEXTURE_2D, terrain.getTextureID());
     glBindVertexArray(terrain.getVAO());
     if (Config::getVal<bool>("EnableLight"))
         program.setMat3("NormalMatrix", mat3(1.f));
+    glEnable(GL_PRIMITIVE_RESTART);
+    glPrimitiveRestartIndex(terrain.getWidth() * terrain.getHeight());
     glDrawElements(GL_TRIANGLE_STRIP, terrain.getIndices().size(), GL_UNSIGNED_INT, nullptr);
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
+    glDisable(GL_PRIMITIVE_RESTART);
+
+    program.setInt("DrawTerrain", false);
 }
 
 void render::drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
