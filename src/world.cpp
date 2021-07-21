@@ -279,8 +279,8 @@ void World::init_terrain()
     auto terrainComp = terrain->getComponent<TerrainComponent>();
 
     terrainComp->terrain = std::make_shared<Terrain>
-            (1000.f, 1000.f, 30, getResourcePath("terrain.jpg"),
-             getResourcePath("terrain.jpg"), 200.f);
+            (1000.f, 700.f, 20.f, getResourcePath("terrain_height_map.jpg"),
+             getResourcePath("terrain.jpg"), 1.f);
 }
 
 
@@ -378,7 +378,6 @@ void World::init_sprites()
             lidarComp->freq, lidarComp->start_angle,
             lidarComp->density);
 
-
     utils::Random rand;
     auto min_rect = Config::getVal<glm::vec3>("MinRectSize");
 
@@ -463,19 +462,19 @@ void World::init_sprites()
     material->specular = vec3(0.f);
     material->shininess = 32.f;
 
-//    auto light_en = createEntity(unique_id());
-//    light_en->activate();
-//    light_en->addComponents<LightComponent, SpriteComponent>();
-//
-//    auto light_comp = light_en->getComponent<LightComponent>();
-//    light_comp->pos = camera->getPos();
-//    light_comp->ambient = vec3(0.1f);
-//    light_comp->diffuse = vec3(0.5f);
-//    light_comp->specular = vec3(0.5f);
-//    std::shared_ptr<Sprite> light_sprite = std::make_shared<Sprite>();
-//    light_sprite->addMesh(getResourcePath("DiscoBall.obj"), 2.f, 2.f, 2.f);
-//    light_sprite->generateDataBuffer();
-//    light_en->getComponent<SpriteComponent>()->sprite = light_sprite;
+    auto light_en = createEntity(unique_id());
+    light_en->activate();
+    light_en->addComponents<LightComponent, SpriteComponent>();
+
+    auto light_comp = light_en->getComponent<LightComponent>();
+    light_comp->pos = camera->getPos();
+    light_comp->ambient = vec3(0.1f);
+    light_comp->diffuse = vec3(0.5f);
+    light_comp->specular = vec3(0.5f);
+    std::shared_ptr<Sprite> light_sprite = std::make_shared<Sprite>();
+    light_sprite->addMesh(getResourcePath("DiscoBall.obj"), 2.f, 2.f, 2.f);
+    light_sprite->generateDataBuffer();
+    light_en->getComponent<SpriteComponent>()->sprite = light_sprite;
 
     Config::addVal("LightPos", camera->getPos(), "vec3");
 

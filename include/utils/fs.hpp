@@ -210,7 +210,7 @@ namespace boost::serialization
     {
         auto terrain = ter_comp.terrain;
         ar & terrain->m_width;
-        ar & terrain->m_height;
+        ar & terrain->m_depth;
         ar & terrain->m_step;
         ar & terrain->m_textureFile;
         ar & terrain->m_heightImage;

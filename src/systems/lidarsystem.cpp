@@ -11,6 +11,7 @@
 #include "config.hpp"
 #include "utils/collision.hpp"
 #include "render/render.hpp"
+#include "components/terraincomponent.hpp"
 
 using utils::log::Logger;
 using glm::cos;
@@ -68,19 +69,39 @@ void LidarSystem::drawLidarIntersect()
         return;
 
     vector<vec3> coll_dots;
-    size_t nans = 0;
     for (const auto& dot: pattern) {
         vec3 dir = normalize(dot - pos->pos);
         if (std::isnan(dir.x) || std::isnan(dir.y) || std::isnan(dir.z)) {
-            nans++;
-            return;
+            continue;
         }
 
         // Check collision
         for (const auto&[key, en]: m_ecsManager->getEntities()) {
             auto bvh_comp = en->getComponent<BVHComponent>();
-            if (!bvh_comp)
+
+            Ray ray;
+            ray.direction = Vector3(dir.x, dir.y, dir.z);
+            ray.origin = Vector3(pos->pos.x, pos->pos.y, pos->pos.z);
+            ray.tmin = 0;
+            ray.tmax = 100000;
+
+            if (!bvh_comp) {
+                auto terrainComp = en->getComponent<TerrainComponent>();
+                if (!terrainComp)
+                    continue;
+
+                auto terrain = terrainComp->terrain;
+                auto coll = coll::rayTerrainIntersection(*terrain, ray, 0, 1000.f, 1000);
+                if (coll.first) {
+                    vec3 col_pos = coll.second;
+                    col_stream << col_pos.x << ", " << col_pos.y << ", "
+                               << col_pos.z << "\n";
+                    col_stream.flush();
+                }
+
                 continue;
+            }
+
             auto pos_comp = en->getComponent<PositionComponent>();
             auto sprite_comp = en->getComponent<SpriteComponent>();
 
@@ -89,11 +110,6 @@ void LidarSystem::drawLidarIntersect()
             bvh::ClosestPrimitiveIntersector<Bvh, Triangle> primitive_intersector(*bvh, triangles->data());
             bvh::SingleRayTraverser<Bvh> traverser(*bvh);
 
-            Ray ray;
-            ray.direction = Vector3(dir.x, dir.y, dir.z);
-            ray.origin = Vector3(pos->pos.x, pos->pos.y, pos->pos.z);
-            ray.tmin = 0;
-            ray.tmax = 100000;
             auto hit = traverser.traverse(ray, primitive_intersector);
             if (hit) {
                 auto triangle_index = hit->primitive_index;
@@ -103,18 +119,6 @@ void LidarSystem::drawLidarIntersect()
                            << col_pos.z << "\n";
                 col_stream.flush();
             }
-
-//            auto coll = coll::BVHAABBTraversal(bvh_comp->vbh_tree, {dir, pos->pos});
-//
-//            if (coll.first) {
-//                Logger::info("collision occurred, pos: %1$.3f, %2$.3f, %3$.3f",
-//                             coll.second.x, coll.second.y, coll.second.z);
-//
-//                col_stream << coll.second.x << ", " << coll.second.y << ", "
-//                           << coll.second.z << "\n";
-//                coll_dots.emplace_back(coll.second);
-//            }
         }
     }
-    Logger::info("nans: %lu", nans);
 }

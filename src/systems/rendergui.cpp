@@ -6,6 +6,8 @@
 #include <imgui_impl_opengl3.h>
 #include <imgui_internal.h>
 #include <imgui_impl_sdl.h>
+#include <ImGuiFileDialog.h>
+#include <ImGuiFileDialogConfig.h>
 #include <filesystem>
 
 #include "systems/renderguisystem.hpp"
@@ -326,11 +328,30 @@ void RenderGuiSystem::update_state(size_t delta)
 
             if (Button(_("Save simulation"))) {
                 auto en = m_ecsManager->getEntities();
-                utils::fs::saveSimJson(getResourcePath("pos"), en);
+                utils::fs::saveSimJson(getResourcePath("pos.json"), en);
             }
 
-            if (Button(_("Load simulation"))) {
-                loadSimulation = true;
+            if (Button(_("Load simulation")))
+                ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey",
+                                                        _("Choose simulation file"), ".json", ".");
+
+            // display
+            if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
+                // action if OK
+                if (ImGuiFileDialog::Instance()->IsOk()) {
+                    loadSimulation = true;
+                    m_simFile = ImGuiFileDialog::Instance()->GetFilePathName();
+                    m_simPath = ImGuiFileDialog::Instance()->GetCurrentPath();
+                    // action
+
+                    if (loadSimulation) {
+                        m_ecsManager->init(m_simFile);
+                        loadSimulation = false;
+                    }
+                }
+
+                // close
+                ImGuiFileDialog::Instance()->Close();
             }
 
             if (Button(_("Color Settings")))
@@ -410,11 +431,6 @@ void RenderGuiSystem::update_state(size_t delta)
 
     Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-    if (loadSimulation) {
-        m_ecsManager->init(getResourcePath("pos"));
-        loadSimulation = false;
-    }
 }
 
 void RenderGuiSystem::export_settings()

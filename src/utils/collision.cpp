@@ -97,6 +97,9 @@ std::pair<bool, vec3>
 coll::rayTerrainIntersection(const Terrain &terrain, const Ray &ray,
                              GLfloat start, GLfloat end, size_t num_iter)
 {
+    if (!interInRange(terrain, start, end, ray))
+        return {false, {0.f, 0.f, 0.f}};
+
     size_t iter = 0;
     GLfloat mid = 0;
     while (++iter <= num_iter) {
