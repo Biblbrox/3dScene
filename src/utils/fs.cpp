@@ -62,32 +62,6 @@ void utils::fs::saveLidarDataSphere(const std::string &data_file,
     out.close();
 }
 
-void utils::fs::saveSimSerial(const std::string &file_name,
-                              std::unordered_map<size_t, std::shared_ptr<Entity>>& entities)
-{
-    std::ofstream out(file_name, std::ios::out);
-    boost::serialization::Payload obj;
-    for (auto& [_, en]: entities) {
-        boost::archive::text_oarchive oa(out);
-        oa << *en;
-    }
-
-    out.close();
-}
-
-std::vector<ecs::Entity> utils::fs::loadSimSerial(const std::string &file_name)
-{
-    std::vector<ecs::Entity> res;
-    boost::serialization::Payload obj;
-
-    std::ifstream in(file_name);
-    boost::archive::text_iarchive ia(in);
-    while (in.peek() != EOF) {
-        ecs::Entity en;
-        ia >> en;
-    }
-}
-
 using nlohmann::json;
 namespace glm
 {
@@ -120,16 +94,6 @@ void glm::from_json(const json& j, glm::vec2& v)
     v.x = j[0];
     v.y = j[1];
 }
-
-//void glm::to_json(json& j, const std::vector<vec3>& vec)
-//{
-//
-//}
-//
-//void glm::from_json(const json& j, std::vector<vec3>& vec)
-//{
-//
-//}
 
 void utils::fs::saveSimJson(const std::string &file_name,
                             std::unordered_map<size_t, std::shared_ptr<Entity>> &entities)
@@ -247,12 +211,11 @@ void utils::fs::saveSimJson(const std::string &file_name,
 
                 json comp_obj = json::object();
                 comp_obj["TerrainComponent"] = json::array();
-                comp_obj["TerrainComponent"].push_back(json::object({{"height_image", terrain->m_heightImage}}));
-                comp_obj["TerrainComponent"].push_back(json::object({{"texture_image", terrain->m_textureFile}}));
+                comp_obj["TerrainComponent"].push_back(json::object({{"height_image", terrain->getHeightImage()}}));
+                comp_obj["TerrainComponent"].push_back(json::object({{"texture_image", terrain->getTextureFile()}}));
                 comp_obj["TerrainComponent"].push_back(json::object({{"width", terrain->getWidth()}}));
                 comp_obj["TerrainComponent"].push_back(json::object({{"height", terrain->getHeight()}}));
                 comp_obj["TerrainComponent"].push_back(json::object({{"scale", terrain->getScale()}}));
-                comp_obj["TerrainComponent"].push_back(json::object({{"step", terrain->getStep()}}));
 
                 en_obj["Components"].push_back(comp_obj);
             }
@@ -364,14 +327,12 @@ utils::fs::loadSimJson(const std::string &file_name)
                 std::string texture_image = json_ter[1]["texture_image"].get<std::string>();
                 GLfloat width = json_ter[2]["width"].get<GLfloat>();
                 GLfloat height = json_ter[3]["height"].get<GLfloat>();
-                GLfloat scale = json_ter[4]["scale"].get<GLfloat>();
-                GLfloat step = json_ter[5]["step"].get<GLfloat>();
+                vec3 scale = json_ter[4]["scale"].get<vec3>();
 
                 entity.addComponent<TerrainComponent>();
                 auto terrain = entity.getComponent<TerrainComponent>();
                 terrain->terrain = std::make_shared<Terrain>
-                        (width, height, step, height_image, texture_image,
-                         scale);
+                        (width, height, height_image, texture_image, scale);
             }
         }
         res.push_back(entity);

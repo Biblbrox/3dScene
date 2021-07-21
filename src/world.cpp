@@ -279,8 +279,8 @@ void World::init_terrain()
     auto terrainComp = terrain->getComponent<TerrainComponent>();
 
     terrainComp->terrain = std::make_shared<Terrain>
-            (1000.f, 700.f, 20.f, getResourcePath("terrain_height_map.jpg"),
-             getResourcePath("terrain.jpg"), 1.f);
+            (1000, 700, getResourcePath("terrain_height_map.jpg"),
+             getResourcePath("rock_2_4w.jpg"), vec3(2000.f, 1.f, 2000.f));
 }
 
 
@@ -385,7 +385,8 @@ void World::init_sprites()
     auto terrain = terrainEn->getComponent<TerrainComponent>()->terrain;
 
     GLfloat start_x, start_z;
-    start_x = start_z = terrain->getWorldWidth() / 2.f;
+//    start_x = start_z = terrain->getWorldWidth() / 2.f;
+    start_x = start_z = 0.f;
 
     auto camera = FpsCamera::getInstance();
     camera->setPos({start_x, 200.f, start_z});

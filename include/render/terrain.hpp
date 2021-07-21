@@ -13,9 +13,8 @@ using glm::vec2;
 class Terrain
 {
 public:
-    explicit Terrain(GLuint width, GLuint depth, GLfloat step,
-                     const std::string& height_image, const std::string& texture,
-                     GLfloat scale);
+    explicit Terrain(GLuint width, GLuint depth, const std::string& height_image,
+                     const std::string& texture, const vec3& scale);
     ~Terrain();
 
     GLuint getTextureID() const;
@@ -27,12 +26,11 @@ public:
 
     // Get terrain width and height in world coordinates
     GLfloat getWorldWidth() const;
-    GLfloat getWorldHeight() const;
+    GLfloat getWorldDepth() const;
 
-    GLfloat getScale() const;
-    GLfloat getStep() const;
+    const vec3& getScale() const;
     const std::vector<GLuint>& getIndices() const;
-    const std::vector<GLfloat>& getVertices() const;
+    const std::vector<std::vector<vec3>> &getVertices() const;
 
 
     const std::string& getTextureFile() const;
@@ -44,28 +42,29 @@ public:
      */
     GLfloat getAltitude(const vec2& point) const;
     bool isUnderGround(const vec3& point) const;
-
-    // Need for serialization
-    GLuint m_width;
-    GLuint m_depth;
-    GLfloat m_step;
-    std::string m_heightImage;
-    GLfloat m_scale;
-    std::string m_textureFile;
 private:
 
     std::vector<std::vector<GLfloat>> m_heightMap;
     std::vector<GLuint> m_indices;
-    std::vector<GLfloat> m_vertices;
+    std::vector<std::vector<vec3>> m_vertices;
+    std::vector<std::vector<vec2>> m_uv;
+    std::vector<std::vector<std::pair<vec3, vec3>>> m_quadNormals;
+    std::vector<std::vector<vec3>> m_normals;
 
     std::vector<GLfloat> m_vertexData;
 
     GLuint m_vao;
 
     GLuint m_textureId;
+    GLuint m_width;
+    GLuint m_depth;
+    vec3 m_scale;
+
+    std::string m_textureFile;
+    std::string m_heightImage;
 
     void computeIndices();
-    vec3 computeNormal(int x, int z);
+    void computeNormals();
     void generateBuffers();
     void generateMesh();
     void sampleHeightMapImage(const std::string& image_file);

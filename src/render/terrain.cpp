@@ -6,17 +6,15 @@
 
 using utils::texture::loadSurface;
 using std::vector;
+using std::pair;
 using utils::log::Logger;
 
-Terrain::Terrain(GLuint width, GLuint height, GLfloat step,
+Terrain::Terrain(GLuint width, GLuint height,
                  const std::string& height_image,
                  const std::string& texture,
-                 GLfloat scale)
-        : m_width(width), m_depth(height), m_step(step),
-//          m_heightMap(vector<vector<GLfloat>>(height, vector<GLfloat>(width))),
-          m_heightMap(vector<vector<GLfloat>>(width, vector<GLfloat>(height))),
-          m_vao(0), m_scale(scale), m_heightImage(height_image),
-          m_textureFile(texture)
+                 const vec3& scale) :
+        m_vao(0), m_scale(scale), m_heightImage(height_image),
+        m_textureFile(texture)
 {
     sampleHeightMapImage(height_image);
     generateMesh();
@@ -28,32 +26,21 @@ Terrain::Terrain(GLuint width, GLuint height, GLfloat step,
 
 void Terrain::sampleHeightMapImage(const std::string& height_image)
 {
-    GLfloat m_offset = 1.f;
-
     SDL_Surface *image = loadSurface(height_image);
-    uint8_t *pixels = (uint8_t *) image->pixels;
-
-    GLfloat scale_x = (float) image->w / (float) (m_width - 1);
-    GLfloat scale_z = (float) image->h / (float) (m_depth - 1);
+    uint8_t* pixels = (uint8_t *) image->pixels;
 
     m_width = image->w;
     m_depth = image->h;
 
+    m_vertices = vector<vector<vec3>>(m_width, vector<vec3>(m_depth));
+    m_normals = vector<vector<vec3>>(m_width, vector<vec3>(m_depth));
+    m_uv = vector<vector<vec2>>(m_width, vector<vec2>(m_depth));
+    m_heightMap = vector<vector<GLfloat>>(m_width, vector<GLfloat>(m_depth));
     unsigned byte_per_pixel = image->format->BytesPerPixel;
     for (size_t i = 0; i < m_width; ++i) {
         for (size_t j = 0; j < m_depth; ++j) {
-//            int img_x = (int) truncf((float) i * scale_x);
-//            int img_y = (int) truncf((float) j * scale_z);
-            int img_x = i;
-            int img_y = j;
-            // Assume rgba
-            GLfloat h = pixels[img_y * image->pitch + img_x * byte_per_pixel];
-            h = h / 127.5 - 1.f;
-
-            h *= m_scale;
-
-            h += m_offset;
-
+            GLfloat h = pixels[j * image->pitch + i * byte_per_pixel];
+            h = h / 255.f;
             m_heightMap.at(i).at(j) = h;
         }
     }
@@ -63,80 +50,115 @@ void Terrain::sampleHeightMapImage(const std::string& height_image)
 
 void Terrain::generateMesh()
 {
-    GLfloat u_step = 1.f / (float) m_width;
-    GLfloat v_step = 1.f / (float) m_depth;
+    GLfloat u_step = 0.1f * (float) m_width;
+    GLfloat v_step = 0.1f * (float) m_depth;
 
     for (int i = 0; i < m_width; ++i) {
         for (int j = 0; j < m_depth; ++j) {
+            GLfloat scale_x = float(j) / float(m_depth - 1);
+            GLfloat scale_z = float(i) / float(m_width - 1);
             GLfloat h = m_heightMap.at(i).at(j);
 
-            vec3 vertex = {(float) i * m_step, h, (float) j * m_step};
-            vec2 uv = {u_step * i, v_step * j};
-            vec3 normal = computeNormal(i, j);
+            vec3 vertex = {-0.5f + scale_x, h, -0.5f + scale_z};
+            // Need to repeat texture every 10 rows and 10 columns
+            vec2 uv = {u_step * scale_x, v_step * scale_z};
 
-            m_vertices.push_back(vertex.x);
-            m_vertices.push_back(vertex.y);
-            m_vertices.push_back(vertex.z);
-
-            m_vertexData.push_back(vertex.x);
-            m_vertexData.push_back(vertex.y);
-            m_vertexData.push_back(vertex.z);
-
-            m_vertexData.push_back(uv.x);
-            m_vertexData.push_back(uv.y);
-
-            m_vertexData.push_back(normal.x);
-            m_vertexData.push_back(normal.y);
-            m_vertexData.push_back(normal.z);
+            m_vertices[i][j] = vertex;
+            m_uv[i][j] = uv;
         }
     }
-
-    GLuint num_indices =
-            (m_width - 1) * (m_depth * 2) + (m_width - 2) + (m_depth - 2);
-    computeIndices();
-    //assert(num_indices == m_indices.size());
 }
 
 void Terrain::computeIndices()
 {
-    size_t min_col = 0, min_row = 0;
-    size_t max_row = m_depth - 2, max_col = m_width - 2;
+//    size_t min_col = 0, min_row = 0;
+//    size_t max_row = m_depth - 2, max_col = m_width - 2;
+    size_t prim_restart_idx = m_width * m_depth;
 
-    for (size_t c = min_col; c <= max_col; ++c) {
-        for (size_t r = min_row; r <= max_row; ++r) {
-            if (c > min_col && r == min_row)
-                m_indices.push_back(c * m_depth + r);
-
-            m_indices.push_back(c * m_depth + r);
-            m_indices.push_back((c + 1) * m_depth + r);
-
-            if (r == max_row && c < max_col)
-                m_indices.push_back((c + 1) * m_depth + r);
+    for (size_t i = 0; i < m_width - 1; ++i) {
+        for (size_t j = 0; j < m_depth; ++j) {
+            size_t row = i + 1;
+            size_t idx = row * m_depth + j;
+            m_indices.push_back(idx);
+            row = i;
+            idx = row * m_depth + j;
+            m_indices.push_back(idx);
         }
+        m_indices.push_back(prim_restart_idx);
     }
 }
 
-vec3 Terrain::computeNormal(int x, int z)
+void Terrain::computeNormals()
 {
-    if (x == 0)
-        x = 1;
-    if (z == 0)
-        z = 1;
+    using Quad = pair<vec3, vec3>; // Pair of normals
+    m_quadNormals = vector<vector<Quad>>(m_width - 1, vector<Quad>(m_depth - 1));
 
-    GLfloat hl = getAltitude({x - 1, z});
-    GLfloat hr = getAltitude({x + 1, z});
-    GLfloat hd = getAltitude({x, z + 1});
-    GLfloat hu = getAltitude({x, z - 1});
+    for (size_t i = 0; i < m_width - 1; ++i) {
+        for (size_t j = 0; j < m_depth - 1; ++j) {
+            vec3 tr0[] = {
+                    m_vertices[i][j],
+                    m_vertices[i + 1][j],
+                    m_vertices[i + 1][j + 1]
+            };
+            vec3 tr1[] = {
+                    m_vertices[i + 1][j + 1],
+                    m_vertices[i][j + 1],
+                    m_vertices[i][j]
+            };
 
-    vec3 normal = {hl - hr, 2.0f, hd - hu};
+            vec3 norm_tr0 = glm::cross(tr0[0] - tr0[1], tr0[1] - tr0[2]);
+            vec3 norm_tr1 = glm::cross(tr1[0] - tr1[1], tr1[1] - tr1[2]);
 
-    return glm::normalize(normal);
+            m_quadNormals[i][j].first = glm::normalize(norm_tr0);
+            m_quadNormals[i][j].second = glm::normalize(norm_tr1);
+        }
+    }
+
+    for (size_t i = 0; i < m_width; ++i) {
+        for (size_t j = 0; j < m_depth; ++j){
+            vec3 normal = vec3(0.f);
+
+            // Upper left
+            if (i != 0 && j != 0)
+                normal += m_quadNormals[i - 1][j - 1].first
+                          + m_quadNormals[i - 1][j - 1].second;
+
+            // Upper right
+            if (i != 0 && j != m_depth - 1)
+                normal += m_quadNormals[i - 1][j].first;
+
+            // Bottom right
+            if (i != m_width - 1 && j != m_depth - 1)
+                normal += m_quadNormals[i + 1][j].first
+                          + m_quadNormals[i + 1][j].second;
+
+            // Bottom left
+            if (i != m_width && j != 0)
+                normal += m_quadNormals[i][j - 1].second;
+
+            m_normals[i][j] = glm::normalize(normal);
+        }
+    }
+
+
 }
 
 void Terrain::generateBuffers()
 {
-//    if (m_vao != 0)
-//        return;
+    for (size_t i = 0; i < m_width; ++i) {
+        for (size_t j = 0; j < m_depth; ++j) {
+            m_vertexData.push_back(m_vertices[i][j].x);
+            m_vertexData.push_back(m_vertices[i][j].y);
+            m_vertexData.push_back(m_vertices[i][j].z);
+
+            m_vertexData.push_back(m_uv[i][j].x);
+            m_vertexData.push_back(m_uv[i][j].y);
+
+            m_vertexData.push_back(m_normals[i][j].x);
+            m_vertexData.push_back(m_normals[i][j].y);
+            m_vertexData.push_back(m_normals[i][j].z);
+        }
+    }
 
     glGenVertexArrays(1, &m_vao);
     GLuint vbo;
@@ -202,46 +224,32 @@ const std::vector<GLuint>& Terrain::getIndices() const
     return m_indices;
 }
 
-GLfloat Terrain::getScale() const
+const vec3& Terrain::getScale() const
 {
     return m_scale;
 }
 
-GLfloat Terrain::getStep() const
-{
-    return m_step;
-}
-
 GLfloat Terrain::getWorldWidth() const
 {
-    return m_width * m_step;
+    return m_width * m_scale.x;
 }
 
-GLfloat Terrain::getWorldHeight() const
+GLfloat Terrain::getWorldDepth() const
 {
-    return m_depth * m_step;
+    return m_depth * m_scale.z;
 }
 
 GLfloat Terrain::getAltitude(const glm::vec2 &point) const
 {
-    // World coordinates to height map indices
-//    size_t x = round(point.x / m_step);
-//    size_t y = round(point.y / m_step);
-//
-//    if (x >= m_heightMap.size() || y >= m_heightMap[0].size())
-//        throw BaseGameException((boost::format("Terrain at coordinate %f, %f doesn't exists")
-//                                 % point.x % point.y).str());
-//
-//
-//    return m_heightMap[x][y];
-//
-
-    /* Terrain's Z extends towards -Z, but our vertices need positive numbers */
-//    z = -z;
-
     GLfloat z = point.y;
     GLfloat x = point.x;
+
+    if (x > m_width / 2.f || z > m_depth / 2.f
+        || x < -m_width / 2.f || z < -m_depth / 2.f)
+        return 0;
+
     /* Find offsets of the coords into a terrain quad */
+    GLfloat m_step = m_scale.x;
     float offx = fmodf(x, m_step);
     float offz = fmodf(z, m_step);
 
@@ -300,7 +308,7 @@ GLfloat Terrain::getAltitude(const glm::vec2 &point) const
     return (-D - C * z - A * x) / B;
 }
 
-const std::vector<GLfloat> &Terrain::getVertices() const
+const std::vector<std::vector<vec3>> &Terrain::getVertices() const
 {
     return m_vertices;
 }
