@@ -18,7 +18,7 @@
 #include <bvh/primitive_intersectors.hpp>
 
 #include "utils/math.hpp"
-#include "render/texture.hpp"
+#include "render/texturebase.hpp"
 #include "sceneprogram.hpp"
 #include "utils/datastructs.hpp"
 #include "render/terrain.hpp"

@@ -20,7 +20,7 @@ namespace render
      * @param angle
      * @param scale_factor
      */
-    void drawTexture(ShaderProgram& program, const Texture &texture,
+    void drawTexture(ShaderProgram& program, const TextureBase &texture,
                      const vec3& pos, GLfloat angle = 0,
                      vec3 rot_axis = {1.f, 0.f, 0.f}, GLfloat scale = 1.f);
     
@@ -31,13 +31,13 @@ namespace render
     void drawTriangles(const std::vector<vec3> &points);
 
     void drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
-                           size_t size, const Texture &texture,
+                           size_t size, const TextureBase &texture,
                            const vec3& position, GLfloat angle = 0.f,
                            vec3 rot_axis = {1.f, 0.f, 0.f}, GLfloat scale = 1.f);
 
 
     void drawVerticesVAO(ShaderProgram& program, const GLfloat* points,
-                             size_t size, const Texture &texture,
+                             size_t size, const TextureBase &texture,
                              const vec3& position,
                              GLfloat angle = 0.f,
                              vec3 rot_axis = {1.f, 0.f, 0.f}, GLfloat scale = 1.f);

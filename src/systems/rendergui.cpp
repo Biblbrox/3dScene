@@ -335,22 +335,14 @@ void RenderGuiSystem::update_state(size_t delta)
                 ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey",
                                                         _("Choose simulation file"), ".json", ".");
 
-            // display
             if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
-                // action if OK
                 if (ImGuiFileDialog::Instance()->IsOk()) {
-                    loadSimulation = true;
                     m_simFile = ImGuiFileDialog::Instance()->GetFilePathName();
                     m_simPath = ImGuiFileDialog::Instance()->GetCurrentPath();
-                    // action
 
-                    if (loadSimulation) {
-                        m_ecsManager->init(m_simFile);
-                        loadSimulation = false;
-                    }
+                    m_ecsManager->init(m_simFile);
                 }
 
-                // close
                 ImGuiFileDialog::Instance()->Close();
             }
 
@@ -405,8 +397,6 @@ void RenderGuiSystem::update_state(size_t delta)
                 Config::addVal<vec2>("ViewportSize", {size.x, size.y}, "vec2");
 
             auto pos = ImGui::GetCursorPos();
-            auto cur = utils::getMousePos<GLfloat>();
-
             if (!Config::hasKey("ViewportPos"))
                 Config::addVal<vec2>("ViewportPos", {pos.x, pos.y}, "vec2");
 

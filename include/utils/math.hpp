@@ -18,6 +18,17 @@ using glm::mat4;
 
 namespace math {
 
+    constexpr GLfloat barry_centric(const vec3& p1, const vec3& p2,
+                                    const vec3& p3, const vec2& pos)
+    {
+        GLfloat det = (p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
+        GLfloat l1 = ((p2.z - p3.z) * (pos.x - p3.x) + (p3.x - p2.x) * (pos.y - p3.z)) / det;
+        GLfloat l2 = ((p3.z - p1.z) * (pos.x - p3.x) + (p1.x - p3.x) * (pos.y - p3.z)) / det;
+        GLfloat l3 = 1.f - l1 - l2;
+
+        return l1 * p1.y + l2 * p2.y + l3 * p3.y;
+    }
+
     /**
  * Rotate world around point v
  * @param m

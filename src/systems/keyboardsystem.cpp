@@ -105,7 +105,7 @@ void KeyboardSystem::update_state(size_t delta)
                     if (bvh) { // Update aabb positions in world space
                         auto sprite = m_draggedObj->getComponent<SpriteComponent>()->sprite;
                         auto pos = m_draggedObj->getComponent<PositionComponent>();
-                        auto triangles = sprite->getTriangles()[0];
+                        auto triangles = sprite->getTriangles();
                         mat4 transform = math::createTransform(pos->pos, pos->angle, pos->rot_axis, sprite->getSize());
                         triangles = math::transformTriangles(triangles, transform);
                         bvh->bvh_tree = coll::buildBVH(triangles);
@@ -194,22 +194,12 @@ void KeyboardSystem::processMouseDrag()
 
         auto hit = traverser.traverse(ray, primitive_intersector);
         if (hit) {
-//            auto triangle_index = hit->primitive_index;
-//            auto intersection = hit->intersection;
-//            vec3 col_pos = pos->pos + dir * intersection.t;
             m_dragEnabled = true;
             m_draggedObj = en;
             m_dragStartPos = en->getComponent<PositionComponent>()->pos;
             m_draggedObj->getComponent<SelectableComponent>()->dragged = true;
             break;
         }
-
-
-//        auto coll = BVHAABBTraversal(bvh_comp->vbh_tree, {ray_world, origin});
-//
-//        if (coll.first) {
-//
-//        }
     }
 }
 

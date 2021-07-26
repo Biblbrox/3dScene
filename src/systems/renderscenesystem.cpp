@@ -62,29 +62,26 @@ void RenderSceneSystem::drawSprites()
         auto terrain = getEntitiesByTag<TerrainComponent>().begin()
                 ->second->getComponent<TerrainComponent>()->terrain;
         GLfloat ter_half = terrain->getWorldWidth() / 2.f;
-        vec3 lightPos = {ter_half, 200, ter_half};
 
         program->setVec3("viewPos", camera->getPos());
-
         if (!getEntitiesByTag<LightComponent>().empty()) {
             auto lightEn = getEntitiesByTag<LightComponent>().begin()->second;
             auto light = lightEn->getComponent<LightComponent>();
             light->pos = Config::getVal<vec3>("LightPos");
             program->setInt("lighting", true);
-            program->setVec3("light.position", light->pos);
+            program->setVec3("light.direction", {-0.2f, -1.f, 0.3f});
             program->setVec3("light.ambient", light->ambient);
             program->setVec3("light.diffuse", light->diffuse);
             program->setVec3("light.specular", light->specular);
 
-            auto lightSprite = lightEn->getComponent<SpriteComponent>()->sprite;
-            auto sprite_vert_vec = lightSprite->getVertices()[lightSprite->getIdx()];
-            float *light_vertices = &sprite_vert_vec[0].x;
-            program->setInt("isPrimitive", true);
-            program->setFloat("alpha", 1.f);
-            program->setVec3("primColor", {1.f, 1.f, 1.f});
-            render::drawVerticesVAO(*program, light_vertices,
-                                    sprite_vert_vec.size(),
-                                    *lightSprite, light->pos);
+            auto lightSprite = lightEn->getComponent<SpriteComponent>();
+            if (lightSprite) {
+                auto sprite = lightSprite->sprite;
+                program->setInt("isPrimitive", true);
+                program->setFloat("alpha", 1.f);
+                program->setVec3("primColor", {1.f, 1.f, 1.f});
+                render::drawTexture(*program, *sprite, light->pos, 0, {0.f, 1.f, 0.f});
+            }
         }
     } else {
         program->setInt("lighting", false);
@@ -101,14 +98,14 @@ void RenderSceneSystem::drawSprites()
         if (lighting) {
             auto material = en->getComponent<MaterialComponent>();
             if (material) {
-                program->setVec3("material.ambient", material->ambient);
-                program->setVec3("material.diffuse", material->diffuse);
-                program->setVec3("material.specular", material->specular);
+//                program->setVec3("material.ambient", material->ambient);
+//                program->setVec3("material.diffuse", material->diffuse);
+//                program->setVec3("material.specular", material->specular);
                 program->setFloat("material.shininess", material->shininess);
             } else {
-                program->setVec3("material.ambient", vec3(1.f, 0.5, 0.31f));
-                program->setVec3("material.diffuse", vec3(1.f, 0.5f, 0.31f));
-                program->setVec3("material.specular", vec3(0.5f, 0.5f, 0.5f));
+//                program->setVec3("material.ambient", vec3(1.f, 0.5, 0.31f));
+//                program->setVec3("material.diffuse", vec3(1.f, 0.5f, 0.31f));
+//                program->setVec3("material.specular", vec3(0.5f, 0.5f, 0.5f));
                 program->setFloat("material.shininess", 32.f);
             }
         }

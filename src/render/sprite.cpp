@@ -1,71 +1,45 @@
 #include <GL/glew.h>
 #include <boost/format.hpp>
 #include <iostream>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "exceptions/sdlexception.hpp"
 #include "render/sprite.hpp"
-#include "utils/texture.hpp"
 #include "utils/collision.hpp"
 
 using utils::log::Category;
 using utils::log::program_log_file_name;
 using utils::log::shader_log_file_name;
 using boost::format;
+using std::vector;
 
-Sprite::Sprite() : m_vao(nullptr)
+Sprite::Sprite(const std::string &modelFile, GLfloat textureWidth,
+               GLfloat textureHeight, GLfloat textureDepth)
+        : m_model(modelFile)
 {
-
-}
-
-void Sprite::addMesh(const std::string& objFile, const vec3& size)
-{
-    addMesh(objFile, size.x, size.y, size.z);
-}
-
-void Sprite::addMesh(const std::string &objFile,
-                     GLfloat textureWidth, GLfloat textureHeight,
-                     GLfloat textureDepth)
-{
-    using namespace utils::texture;
-
-    std::string textureFile;
-    std::vector<vec3> vertices;
-    std::vector<vec2> uv;
-    std::vector<vec3> normals;
-    std::vector<vec3u> indices;
-    auto v = loadObj(objFile, textureFile, vertices, uv, normals, indices);
-    m_vertices.push_back(vertices);
-
-    m_uv.push_back(uv);
-
-    m_normals.push_back(normals);
-
-    m_indices.push_back(indices);
-    m_vertexData.push_back(v);
-
-    if (!textureFile.empty()) {
-        GLuint textureId = loadTexture(getResourcePath(textureFile), nullptr,
-                                       nullptr);
-        m_textureIds.push_back(textureId);
-    }
-
     m_sizes.emplace_back(textureWidth, textureHeight, textureDepth);
-    m_objFiles.push_back(objFile);
-
-    std::vector<vec3> vertices_ordering;
-    for (const glm::vec<3, GLuint>& data: m_indices[0])
-        vertices_ordering.emplace_back(m_vertices[0][data[0]]); // Vertex coords
 
     m_triangles.emplace_back();
+    vector<Mesh> meshes = m_model.getMeshes();
+    std::vector<vec3> vertices_ordering;
+    for (const Mesh& mesh: meshes) {
+        vector<Vertex> vertices = mesh.getVertices();
+        for (GLuint idx: mesh.getIndices())
+            vertices_ordering.emplace_back(vertices[idx].pos);
+    }
+
     for (size_t i = 0; i < vertices_ordering.size() - 2; i += 3) {
         vec3 p0 = vertices_ordering[i];
         vec3 p1 = vertices_ordering[i + 1];
         vec3 p2 = vertices_ordering[i + 2];
-        m_triangles[0].push_back(Triangle(Vector3(p0.x, p0.y, p0.z),
+        m_triangles.push_back(Triangle(Vector3(p0.x, p0.y, p0.z),
                                           Vector3(p1.x, p1.y, p1.z),
                                           Vector3(p2.x, p2.y, p2.z)));
     }
 }
+
+Sprite::Sprite(const std::string &modelFile, const vec3& size)
+        : Sprite(modelFile, size.x, size.y, size.z) {}
 
 vec3 Sprite::getClip(GLuint idx) noexcept
 {
@@ -73,75 +47,11 @@ vec3 Sprite::getClip(GLuint idx) noexcept
     return m_sizes[idx];
 }
 
-void Sprite::generateDataBuffer()
-{
-    size_t texCount = m_sizes.size();
-    m_vao = new GLuint[texCount];
-
-    glGenVertexArrays(texCount, m_vao);
-    GLuint VBO;
-    GLuint EBO;
-
-    for (GLuint i = 0; i < texCount; ++i) {
-        GLfloat *vertices = &m_vertexData[i][0];
-        glBindVertexArray(m_vao[i]);
-        glGenBuffers(1, &VBO);
-
-//        glGenBuffers(1, &EBO);
-//        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-//        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * m_indices.size(), m_indices.data(),
-//                     GL_STATIC_DRAW);
-
-        size_t vertSize = m_vertexData[i].size() * sizeof(GLfloat);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, vertSize, vertices, GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, // Pos of vertices
-                              8 * sizeof(GLfloat), nullptr);
-        glEnableVertexAttribArray(0);
-
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
-                              8 * sizeof(GLfloat), // UV coords
-                              (void *) (3 * sizeof(GLfloat)));
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
-                              8 * sizeof(GLfloat), // normals
-                              (void *) (5 * sizeof(GLfloat)));
-        glEnableVertexAttribArray(2);
-
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        glDeleteBuffers(1, &VBO);
-    }
-}
-
-void Sprite::freeVBO() noexcept
-{
-    if (m_vao) {
-        glDeleteVertexArrays(m_sizes.size(), m_vao);
-        delete[] m_vao;
-        m_vao = nullptr;
-    }
-
-    m_sizes.clear();
-}
-
 Sprite::~Sprite()
 {
-    freeVBO();
-    for (unsigned int & m_textureId : m_textureIds)
-        glDeleteTextures(1, &m_textureId);
-}
-
-GLuint Sprite::getVAO() const
-{
-    return m_vao[m_textureId];
-}
-
-GLuint Sprite::getIdx() const noexcept
-{
-    return m_textureId;
+//    freeVBO();
+//    for (unsigned int & m_textureId : m_textureIds)
+//        glDeleteTextures(1, &m_textureId);
 }
 
 vec3 Sprite::getCurrentClip() const noexcept
@@ -175,47 +85,37 @@ GLuint Sprite::getSpritesCount() const noexcept
     return m_sizes.size();
 }
 
-GLuint Sprite::getTextureID() const
-{
-    return m_textureIds[m_textureId];
-}
-
 GLuint Sprite::getTriangleCount() const
 {
-    return m_vertexData[m_textureId].size() * 3;
+    return m_triangles.size();
 }
 
-const std::vector<std::vector<vec3>> &Sprite::getVertices() const
+/*const std::vector<vec3> &Sprite::getVertices() const noexcept
 {
-    return m_vertices;
+    return m_vertices[m_textureId];
 }
 
-const std::vector<std::vector<vec2>> &Sprite::getUv() const
+const std::vector<vec2>& Sprite::getUv() const noexcept
 {
-    return m_uv;
+    return m_uv[m_textureId];
 }
 
-const std::vector<std::vector<vec3u>> &Sprite::getIndices() const
+const std::vector<vec3> &Sprite::getNormals() const noexcept
 {
-    return m_indices;
+    return m_normals[m_textureId];
 }
 
-const std::vector<std::vector<vec3>> &Sprite::getNormals() const
+const std::vector<GLfloat>& Sprite::getVertexData() const noexcept
 {
-    return m_normals;
+    return m_vertexData[m_textureId];
 }
 
-const std::vector<std::vector<GLfloat>> &Sprite::getVertexData() const
-{
-    return m_vertexData;
-}
-
-const std::vector<std::string> &Sprite::getObjFiles() const
+const std::vector<std::string>& Sprite::getObjFiles() const
 {
     return m_objFiles;
-}
+}*/
 
-const std::vector<vec3> &Sprite::getSizes() const
+const std::vector<vec3>& Sprite::getSizes() const
 {
     return m_sizes;
 }
@@ -225,7 +125,13 @@ vec3 Sprite::getSize() const noexcept
     return m_sizes[m_textureId];
 }
 
-std::vector<std::vector<Triangle>> Sprite::getTriangles() const
+const std::vector<Triangle>& Sprite::getTriangles() const
 {
     return m_triangles;
 }
+
+void Sprite::draw(ShaderProgram& program) const
+{
+    m_model.draw(program);
+}
+

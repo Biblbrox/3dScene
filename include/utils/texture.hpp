@@ -58,7 +58,7 @@ namespace utils::texture
      * @return
      */
     GLuint loadTexture(const std::string &file,
-                       GLuint *textureWidth, GLuint *textureHeight);
+                       GLuint *textureWidth = nullptr, GLuint *textureHeight = nullptr);
 
     SDL_Surface* loadSurface(const std::string& file);
 

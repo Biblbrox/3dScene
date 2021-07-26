@@ -88,12 +88,10 @@ namespace utils::log {
             std::string date_str = utils::time::get_current_date();
 
             boost::format msg(format);
-            std::initializer_list<char> {(static_cast<void>(
-                    msg % args
-            ), char{}) ...};
+            std::initializer_list<char> {(static_cast<void>(msg % args), char{}) ...};
             std::string message = boost::str(msg);
 
-            message = (boost::format("%s[%s]: %s") % category_str % date_str % message).str();
+            message = (boost::format("%s[%s]: %s\n") % category_str % date_str % message).str();
 
             if (writeFile) {
                 std::shared_ptr<std::ofstream> file(new std::ofstream,
