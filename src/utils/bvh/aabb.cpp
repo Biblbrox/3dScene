@@ -49,7 +49,7 @@ RectPoints3D buildAABB(const std::vector<vec3> &vertices) noexcept
 RectPoints3D
 AABBtoWorldSpace(RectPoints3D rect,
                  const vec3& rot_axis, GLfloat angle,
-                 const vec3& position, const Texture& texture) noexcept
+                 const vec3& position, const TextureBase& texture) noexcept
 {
     vec3 pos = position / texture.getSize();
 
@@ -74,7 +74,7 @@ AABBtoWorldSpace(RectPoints3D rect,
 Tree::Node
 NodeToWorldSpace(Tree::Node node,
                  const vec3& rot_axis, GLfloat angle,
-                 const vec3& position, const Texture& texture) noexcept
+                 const vec3& position, const TextureBase& texture) noexcept
 {
     vec3 pos = position / texture.getSize();
 
@@ -101,7 +101,7 @@ NodeToWorldSpace(Tree::Node node,
 
 RectPoints3D AABBTransform(RectPoints3D rect,
                            const vec3& rot_axis, GLfloat angle,
-                           const vec3& position, const Texture& texture) noexcept
+                           const vec3& position, const TextureBase& texture) noexcept
 {
     vec3 pos = position / texture.getSize();
 

@@ -92,12 +92,10 @@ void render::drawDots(const std::vector<vec3>& dots)
     glDeleteVertexArrays(1, &VAO);
 }
 
-void render::drawTexture(ShaderProgram& program, const Texture &texture,
+void render::drawTexture(ShaderProgram& program, const TextureBase &texture,
                          const glm::vec3& position, GLfloat angle,
                          glm::vec3 rot_axis, GLfloat sc)
 {
-    assert(texture.getVAO() != 0);
-
     vec3 pos = {position.x / (sc * texture.getWidth()),
                 position.y / (sc * texture.getHeight()),
                 position.z / (sc * texture.getDepth())};
@@ -118,11 +116,7 @@ void render::drawTexture(ShaderProgram& program, const Texture &texture,
     if (Config::getVal<bool>("EnableLight"))
         program.setMat3("NormalMatrix", mat3(transpose(inverse(model))));
 
-    glBindTexture(GL_TEXTURE_2D, texture.getTextureID());
-    glBindVertexArray(texture.getVAO());
-    glDrawArrays(GL_TRIANGLES, 0, texture.getTriangleCount());
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindVertexArray(0);
+    texture.draw(program);
 
     translation[3] = vec4(-pos.x,  -pos.y, -pos.z, 1);
     rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), -angle,
@@ -151,12 +145,10 @@ void render::renderTerrain(ShaderProgram& program, const Terrain& terrain)
 }
 
 void render::drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
-                               size_t size, const Texture &texture,
+                               size_t size, const TextureBase &texture,
                                const vec3& position,
                                GLfloat angle, vec3 rot_axis, GLfloat sc)
 {
-    assert(texture.getVAO() != 0);
-
     vec3 pos = {position.x / texture.getWidth(),
                 position.y / texture.getHeight(),
                 position.z / texture.getDepth()};
@@ -202,12 +194,10 @@ void render::drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
 }
 
 void render::drawVerticesVAO(ShaderProgram& program, const GLfloat* points,
-                             size_t size, const Texture &texture,
+                             size_t size, const TextureBase &texture,
                              const vec3& position, GLfloat angle,
                              vec3 rot_axis, GLfloat sc)
 {
-    assert(texture.getVAO() != 0);
-
     glm::vec3 pos = {position.x / texture.getWidth(),
                      position.y / texture.getHeight(),
                      position.z / texture.getDepth()};
@@ -226,9 +216,9 @@ void render::drawVerticesVAO(ShaderProgram& program, const GLfloat* points,
     mat4 scaling = glm::scale(mat4(1.f), scale);
     program.leftMult("ModelMatrix", scaling * rotation * translation);
 
-    glBindVertexArray(texture.getVAO());
-    glDrawArrays(GL_TRIANGLES, 0, texture.getTriangleCount());
-    glBindVertexArray(0);
+//    glBindVertexArray(texture.getVAO());
+//    glDrawArrays(GL_TRIANGLES, 0, texture.getTriangleCount());
+//    glBindVertexArray(0);
 
     translation[3] = vec4(-pos.x,  -pos.y, -pos.z, 1);
     rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), -angle,
@@ -236,43 +226,3 @@ void render::drawVerticesVAO(ShaderProgram& program, const GLfloat* points,
     scaling = glm::scale(mat4(1.f), 1 / scale);
     program.leftMult("ModelMatrix", translation * rotation * scaling);
 }
-
-
-/*void render::drawPolygonModel(ShaderProgram& program, const Texture &texture,
-                              const glm::vec3& position, GLfloat angle,
-                              glm::vec3 rot_axis)
-{
-    assert(texture.getVAO() != 0);
-
-    glm::vec3 pos = {2.f * position.x / texture.getWidth(),
-                     2.f * position.y / texture.getHeight(),
-                     2.f * position.z / texture.getDepth()};
-    const GLfloat half = 1.f;
-    const GLfloat centerX = pos.x + half;
-    const GLfloat centerY = pos.y + half;
-    const GLfloat centerZ = pos.z + half;
-
-    const glm::vec3 scale = glm::vec3(texture.getWidth(), texture.getHeight(),
-                                      texture.getDepth());
-
-    mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
-                                  rot_axis);
-    mat4 translation = translate(mat4(1.f), pos);
-    mat4 scaling = glm::scale(mat4(1.f), scale);
-    program.leftMult("ModelMatrix", scaling * rotation * translation);
-    program.updateMat4("ModelMatrix");
-
-//    glBindTexture(GL_TEXTURE_2D, texture.getTextureID());
-    glBindVertexArray(texture.getVAO());
-    glDrawArrays(GL_TRIANGLES, 0, texture.getTriangleCount());
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindVertexArray(0);
-
-    translation[3] = glm::vec4(-pos.x,  -pos.y, -pos.z, 1);
-    rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), -angle,
-                             rot_axis);
-    scaling = glm::scale(mat4(1.f), 1 / scale);
-    program.leftMult("ModelMatrix", translation * rotation * scaling);
-    program.updateMat4("ModelMatrix");
-}
- */

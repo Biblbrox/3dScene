@@ -1,24 +1,15 @@
 #include <memory>
 #include <boost/format.hpp>
 #include <imgui.h>
+#include <filesystem>
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
-
-#include <bvh/bvh.hpp>
-#include <bvh/vector.hpp>
-#include <bvh/triangle.hpp>
-#include <bvh/ray.hpp>
-#include <bvh/sweep_sah_builder.hpp>
-#include <bvh/single_ray_traverser.hpp>
-#include <bvh/primitive_intersectors.hpp>
 
 #include "base.hpp"
 #include "world.hpp"
 #include "config.hpp"
 #include "game.hpp"
 #include "utils/fs.hpp"
-#include "utils/bvh/aabb.hpp"
-#include "utils/bvh/obb.hpp"
 #include "utils/math.hpp"
 #include "utils/datastructs.hpp"
 #include "utils/collision.hpp"
@@ -82,8 +73,6 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("CheckCollision", false, "bool");
     if (!Config::hasKey("TreeLevelShow"))
         Config::addVal("TreeLevelShow", 0, "int");
-    if (!Config::hasKey("MinRectSize"))
-        Config::addVal("MinRectSize", glm::vec3(0.0001f), "vec3");
     if (!Config::hasKey("PrismFreq"))
         Config::addVal("PrismFreq", glm::vec2(90.f, 45.f), "vec2");
     if (!Config::hasKey("PrismStartAngle"))
@@ -106,12 +95,6 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("MouseSens", 1.f, "float");
     if (!Config::hasKey("Theme"))
         Config::addVal("Theme", 0, "int");
-    if (!Config::hasKey("CellColor"))
-        Config::addVal("CellColor", glm::vec4(1.f, 0.2f, 0.f, 1.f), "vec4");
-    if (!Config::hasKey("CellBorderColor"))
-        Config::addVal("CellBorderColor", glm::vec4(1.f, 1.f, 1.f, 1.f), "vec4");
-    if (!Config::hasKey("ColoredLife"))
-        Config::addVal("ColoredLife", false, "bool");
     if (!Config::hasKey("ShowCameraPos"))
         Config::addVal("ShowCameraPos", false, "bool");
     if (!Config::hasKey("EnableLight"))
@@ -280,7 +263,7 @@ void World::init_terrain()
 
     terrainComp->terrain = std::make_shared<Terrain>
             (1000, 700, getResourcePath("terrain_height_map.jpg"),
-             getResourcePath("rock_2_4w.jpg"), vec3(2000.f, 1.f, 2000.f));
+             getResourcePath("rock_2_4w.jpg"), vec3(2000.f, 100.f, 2000.f));
 }
 
 
@@ -342,6 +325,8 @@ void World::init_scene()
 void World::deallocate_scene()
 {
     auto scene_en = m_entities[m_sceneID];
+    if (!scene_en)
+        return;
     auto scene = scene_en->getComponent<SceneComponent>();
     if (scene->sceneBuffer != 0)
         glDeleteFramebuffers(1, &scene->sceneBuffer);
@@ -379,13 +364,11 @@ void World::init_sprites()
             lidarComp->density);
 
     utils::Random rand;
-    auto min_rect = Config::getVal<glm::vec3>("MinRectSize");
 
     auto terrainEn = m_entities[m_terrainID];
     auto terrain = terrainEn->getComponent<TerrainComponent>()->terrain;
 
     GLfloat start_x, start_z;
-//    start_x = start_z = terrain->getWorldWidth() / 2.f;
     start_x = start_z = 0.f;
 
     auto camera = FpsCamera::getInstance();
@@ -398,22 +381,11 @@ void World::init_sprites()
     vec3 house_size = {1.f, 1.f, 1.f};
     std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite, man_sprite,
             chair_sprite;
-    car_sprite = std::make_shared<Sprite>();
-    palm_sprite = std::make_shared<Sprite>();
-    house_sprite = std::make_shared<Sprite>();
-    man_sprite = std::make_shared<Sprite>();
-    chair_sprite = std::make_shared<Sprite>();
-    car_sprite->addMesh(getResourcePath("ford_focus2.obj"), car_size);
-    car_sprite->generateDataBuffer();
-    palm_sprite->addMesh(getResourcePath("lowpolypalm.obj"), palm_size);
-    palm_sprite->generateDataBuffer();
-    house_sprite->addMesh(getResourcePath("spah9lvl.obj"), house_size);
-    house_sprite->generateDataBuffer();
-    man_sprite->addMesh(getResourcePath("human_female.obj"), man_size);
-    man_sprite->generateDataBuffer();
-    chair_sprite->addMesh(getResourcePath("Wooden_Chair/Wooden_Chair.obj"),
-                          chair_size);
-    chair_sprite->generateDataBuffer();
+//    car_sprite = make_shared<Sprite>(getResourcePath("ford_focus2.obj"), car_size);
+//    palm_sprite = make_shared<Sprite>(getResourcePath("lowpolypalm.obj"), palm_size);
+//    house_sprite = make_shared<Sprite>(getResourcePath("spah9lvl.obj"), house_size);
+    man_sprite = make_shared<Sprite>(getModelPath("police/police.obj"), man_size);
+    chair_sprite = make_shared<Sprite>(getModelPath("Wooden_Chair/Wooden_Chair.obj"), chair_size);
 
     auto chair_en = createEntity(unique_id());
     chair_en->activate();
@@ -425,8 +397,8 @@ void World::init_sprites()
     pos_chair->pos.x = 40.f + start_x;
     pos_chair->pos.z = 400.f + start_z;
     pos_chair->pos.y = terrain->getAltitude(
-            {pos_chair->pos.x, pos_chair->pos.z});
-    auto triangles = chair_sprite->getTriangles()[0];
+            {pos_chair->pos.x, pos_chair->pos.z}) + 40.f;
+    auto triangles = chair_sprite->getTriangles();
     mat4 chair_transform = math::createTransform(pos_chair->pos, 0,
                                                  {0.f, 1.f, 1.f}, chair_size);
     triangles = math::transformTriangles(triangles, chair_transform);
@@ -449,8 +421,8 @@ void World::init_sprites()
     auto pos_man = man_en->getComponent<PositionComponent>();
     pos_man->pos.x = 40.f + start_x;
     pos_man->pos.z = 300 + start_z;
-    pos_man->pos.y = terrain->getAltitude({pos_man->pos.x, pos_man->pos.z});
-    triangles = man_sprite->getTriangles()[0];
+    pos_man->pos.y = terrain->getAltitude({pos_man->pos.x, pos_man->pos.z}) + 60.f;
+    triangles = man_sprite->getTriangles();
     mat4 man_transform = math::createTransform(pos_man->pos, 0, {0.f, 1.f, 1.f},
                                                man_size);
     triangles = math::transformTriangles(triangles, man_transform);
@@ -465,17 +437,16 @@ void World::init_sprites()
 
     auto light_en = createEntity(unique_id());
     light_en->activate();
-    light_en->addComponents<LightComponent, SpriteComponent>();
+    light_en->addComponent<LightComponent>();
 
     auto light_comp = light_en->getComponent<LightComponent>();
     light_comp->pos = camera->getPos();
-    light_comp->ambient = vec3(0.1f);
+    light_comp->ambient = vec3(0.3f);
     light_comp->diffuse = vec3(0.5f);
     light_comp->specular = vec3(0.5f);
-    std::shared_ptr<Sprite> light_sprite = std::make_shared<Sprite>();
-    light_sprite->addMesh(getResourcePath("DiscoBall.obj"), 2.f, 2.f, 2.f);
-    light_sprite->generateDataBuffer();
-    light_en->getComponent<SpriteComponent>()->sprite = light_sprite;
+//    std::shared_ptr<Sprite> light_sprite =
+//            make_shared<Sprite>(getResourcePath("DiscoBall.obj"), 2.f, 2.f, 2.f);
+//    light_en->getComponent<SpriteComponent>()->sprite = light_sprite;
 
     Config::addVal("LightPos", camera->getPos(), "vec3");
 
@@ -491,7 +462,7 @@ void World::init_sprites()
 //                      );
 //                  });
 
-    for (size_t i = 0; i < 5; ++i) {
+    /*for (size_t i = 0; i < 5; ++i) {
         auto left = createEntity(unique_id());
         left->activate();
         left->addComponents<SpriteComponent, PositionComponent,
@@ -502,7 +473,7 @@ void World::init_sprites()
         pos_left->pos.x = i * 30.f + start_x;
         pos_left->pos.z = 0 + start_z;
         pos_left->pos.y = terrain->getAltitude({pos_left->pos.x, pos_left->pos.z});
-        triangles = palm_sprite->getTriangles()[0];
+        triangles = palm_sprite->getTriangles();
         mat4 palm_transform = math::createTransform(pos_left->pos, pos_left->angle, pos_left->rot_axis,
                                                     palm_size);
         triangles = math::transformTriangles(triangles, palm_transform);
@@ -525,7 +496,7 @@ void World::init_sprites()
         pos_right->pos.x = i * 30.f + start_x;
         pos_right->pos.z = 30.f + start_z;
         pos_right->pos.y = terrain->getAltitude({pos_right->pos.x, pos_right->pos.z});
-        triangles = palm_sprite->getTriangles()[0];
+        triangles = palm_sprite->getTriangles();
         palm_transform = math::createTransform(pos_right->pos, pos_right->angle, pos_right->rot_axis,
                                                palm_size);
         triangles = math::transformTriangles(triangles, palm_transform);
@@ -551,7 +522,7 @@ void World::init_sprites()
         car_pos->pos.y = terrain->getAltitude({car_pos->pos.x, car_pos->pos.z});
         car_pos->angle = -glm::half_pi<GLfloat>();
         car_pos->rot_axis = vec3(0.f, 1.f, 0.f);
-        triangles = palm_sprite->getTriangles()[0];
+        triangles = palm_sprite->getTriangles();
         auto car_transform = math::createTransform(car_pos->pos, car_pos->angle,
                                                    car_pos->rot_axis, car_size);
         triangles = math::transformTriangles(triangles, car_transform);
@@ -577,7 +548,7 @@ void World::init_sprites()
         house_pos->pos.y = terrain->getAltitude({house_pos->pos.x, house_pos->pos.z});
         house_pos->angle = -glm::half_pi<GLfloat>();
         house_pos->rot_axis = vec3(0.f, 1.f, 0.f);
-        triangles = palm_sprite->getTriangles()[0];
+        triangles = palm_sprite->getTriangles();
         auto house_transform = math::createTransform(house_pos->pos, house_pos->angle,
                                                      house_pos->rot_axis, house_size);
         triangles = math::transformTriangles(triangles, house_transform);
@@ -589,6 +560,6 @@ void World::init_sprites()
         material->diffuse = vec3(1.f);
         material->specular = vec3(0.5f);
         material->shininess = 32.f;
-    }
+    }*/
 }
 

@@ -133,7 +133,8 @@ void utils::fs::saveSimJson(const std::string &file_name,
                 comp_obj["SpriteComponent"] = json::array();
 
                 json files_obj = json::object();
-                files_obj["obj_files"] = json(sprite->getObjFiles());
+                // TODO: fix this
+//                files_obj["obj_files"] = json(sprite->getObjFiles());
                 comp_obj["SpriteComponent"].push_back(files_obj);
 
                 json sizes_obj = json::object();
@@ -265,10 +266,10 @@ utils::fs::loadSimJson(const std::string &file_name)
 
                 entity.addComponent<SpriteComponent>();
                 auto sprite_comp = entity.getComponent<SpriteComponent>();
-                sprite_comp->sprite = std::make_shared<Sprite>();
-                for (size_t i = 0; i < obj_files.size(); ++i)
-                    sprite_comp->sprite->addMesh(obj_files[i], sizes[i]);
-                sprite_comp->sprite->generateDataBuffer();
+//                sprite_comp->sprite = std::make_shared<Sprite>();
+                for (size_t i = 0; i < obj_files.size(); ++i);
+//                    sprite_comp->sprite->addMesh(obj_files[i], sizes[i]);
+//                sprite_comp->sprite->generateDataBuffer();
             } else if (comp.contains("BVHComponent")) {
                 entity.addComponent<BVHComponent>();
             } else if (comp.contains("SceneComponent")) {
@@ -343,7 +344,7 @@ utils::fs::loadSimJson(const std::string &file_name)
         if (bvh) {
             auto sprite = en.getComponent<SpriteComponent>()->sprite;
             auto pos = en.getComponent<PositionComponent>();
-            auto triangles = sprite->getTriangles()[0];
+            auto triangles = sprite->getTriangles();
             mat4 transform = math::createTransform(pos->pos, pos->angle, pos->rot_axis, sprite->getSize());
             triangles = math::transformTriangles(triangles, transform);
             bvh->bvh_tree = coll::buildBVH(triangles);

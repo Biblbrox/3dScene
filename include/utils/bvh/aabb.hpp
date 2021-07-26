@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "utils/datastructs.hpp"
-#include "render/texture.hpp"
+#include "render/texturebase.hpp"
 
 using utils::RectPoints3D;
 using std::minmax;
@@ -32,12 +32,12 @@ RectPoints3D
 AABBtoWorldSpace(utils::RectPoints3D rect,
                  const glm::vec3 &rot_axis, GLfloat angle,
                  const glm::vec3 &position,
-                 const Texture &texture) noexcept;
+                 const TextureBase &texture) noexcept;
 
 RectPoints3D
 AABBTransform(RectPoints3D rect,
               const vec3 &rot_axis, GLfloat angle,
-              const vec3 &position, const Texture &texture) noexcept;
+              const vec3 &position, const TextureBase &texture) noexcept;
 
 constexpr RectPoints3D
 rebuildAABBinWorldSpace(const RectPoints3D &rect) noexcept

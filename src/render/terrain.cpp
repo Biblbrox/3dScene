@@ -3,11 +3,13 @@
 
 #include "render/terrain.hpp"
 #include "utils/texture.hpp"
+#include "utils/math.hpp"
 
 using utils::texture::loadSurface;
 using std::vector;
 using std::pair;
 using utils::log::Logger;
+using math::barry_centric;
 
 Terrain::Terrain(GLuint width, GLuint height,
                  const std::string& height_image,
@@ -57,7 +59,7 @@ void Terrain::generateMesh()
         for (int j = 0; j < m_depth; ++j) {
             GLfloat scale_x = float(j) / float(m_depth - 1);
             GLfloat scale_z = float(i) / float(m_width - 1);
-            GLfloat h = m_heightMap.at(i).at(j);
+            GLfloat h = m_heightMap.at(j).at(i);
 
             vec3 vertex = {-0.5f + scale_x, h, -0.5f + scale_z};
             // Need to repeat texture every 10 rows and 10 columns
@@ -71,8 +73,6 @@ void Terrain::generateMesh()
 
 void Terrain::computeIndices()
 {
-//    size_t min_col = 0, min_row = 0;
-//    size_t max_row = m_depth - 2, max_col = m_width - 2;
     size_t prim_restart_idx = m_width * m_depth;
 
     for (size_t i = 0; i < m_width - 1; ++i) {
@@ -241,71 +241,35 @@ GLfloat Terrain::getWorldDepth() const
 
 GLfloat Terrain::getAltitude(const glm::vec2 &point) const
 {
-    GLfloat z = point.y;
-    GLfloat x = point.x;
+    GLfloat ter_x = point.x / m_scale.x + 0.5f;
+    GLfloat ter_z = point.y / m_scale.z + 0.5f;
 
-    if (x > m_width / 2.f || z > m_depth / 2.f
-        || x < -m_width / 2.f || z < -m_depth / 2.f)
+    GLfloat grid_size = 1.f / (float)(m_heightMap.size() - 1);
+
+    GLint grid_x =  std::floor(ter_x / grid_size);
+    GLint grid_z =  std::floor(ter_z / grid_size);
+
+    if (grid_x >= m_heightMap.size() - 1 || grid_z >= m_heightMap.size() - 1
+        || grid_x < 0 || grid_z < 0)
         return 0;
 
-    /* Find offsets of the coords into a terrain quad */
-    GLfloat m_step = m_scale.x;
-    float offx = fmodf(x, m_step);
-    float offz = fmodf(z, m_step);
+    GLfloat x_cord = fmodf(ter_x, grid_size) / grid_size;
+    GLfloat z_cord = fmodf(ter_z, grid_size) / grid_size;
 
-    /* Compute the plane equation for the triangle we are in */
-    glm::vec3 p1, p2, p3;
-    float A, B, C, D;
-    if (offx + offz <= m_step) {
-        /* First triangle in the quad */
-        p1.x = trunc(x / m_step);
-        p1.z = trunc(z / m_step);
-        p1.y = m_heightMap[p1.x][p1.z];
-
-        p2.x = trunc(x /m_step) + 1;
-        p2.z = trunc(z /m_step);
-        p2.y = m_heightMap[p2.x][p2.z];
-
-        p3.x = trunc(x / m_step);
-        p3.z = trunc(z / m_step) + 1;
-        p3.y = m_heightMap[p3.x][p3.z];
+    GLfloat height;
+    if (x_cord <= (1 - z_cord)) {
+        height = barry_centric({0.f, m_heightMap[grid_x][grid_z], 0.f},
+                               {1.f, m_heightMap[grid_x + 1][grid_z], 0.f},
+                               {0.f, m_heightMap[grid_x][grid_z + 1], 1.f},
+                               {x_cord, z_cord});
     } else {
-        /* Second triangle in the quad */
-        p1.x = trunc(x / m_step) + 1;
-        p1.z = trunc(z / m_step);
-        p1.y = m_heightMap[p1.x][p1.z];
-
-        p2.x = trunc(x / m_step);
-        p2.z = trunc(z / m_step) + 1;
-        p2.y = m_heightMap[p2.x][p2.z];
-
-        p3.x = trunc(x / m_step) + 1;
-        p3.z = trunc(z / m_step) + 1;
-        p3.y = m_heightMap[p3.x][p3.z];
-
+        height = barry_centric({1.f, m_heightMap[grid_x + 1][grid_z], 0.f},
+                               {1.f, m_heightMap[grid_x + 1][grid_z + 1], 1.f},
+                               {0.f, m_heightMap[grid_x][grid_z + 1], 1.f},
+                               {x_cord, z_cord});
     }
 
-    /* Above we compute X,Z coords as vertex indices so we could use TERRAIN()
-     * to compute heights at specific vertices, but to apply the plane equation
-     * we need to turn the coordinates into world units
-     */
-    p1.x *= m_step;
-    p1.z *= m_step;
-    p2.x *= m_step;
-    p2.z *= m_step;
-    p3.x *= m_step;
-    p3.z *= m_step;
-
-    /* FIXME: we probably want to pre-compute plane equations for each
-     * triangle in the terrain rather than recomputing them all the time
-     */
-    A = (p2.y - p1.y) * (p3.z - p1.z) - (p3.y - p1.y) * (p2.z - p1.z);
-    B = (p2.z - p1.z) * (p3.x - p1.x) - (p3.z - p1.z) * (p2.x - p1.x);
-    C = (p2.x - p1.x) * (p3.y - p1.y) - (p3.x - p1.x) * (p2.y - p1.y);
-    D = -(A * p1.x + B * p1.y + C * p1.z);
-
-    /* Use the plane equation to find Y given (X,Z) */
-    return (-D - C * z - A * x) / B;
+    return height * m_scale.y;
 }
 
 const std::vector<std::vector<vec3>> &Terrain::getVertices() const

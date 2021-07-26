@@ -29,7 +29,7 @@ buildOBB(const std::vector<vec3> &mesh_vertices) noexcept;
 RectPoints3D
 OBBtoWorldSpace(RectPoints3D rect,
                 const glm::vec3 &rot_axis, GLfloat angle,
-                const glm::vec3 &position, const Texture &texture) noexcept;
+                const glm::vec3 &position, const TextureBase &texture) noexcept;
 
 
 #endif //OBB_HPP

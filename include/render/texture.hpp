@@ -1,44 +1,14 @@
 #ifndef TEXTURE_HPP
 #define TEXTURE_HPP
 
-#include <string>
 #include <GL/glew.h>
-#include <glm/vec3.hpp>
+#include <string>
 
-using glm::vec3;
-
-/**
- * Texture class.
- * This is only base methods. You can't create instance of this class
- */
-class Texture
+struct Texture
 {
-public:
-    virtual ~Texture();
-
-    virtual GLuint getTextureID() const;
-
-    virtual GLuint getWidth() const noexcept;
-    virtual GLuint getHeight() const noexcept;
-    virtual GLuint getDepth() const noexcept;
-    virtual vec3 getSize() const noexcept;
-
-    virtual GLuint getTriangleCount() const = 0;
-
-    virtual GLuint getVAO() const = 0;
-    virtual void generateDataBuffer() = 0;
-
-    virtual void freeTexture() final;
-    virtual void freeVBO() noexcept = 0;
-
-protected:
-    explicit Texture();
-
-    GLuint m_textureId;
-
-    GLuint m_textureWidth;
-    GLuint m_textureHeight;
-    GLuint m_textureDepth;
+    GLuint id;
+    std::string type;
+    std::string path;
 };
 
 #endif //TEXTURE_HPP

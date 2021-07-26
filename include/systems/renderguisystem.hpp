@@ -6,14 +6,13 @@
 #include <fstream>
 
 #include "view/arcballcamera.hpp"
-#include "components/textcomponent.hpp"
 #include "ecs/system.hpp"
 #include "components/positioncomponent.hpp"
 
 /**
  * System that can handle level surface
  */
-class RenderGuiSystem : public ecs::System<PositionComponent, TextComponent>
+class RenderGuiSystem : public ecs::System<PositionComponent>
 {
 public:
     explicit RenderGuiSystem();

@@ -3,15 +3,16 @@
 #include <glm/vec4.hpp>
 #include <GL/glew.h>
 #include <Eigen/Core>
-#include <pcl/pcl_base.h>
-#include <pcl/features/moment_of_inertia_estimation.h>
+//#include <pcl/pcl_base.h>
+//#include <pcl/features/moment_of_inertia_estimation.h>
 #include <vector>
-#include <pcl/io/pcd_io.h>
+/*#include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/visualization/common/shapes.h>
 #include <pcl/visualization/cloud_viewer.h>
+ */
 
-#include "render/texture.hpp"
+#include "render/texturebase.hpp"
 #include "utils/bvh/obb.hpp"
 #include "utils/datastructs.hpp"
 #include "utils/math.hpp"
@@ -25,7 +26,7 @@ using glm::mat3;
 RectPoints3D
 OBBtoWorldSpace(RectPoints3D rect,
                       const glm::vec3& rot_axis, GLfloat angle,
-                      const glm::vec3& position, const Texture& texture) noexcept
+                      const glm::vec3& position, const TextureBase& texture) noexcept
 {
     vec3 pos = position / texture.getSize();
 
@@ -113,7 +114,7 @@ RectPoints3D buildOBB(const std::vector<vec3> &vertices) noexcept
 //    rect.g = pos + r*ext[0] + u*ext[1] + f*ext[2];
 //    rect.k = pos - r*ext[0] + u*ext[1] + f*ext[2];
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+    /*pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
 
     for(auto v: vertices) {
         cloud->push_back(pcl::PointXYZ(v.x, v.y, v.z));
@@ -188,7 +189,7 @@ RectPoints3D buildOBB(const std::vector<vec3> &vertices) noexcept
     vec3 g = {min_x, max_y, max_z};
     vec3 k = {min_x, min_y, max_z};
 
-    return {a, b, c, d, e, f, g, k};
+    return {a, b, c, d, e, f, g, k};*/
 
 //    return rect;
 }

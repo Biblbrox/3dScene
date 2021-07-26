@@ -77,7 +77,7 @@ utils::texture::loadObj(const std::string& file,
     obj.close();
 
     std::vector<GLfloat> res;
-    for (const glm::vec<3, GLuint>& data: indices) {
+    for (const vec3u& data: indices) {
         res.emplace_back(vertices[data[0]].x); // Vertex coords
         res.emplace_back(vertices[data[0]].y);
         res.emplace_back(vertices[data[0]].z);
