@@ -27,6 +27,7 @@ public:
 
     void useScreenProgram();
     void useFramebufferProgram();
+    void useSkyboxProgram();
 
     /**
      * Init programs

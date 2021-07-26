@@ -37,12 +37,12 @@ SceneProgram::SceneProgram()
 void SceneProgram::initPrograms()
 {
     // Create framebuffer program
-    addProgram("framebuffer", "framebuffer/Scene.glvs",
-               "framebuffer/Scene.glfs");
+    addProgram("framebuffer", "framebuffer/Scene.glvs", "framebuffer/Scene.glfs");
 
     // Create screen program
-    addProgram("screen", "screen/Scene.glvs",
-               "screen/Scene.glfs");
+    addProgram("screen", "screen/Scene.glvs", "screen/Scene.glfs");
+
+    addProgram("skybox", "skybox/Scene.glvs", "skybox/Scene.glfs");
 
     useFramebufferProgram();
 }
@@ -73,5 +73,13 @@ void SceneProgram::useFramebufferProgram()
     if (m_programID != m_programs["framebuffer"]) {
         glUseProgram(m_programs["framebuffer"]);
         m_programID = m_programs["framebuffer"];
+    }
+}
+
+void SceneProgram::useSkyboxProgram()
+{
+    if (m_programID != m_programs["skybox"]) {
+        glUseProgram(m_programs["skybox"]);
+        m_programID = m_programs["skybox"];
     }
 }

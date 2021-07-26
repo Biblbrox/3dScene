@@ -60,7 +60,9 @@ namespace utils::texture
     GLuint loadTexture(const std::string &file,
                        GLuint *textureWidth = nullptr, GLuint *textureHeight = nullptr);
 
-    SDL_Surface* loadSurface(const std::string& file);
+    GLuint loadCubemap(const std::vector<std::string>& faces);
+
+    SDL_Surface* loadSurface(const std::string& file, bool flip = true);
 
     /**
      * Return Surface format
@@ -82,6 +84,8 @@ namespace utils::texture
                 format = GL_RGB;
             else
                 format = GL_BGR;
+        } else if (color_num == 1) {
+            format = GL_RG8;
         }
 
         return format;

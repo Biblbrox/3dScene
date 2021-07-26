@@ -29,10 +29,11 @@ class Sprite: public TextureBase
 public:
     explicit Sprite(const std::string& objFile,
                     GLfloat textureWidth,
-                    GLfloat textureHeight, GLfloat textureDepth);
+                    GLfloat textureHeight, GLfloat textureDepth,
+                    bool flip_uv = true);
 
     explicit Sprite(const std::string& objFile,
-                    const vec3& size);
+                    const vec3& size, bool flip_uv = true);
     ~Sprite();
 //    Sprite(Sprite&& en) = default;
 //    Sprite(Sprite& en) = default;
