@@ -18,9 +18,9 @@ using utils::log::Logger;
 using utils::log::Category;
 using boost::format;
 
-Model::Model(const std::string& path)
+Model::Model(const std::string& path, bool flip_uv)
 {
-    loadModel(path);
+    loadModel(path, flip_uv);
 }
 
 void Model::draw(ShaderProgram& program) const
@@ -29,7 +29,7 @@ void Model::draw(ShaderProgram& program) const
         mesh.draw(program);
 }
 
-void Model::loadModel(const std::string& path)
+void Model::loadModel(const std::string& path, bool flip_uv)
 {
     Assimp::Importer import;
 
@@ -38,7 +38,8 @@ void Model::loadModel(const std::string& path)
     if (std::filesystem::path(model_path).is_relative())
         model_path = canonical(absolute(model_path));
 
-    GLuint import_params = aiProcess_Triangulate | aiProcess_FlipUVs;
+    GLuint import_params = aiProcess_Triangulate
+                           | (flip_uv ? aiProcess_FlipUVs : 1ul);
     const aiScene* scene = import.ReadFile(model_path, import_params);
     if (!scene || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || !scene->mRootNode) {
         Logger::write("assimp.log", Category::INITIALIZATION_ERROR,

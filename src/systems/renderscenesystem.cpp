@@ -10,6 +10,7 @@
 #include "components/scenecomponent.hpp"
 #include "components/terraincomponent.hpp"
 #include "components/lightcomponent.hpp"
+#include "components/skyboxcomponent.hpp"
 #include "utils/bvh/aabb.hpp"
 #include "render/render.hpp"
 #include "utils/logger.hpp"
@@ -26,6 +27,7 @@ using utils::log::Logger;
 using boost::format;
 using utils::log::program_log_file_name;
 using utils::log::Category;
+using glm::mat3;
 using glm::mat4;
 using glm::vec3;
 using glm::scale;
@@ -142,6 +144,22 @@ void RenderSceneSystem::drawSprites()
                                 posComp->rot_axis);
         }
     }
+
+    program->useFramebufferProgram();
+    auto proj = program->getMat4("ProjectionMatrix");
+    auto view = program->getMat4("ViewMatrix");
+
+    auto skyboxEn = getEntitiesByTag<SkyboxComponent>().begin()->second;
+    auto skybox = skyboxEn->getComponent<SkyboxComponent>();
+    glDepthFunc(GL_LEQUAL);
+    program->useSkyboxProgram();
+    program->setMat4("ProjectionMatrix", proj);
+    program->setMat4("ViewMatrix", mat4(mat3(view)));
+// ... set view and projection matrix
+    glBindVertexArray(skybox->vao);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->skybox_id);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glDepthFunc(GL_LESS);
 
     if (GLenum error = glGetError(); error != GL_NO_ERROR)
         throw GLException((format("\n\tRender while drawing sprites: %1%\n")

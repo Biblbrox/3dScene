@@ -110,13 +110,16 @@ utils::texture::loadObj(const std::string& file,
     return res;
 }
 
-SDL_Surface* utils::texture::loadSurface(const std::string& file)
+SDL_Surface* utils::texture::loadSurface(const std::string& file, bool flip)
 {
     SDL_Surface* surface = IMG_Load(file.c_str());
     if (!surface)
         throw SdlException((format("Unable to load image: %s"
                                    ". SDL Error: %s\n")
                             % file % SDL_GetError()).str());
+
+    if (!flip)
+        return surface;
 
     SDL_Surface* flipped = flipVertically(surface);
     SDL_FreeSurface(surface);
@@ -223,9 +226,40 @@ GLuint utils::texture::genRbo(GLuint width, GLuint height,
         glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples,
                                          GL_DEPTH24_STENCIL8, width, height);
     else
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width,
-                              height);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     return rbo;
+}
+
+GLuint utils::texture::loadCubemap(const vector<std::string>& faces)
+{
+    using namespace utils::texture;
+
+    GLuint cubemap;
+    glGenTextures(1, &cubemap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
+
+    for (size_t i = 0; i < faces.size(); ++i) {
+        SDL_Surface* surface = loadSurface(faces[i], false);
+
+        GLenum texture_format = getSurfaceFormatInfo(*surface);
+
+        GLuint tw = surface->w;
+        GLuint th = surface->h;
+
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                     0, GL_RGB, tw, th, 0, texture_format,
+                     GL_UNSIGNED_BYTE, surface->pixels);
+
+        SDL_FreeSurface(surface);
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return cubemap;
 }

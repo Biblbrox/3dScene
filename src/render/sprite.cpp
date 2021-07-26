@@ -14,8 +14,9 @@ using boost::format;
 using std::vector;
 
 Sprite::Sprite(const std::string &modelFile, GLfloat textureWidth,
-               GLfloat textureHeight, GLfloat textureDepth)
-        : m_model(modelFile)
+               GLfloat textureHeight, GLfloat textureDepth,
+               bool flip_uv)
+        : m_model(modelFile, flip_uv)
 {
     m_sizes.emplace_back(textureWidth, textureHeight, textureDepth);
 
@@ -38,8 +39,9 @@ Sprite::Sprite(const std::string &modelFile, GLfloat textureWidth,
     }
 }
 
-Sprite::Sprite(const std::string &modelFile, const vec3& size)
-        : Sprite(modelFile, size.x, size.y, size.z) {}
+Sprite::Sprite(const std::string &modelFile, const vec3& size,
+               bool flip_uv)
+        : Sprite(modelFile, size.x, size.y, size.z, flip_uv) {}
 
 vec3 Sprite::getClip(GLuint idx) noexcept
 {

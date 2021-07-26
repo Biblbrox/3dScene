@@ -42,6 +42,7 @@ private:
     void init_scene();
     void init_terrain();
     void init_imgui();
+    void init_skybox();
     void init_from_file(const std::string& json_file);
 
     void deallocate_scene();

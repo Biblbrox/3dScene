@@ -23,6 +23,7 @@
 #include "components/materialcomponent.hpp"
 #include "components/selectablecomponent.hpp"
 #include "components/terraincomponent.hpp"
+#include "components/skyboxcomponent.hpp"
 #include "systems/renderscenesystem.hpp"
 #include "systems/renderguisystem.hpp"
 #include "systems/keyboardsystem.hpp"
@@ -192,6 +193,7 @@ void World::init()
     init_terrain();
     init_sprites();
     init_scene();
+    init_skybox();
 
     m_wasInit = true;
 }
@@ -383,7 +385,8 @@ void World::init_sprites()
             chair_sprite;
 //    car_sprite = make_shared<Sprite>(getResourcePath("ford_focus2.obj"), car_size);
 //    palm_sprite = make_shared<Sprite>(getResourcePath("lowpolypalm.obj"), palm_size);
-//    house_sprite = make_shared<Sprite>(getResourcePath("spah9lvl.obj"), house_size);
+    house_sprite = make_shared<Sprite>(getModelPath("Soviet_Panel/spah9lvl.obj"), house_size,
+                                       false);
     man_sprite = make_shared<Sprite>(getModelPath("police/police.obj"), man_size);
     chair_sprite = make_shared<Sprite>(getModelPath("Wooden_Chair/Wooden_Chair.obj"), chair_size);
 
@@ -462,8 +465,8 @@ void World::init_sprites()
 //                      );
 //                  });
 
-    /*for (size_t i = 0; i < 5; ++i) {
-        auto left = createEntity(unique_id());
+    for (size_t i = 0; i < 5; ++i) {
+        /*auto left = createEntity(unique_id());
         left->activate();
         left->addComponents<SpriteComponent, PositionComponent,
                 SelectableComponent, BVHComponent, MaterialComponent>();
@@ -536,6 +539,7 @@ void World::init_sprites()
         material->shininess = 32.f;
 
 
+        */
         auto house = createEntity(unique_id());
         house->activate();
         house->addComponents<SpriteComponent, PositionComponent,
@@ -548,7 +552,7 @@ void World::init_sprites()
         house_pos->pos.y = terrain->getAltitude({house_pos->pos.x, house_pos->pos.z});
         house_pos->angle = -glm::half_pi<GLfloat>();
         house_pos->rot_axis = vec3(0.f, 1.f, 0.f);
-        triangles = palm_sprite->getTriangles();
+        triangles = house_sprite->getTriangles();
         auto house_transform = math::createTransform(house_pos->pos, house_pos->angle,
                                                      house_pos->rot_axis, house_size);
         triangles = math::transformTriangles(triangles, house_transform);
@@ -560,6 +564,81 @@ void World::init_sprites()
         material->diffuse = vec3(1.f);
         material->specular = vec3(0.5f);
         material->shininess = 32.f;
-    }*/
+    }
+}
+
+void World::init_skybox()
+{
+    float skyboxVertices[] = {
+            // positions
+            -1.0f,  1.0f, -1.0f,
+            -1.0f, -1.0f, -1.0f,
+            1.0f, -1.0f, -1.0f,
+            1.0f, -1.0f, -1.0f,
+            1.0f,  1.0f, -1.0f,
+            -1.0f,  1.0f, -1.0f,
+
+            -1.0f, -1.0f,  1.0f,
+            -1.0f, -1.0f, -1.0f,
+            -1.0f,  1.0f, -1.0f,
+            -1.0f,  1.0f, -1.0f,
+            -1.0f,  1.0f,  1.0f,
+            -1.0f, -1.0f,  1.0f,
+
+            1.0f, -1.0f, -1.0f,
+            1.0f, -1.0f,  1.0f,
+            1.0f,  1.0f,  1.0f,
+            1.0f,  1.0f,  1.0f,
+            1.0f,  1.0f, -1.0f,
+            1.0f, -1.0f, -1.0f,
+
+            -1.0f, -1.0f,  1.0f,
+            -1.0f,  1.0f,  1.0f,
+            1.0f,  1.0f,  1.0f,
+            1.0f,  1.0f,  1.0f,
+            1.0f, -1.0f,  1.0f,
+            -1.0f, -1.0f,  1.0f,
+
+            -1.0f,  1.0f, -1.0f,
+            1.0f,  1.0f, -1.0f,
+            1.0f,  1.0f,  1.0f,
+            1.0f,  1.0f,  1.0f,
+            -1.0f,  1.0f,  1.0f,
+            -1.0f,  1.0f, -1.0f,
+
+            -1.0f, -1.0f, -1.0f,
+            -1.0f, -1.0f,  1.0f,
+            1.0f, -1.0f, -1.0f,
+            1.0f, -1.0f, -1.0f,
+            -1.0f, -1.0f,  1.0f,
+            1.0f, -1.0f,  1.0f
+    };
+
+    unsigned int skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+    auto skyboxEn = createEntity(unique_id());
+    skyboxEn->activate();
+    skyboxEn->addComponent<SkyboxComponent>();
+    auto skybox = skyboxEn->getComponent<SkyboxComponent>();
+
+    vector<std::string> faces =
+    {
+        getResourcePath("skybox/interstellar_skybox/xpos.png"),
+        getResourcePath("skybox/interstellar_skybox/xneg.png"),
+        getResourcePath("skybox/interstellar_skybox/ypos.png"),
+        getResourcePath("skybox/interstellar_skybox/yneg.png"),
+        getResourcePath("skybox/interstellar_skybox/zpos.png"),
+        getResourcePath("skybox/interstellar_skybox/zneg.png")
+    };
+
+    skybox->vao = skyboxVAO;
+    skybox->skybox_id = utils::texture::loadCubemap(faces);
 }
 

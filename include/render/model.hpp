@@ -9,7 +9,7 @@
 class Model
 {
 public:
-    explicit Model(const std::string &path);
+    explicit Model(const std::string &path, bool flip_uv = true);
 
     void draw(ShaderProgram &program) const;
 
@@ -20,7 +20,7 @@ private:
     std::vector<Texture> m_textureLoaded;
     std::string m_directory;
 
-    void loadModel(const std::string &path);
+    void loadModel(const std::string &path, bool flip_uv);
 
     void processNode(aiNode *node, const aiScene *scene);
     Mesh processMesh(aiMesh *mesh, const aiScene *scene);

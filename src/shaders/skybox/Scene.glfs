@@ -1,21 +1,11 @@
 #version 330 core
-
-// Texture coords
-in vec2 TextureCoords;
-
-// Texture number
-uniform sampler2D TextureNum;
-uniform bool isPrimitive;
-uniform vec3 primColor;
-uniform float alpha;
-
 out vec4 FragColor;
+
+in vec3 TexCoords;
+
+uniform samplerCube skybox;
 
 void main()
 {
-    if (isPrimitive) {
-        FragColor = texture(TextureNum, TextureCoords);
-    } else {
-        FragColor = vec4(primColor, alpha);
-    }
+    FragColor = texture(skybox, TexCoords);
 }
