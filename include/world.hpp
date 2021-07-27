@@ -1,5 +1,5 @@
-#ifndef MOONLANDER_WORLD_HPP
-#define MOONLANDER_WORLD_HPP
+#ifndef WORLD_HPP
+#define WORLD_HPP
 
 #include <unordered_map>
 #include <memory>
@@ -18,12 +18,6 @@
 #include "utils/threadpool.hpp"
 
 using utils::time::Timer;
-
-struct CellState
-{
-    bool alive;
-    glm::vec4 color;
-};
 
 class World: public ecs::EcsManager
 {
@@ -45,7 +39,6 @@ private:
     void init_skybox();
     void init_from_file(const std::string& json_file);
 
-    void deallocate_scene();
     void deallocate_imgui();
 
     /**
@@ -62,4 +55,4 @@ private:
     std::string m_initFile;
 };
 
-#endif //MOONLANDER_WORLD_HPP
+#endif //WORLD_HPP

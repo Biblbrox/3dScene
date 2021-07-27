@@ -18,7 +18,7 @@ using utils::log::Logger;
 using utils::log::Category;
 using boost::format;
 
-Model::Model(const std::string& path, bool flip_uv)
+Model::Model(const std::string& path, bool flip_uv) : m_modelFile(path)
 {
     loadModel(path, flip_uv);
 }
@@ -140,4 +140,9 @@ Model::loadMaterialsTextures(aiMaterial *mat, aiTextureType type,
 const std::vector<Mesh> &Model::getMeshes() const
 {
     return m_meshes;
+}
+
+std::string Model::getModelFile() const
+{
+    return m_modelFile;
 }

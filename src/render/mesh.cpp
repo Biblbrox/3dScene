@@ -38,6 +38,9 @@ void Mesh::setupMesh()
                           (void*)offsetof(Vertex, normal));
 
     glBindVertexArray(0);
+
+    glDeleteBuffers(1, &m_vbo);
+    glDeleteBuffers(1, &m_ebo);
 }
 
 void Mesh::draw(ShaderProgram &program) const

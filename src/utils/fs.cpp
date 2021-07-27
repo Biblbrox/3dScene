@@ -4,13 +4,11 @@
 #include <glm/glm.hpp>
 #include <json/json.hpp>
 #include <glm/exponential.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <initializer_list>
 
 #include "components/positioncomponent.hpp"
 #include "components/lidarcomponent.hpp"
 #include "components/spritecomponent.hpp"
+#include "components/skyboxcomponent.hpp"
 #include "components/lightcomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "components/bvhcomponent.hpp"
@@ -132,16 +130,12 @@ void utils::fs::saveSimJson(const std::string &file_name,
                 json comp_obj = json::object();
                 comp_obj["SpriteComponent"] = json::array();
 
-                json files_obj = json::object();
-                // TODO: fix this
-//                files_obj["obj_files"] = json(sprite->getObjFiles());
-                comp_obj["SpriteComponent"].push_back(files_obj);
+                json model_file = json::object();
+                model_file["model_file"] = json(sprite->getModelFile());
+                comp_obj["SpriteComponent"].push_back(model_file);
 
                 json sizes_obj = json::object();
-                json sizes_array = json::array();
-                for (auto size: sprite->getSizes())
-                    sizes_array.push_back({size.x, size.y, size.z});
-                sizes_obj["sizes"] = json(sizes_array);
+                sizes_obj["size"] = json(sprite->getSize());
                 comp_obj["SpriteComponent"].push_back(sizes_obj);
 
                 en_obj["Components"].push_back(comp_obj);
@@ -177,10 +171,10 @@ void utils::fs::saveSimJson(const std::string &file_name,
 
                 json comp_obj = json::object();
                 comp_obj["LightComponent"] = json::array();
-                comp_obj["LightComponent"].push_back(json::object({{"pos", {pos.x, pos.y, pos.z}}}));
-                comp_obj["LightComponent"].push_back(json::object({{"amb", {amb.x, amb.y, amb.z}}}));
-                comp_obj["LightComponent"].push_back(json::object({{"dif", {dif.x, dif.y, dif.z}}}));
-                comp_obj["LightComponent"].push_back(json::object({{"spec", {spec.x, spec.y, spec.z}}}));
+                comp_obj["LightComponent"].push_back(json::object({{"direction", {pos.x, pos.y, pos.z}}}));
+                comp_obj["LightComponent"].push_back(json::object({{"ambient", {amb.x, amb.y, amb.z}}}));
+                comp_obj["LightComponent"].push_back(json::object({{"diffuse", {dif.x, dif.y, dif.z}}}));
+                comp_obj["LightComponent"].push_back(json::object({{"specular", {spec.x, spec.y, spec.z}}}));
 
                 en_obj["Components"].push_back(comp_obj);
             } else if (type == type_id<MaterialComponent>) {
@@ -219,6 +213,14 @@ void utils::fs::saveSimJson(const std::string &file_name,
                 comp_obj["TerrainComponent"].push_back(json::object({{"scale", terrain->getScale()}}));
 
                 en_obj["Components"].push_back(comp_obj);
+            } else if (type == type_id<SkyboxComponent>) {
+                auto comp = en->getComponent<SkyboxComponent>();
+
+                json comp_skybox = json::object();
+                comp_skybox["SkyboxComponent"] = json::array();
+                comp_skybox["SkyboxComponent"].push_back({});
+
+                en_obj["Components"].push_back(comp_skybox);
             }
         }
 
@@ -261,15 +263,12 @@ utils::fs::loadSimJson(const std::string &file_name)
             } else if (comp.contains("SpriteComponent")) {
                 json json_sprite = comp["SpriteComponent"];
 
-                std::vector<std::string> obj_files = json_sprite[0]["obj_files"].get<std::vector<std::string>>();
-                std::vector<glm::vec3> sizes = json_sprite[1]["sizes"].get<std::vector<glm::vec3>>();
+                std::string model_file = json_sprite[0]["model_file"].get<std::string>();
+                glm::vec3 size = json_sprite[1]["size"].get<glm::vec3>();
 
                 entity.addComponent<SpriteComponent>();
                 auto sprite_comp = entity.getComponent<SpriteComponent>();
-//                sprite_comp->sprite = std::make_shared<Sprite>();
-                for (size_t i = 0; i < obj_files.size(); ++i);
-//                    sprite_comp->sprite->addMesh(obj_files[i], sizes[i]);
-//                sprite_comp->sprite->generateDataBuffer();
+                sprite_comp->sprite = std::make_shared<Sprite>(model_file, size);
             } else if (comp.contains("BVHComponent")) {
                 entity.addComponent<BVHComponent>();
             } else if (comp.contains("SceneComponent")) {
@@ -295,7 +294,7 @@ utils::fs::loadSimJson(const std::string &file_name)
                 lidar->yaw = yaw;
             } else if (comp.contains("LightComponent")) {
                 json json_light = comp["LightComponent"];
-                vec3 pos = json_light[0]["pos"].get<vec3>();
+                vec3 pos = json_light[0]["direction"].get<vec3>();
                 vec3 ambient = json_light[1]["ambient"].get<vec3>();
                 vec3 diffuse = json_light[2]["diffuse"].get<vec3>();
                 vec3 specular = json_light[3]["specular"].get<vec3>();
@@ -326,14 +325,14 @@ utils::fs::loadSimJson(const std::string &file_name)
 
                 std::string height_image = json_ter[0]["height_image"].get<std::string>();
                 std::string texture_image = json_ter[1]["texture_image"].get<std::string>();
-                GLfloat width = json_ter[2]["width"].get<GLfloat>();
-                GLfloat height = json_ter[3]["height"].get<GLfloat>();
                 vec3 scale = json_ter[4]["scale"].get<vec3>();
 
                 entity.addComponent<TerrainComponent>();
                 auto terrain = entity.getComponent<TerrainComponent>();
                 terrain->terrain = std::make_shared<Terrain>
-                        (width, height, height_image, texture_image, scale);
+                        (height_image, texture_image, scale);
+            } else if (comp.contains("SkyboxComponent")) {
+                continue;
             }
         }
         res.push_back(entity);

@@ -151,15 +151,10 @@ void RenderSceneSystem::drawSprites()
 
     auto skyboxEn = getEntitiesByTag<SkyboxComponent>().begin()->second;
     auto skybox = skyboxEn->getComponent<SkyboxComponent>();
-    glDepthFunc(GL_LEQUAL);
     program->useSkyboxProgram();
     program->setMat4("ProjectionMatrix", proj);
     program->setMat4("ViewMatrix", mat4(mat3(view)));
-// ... set view and projection matrix
-    glBindVertexArray(skybox->vao);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->skybox_id);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    glDepthFunc(GL_LESS);
+    render::drawSkybox(skybox->vao, skybox->skybox_id);
 
     if (GLenum error = glGetError(); error != GL_NO_ERROR)
         throw GLException((format("\n\tRender while drawing sprites: %1%\n")
