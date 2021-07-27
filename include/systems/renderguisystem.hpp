@@ -20,6 +20,7 @@ public:
 private:
     void update_state(size_t delta) override;
     void export_settings();
+    void laser_settings();
 
     GLfloat m_aspectRatio;
 

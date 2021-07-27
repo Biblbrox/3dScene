@@ -127,9 +127,7 @@ void RenderGuiSystem::update_state(size_t delta)
 
     PushFont(m_font);
     SetNextWindowPos({0, 0});
-    SetNextWindowSize({static_cast<float>(screen_width),
-                              static_cast<float>(screen_height)});
-    bool loadSimulation = false;
+    SetNextWindowSize({screen_width, screen_height});
     bool open = true;
     ImGui::Begin("GameWindow", &open, ImGuiWindowFlags_NoResize
                                       | ImGuiWindowFlags_NoScrollbar
@@ -192,109 +190,8 @@ void RenderGuiSystem::update_state(size_t delta)
             if (ImGui::Button(_("Laser Settings")))
                 m_laserSettingsOpen = true;
 
-            if (m_laserSettingsOpen) {
-                auto lidarEn = getEntitiesByTag<LidarComponent>().begin()->second;
-                auto lidarComp = lidarEn->getComponent<LidarComponent>();
-                auto pos = lidarEn->getComponent<PositionComponent>();
-
-                Begin(_("Laser settings"), &m_laserSettingsOpen);
-                Text(_("Laser position"));
-                if (InputFloat3("##laser_pos", glm::value_ptr(
-                        Config::getVal<vec3>("LaserPos")))) {
-                    pos->pos = Config::getVal<vec3>("LaserPos");
-                    Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                                lidarComp->yaw, lidarComp->pitch);
-
-                    lidarComp->pattern_points = lidar.risleyPattern2(
-                            lidarComp->freq, lidarComp->start_angle,
-                            lidarComp->density);
-                }
-
-                Text(_("Laser yaw"));
-                if (InputFloat("##laser_yaw", &Config::getVal<GLfloat>("LaserYaw"))) {
-                    lidarComp->yaw = Config::getVal<GLfloat>("LaserYaw");
-                    Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                                lidarComp->yaw, lidarComp->pitch);
-
-                    lidarComp->pattern_points = lidar.risleyPattern2(
-                            lidarComp->freq, lidarComp->start_angle,
-                            lidarComp->density);
-                }
-
-                Text(_("Laser pitch"));
-                if (InputFloat("##laser_pitch", &Config::getVal<GLfloat>("LaserPitch"))) {
-                    lidarComp->pitch = Config::getVal<GLfloat>("LaserPitch");
-                    Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                                lidarComp->yaw, lidarComp->pitch);
-
-                    lidarComp->pattern_points = lidar.risleyPattern2(
-                            lidarComp->freq, lidarComp->start_angle,
-                            lidarComp->density);
-                }
-
-                Text(_("Prism frequencies"));
-                if (InputFloat2("##prism_freq", value_ptr(
-                        Config::getVal<vec2>("PrismFreq")))) {
-                    lidarComp->freq = Config::getVal<vec2>("PrismFreq");
-                    Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                                lidarComp->yaw, lidarComp->pitch);
-
-                    lidarComp->pattern_points = lidar.risleyPattern2(
-                            lidarComp->freq, lidarComp->start_angle,
-                            lidarComp->density);
-                }
-
-                Text(_("Prism start angle"));
-                if (InputFloat2("##prism_start_angle", glm::value_ptr(
-                        Config::getVal<vec2>("PrismStartAngle")))) {
-                    lidarComp->start_angle = Config::getVal<vec2>("PrismStartAngle");
-                    Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                                lidarComp->yaw, lidarComp->pitch);
-
-                    lidarComp->pattern_points = lidar.risleyPattern2(
-                            lidarComp->freq, lidarComp->start_angle,
-                            lidarComp->density);
-                }
-
-                Text(_("Object distance"));
-                if (InputFloat("##obj_distance",
-                               &Config::getVal<GLfloat>("ObjDistance"))) {
-                    lidarComp->obj_distance = Config::getVal<GLfloat>("ObjDistance");
-                    Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                                lidarComp->yaw, lidarComp->pitch);
-
-                    lidarComp->pattern_points = lidar.risleyPattern2(
-                            lidarComp->freq, lidarComp->start_angle,
-                            lidarComp->density);
-                }
-
-                Text(_("Length of rays"));
-                if (InputFloat("##ray_length", &Config::getVal<GLfloat>("RayLength"))) {
-                    lidarComp->length = Config::getVal<GLfloat>("RayLength");
-                    Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                                lidarComp->yaw, lidarComp->pitch);
-
-                    lidarComp->pattern_points = lidar.risleyPattern2(
-                            lidarComp->freq, lidarComp->start_angle,
-                            lidarComp->density);
-                }
-
-                Text(_("Dots density"));
-                if (InputFloat("##dot_dens", &Config::getVal<GLfloat>("DotDens"))) {
-                    lidarComp->density = Config::getVal<GLfloat>("DotDens");
-                    Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                                lidarComp->yaw, lidarComp->pitch);
-
-                    lidarComp->pattern_points = lidar.risleyPattern2(
-                            lidarComp->freq, lidarComp->start_angle,
-                            lidarComp->density);
-                }
-
-                Text(_("Draw pattern"));
-                Checkbox("##draw_pattern", &Config::getVal<bool>("DrawPattern"));
-
-                End();
-            }
+            if (m_laserSettingsOpen)
+                laser_settings();
 
             Text(_("Light position"));
             InputFloat3("##light_pos", glm::value_ptr(
@@ -477,6 +374,113 @@ void RenderGuiSystem::export_settings()
             ImGui::EndPopup();
         }
     }
+
+    End();
+}
+
+void RenderGuiSystem::laser_settings()
+{
+    using namespace ImGui;
+
+    auto lidarEn = getEntitiesByTag<LidarComponent>().begin()->second;
+    auto lidarComp = lidarEn->getComponent<LidarComponent>();
+    auto pos = lidarEn->getComponent<PositionComponent>();
+
+    Begin(_("Laser settings"), &m_laserSettingsOpen);
+    Text(_("Laser position"));
+    if (InputFloat3("##laser_pos", glm::value_ptr(
+            Config::getVal<vec3>("LaserPos")))) {
+        pos->pos = Config::getVal<vec3>("LaserPos");
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
+                    lidarComp->yaw, lidarComp->pitch);
+
+        lidarComp->pattern_points = lidar.risleyPattern2(
+                lidarComp->freq, lidarComp->start_angle,
+                lidarComp->density);
+    }
+
+    Text(_("Laser yaw"));
+    if (InputFloat("##laser_yaw", &Config::getVal<GLfloat>("LaserYaw"))) {
+        lidarComp->yaw = Config::getVal<GLfloat>("LaserYaw");
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
+                    lidarComp->yaw, lidarComp->pitch);
+
+        lidarComp->pattern_points = lidar.risleyPattern2(
+                lidarComp->freq, lidarComp->start_angle,
+                lidarComp->density);
+    }
+
+    Text(_("Laser pitch"));
+    if (InputFloat("##laser_pitch", &Config::getVal<GLfloat>("LaserPitch"))) {
+        lidarComp->pitch = Config::getVal<GLfloat>("LaserPitch");
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
+                    lidarComp->yaw, lidarComp->pitch);
+
+        lidarComp->pattern_points = lidar.risleyPattern2(
+                lidarComp->freq, lidarComp->start_angle,
+                lidarComp->density);
+    }
+
+    Text(_("Prism frequencies"));
+    if (InputFloat2("##prism_freq", value_ptr(
+            Config::getVal<vec2>("PrismFreq")))) {
+        lidarComp->freq = Config::getVal<vec2>("PrismFreq");
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
+                    lidarComp->yaw, lidarComp->pitch);
+
+        lidarComp->pattern_points = lidar.risleyPattern2(
+                lidarComp->freq, lidarComp->start_angle,
+                lidarComp->density);
+    }
+
+    Text(_("Prism start angle"));
+    if (InputFloat2("##prism_start_angle", glm::value_ptr(
+            Config::getVal<vec2>("PrismStartAngle")))) {
+        lidarComp->start_angle = Config::getVal<vec2>("PrismStartAngle");
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
+                    lidarComp->yaw, lidarComp->pitch);
+
+        lidarComp->pattern_points = lidar.risleyPattern2(
+                lidarComp->freq, lidarComp->start_angle,
+                lidarComp->density);
+    }
+
+    Text(_("Object distance"));
+    if (InputFloat("##obj_distance",
+                   &Config::getVal<GLfloat>("ObjDistance"))) {
+        lidarComp->obj_distance = Config::getVal<GLfloat>("ObjDistance");
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
+                    lidarComp->yaw, lidarComp->pitch);
+
+        lidarComp->pattern_points = lidar.risleyPattern2(
+                lidarComp->freq, lidarComp->start_angle,
+                lidarComp->density);
+    }
+
+    Text(_("Length of rays"));
+    if (InputFloat("##ray_length", &Config::getVal<GLfloat>("RayLength"))) {
+        lidarComp->length = Config::getVal<GLfloat>("RayLength");
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
+                    lidarComp->yaw, lidarComp->pitch);
+
+        lidarComp->pattern_points = lidar.risleyPattern2(
+                lidarComp->freq, lidarComp->start_angle,
+                lidarComp->density);
+    }
+
+    Text(_("Dots density"));
+    if (InputFloat("##dot_dens", &Config::getVal<GLfloat>("DotDens"))) {
+        lidarComp->density = Config::getVal<GLfloat>("DotDens");
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
+                    lidarComp->yaw, lidarComp->pitch);
+
+        lidarComp->pattern_points = lidar.risleyPattern2(
+                lidarComp->freq, lidarComp->start_angle,
+                lidarComp->density);
+    }
+
+    Text(_("Draw pattern"));
+    Checkbox("##draw_pattern", &Config::getVal<bool>("DrawPattern"));
 
     End();
 }

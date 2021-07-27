@@ -18,6 +18,22 @@ struct SceneComponent: ecs::Component
     GLuint texture = 0;
 
     GLuint rbo = 0;
+
+    ~SceneComponent() override
+    {
+        if (sceneBuffer != 0)
+            glDeleteFramebuffers(1, &sceneBuffer);
+        if (texture != 0)
+            glDeleteTextures(1, &texture);
+        if (rbo != 0)
+            glDeleteRenderbuffers(1, &rbo);
+        if (isMsaa) {
+            if (sceneBufferMSAA != 0)
+                glDeleteFramebuffers(1, &sceneBufferMSAA);
+            if (textureMSAA != 0)
+                glDeleteTextures(1, &textureMSAA);
+        }
+    }
 };
 
 #endif //SCENECOMPONENT_HPP

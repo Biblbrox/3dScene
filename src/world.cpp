@@ -124,7 +124,6 @@ World::World() : m_wasInit(false), m_initFromFile(false)
 
 World::~World()
 {
-    deallocate_scene();
     deallocate_imgui();
 }
 
@@ -186,9 +185,6 @@ void World::init()
     createSystem<RenderSceneSystem>();
     createSystem<KeyboardSystem>();
 
-    if (m_wasInit)
-        deallocate_scene();
-
     m_entities.clear();
     init_terrain();
     init_sprites();
@@ -221,9 +217,6 @@ void World::init_from_file(const std::string& init_file)
     createSystem<RenderSceneSystem>();
     createSystem<KeyboardSystem>();
 
-    if (m_wasInit)
-        deallocate_scene();
-
     m_entities.clear();
     for (auto& en: entities) {
         auto e = std::make_shared<ecs::Entity>(en);
@@ -232,6 +225,7 @@ void World::init_from_file(const std::string& init_file)
     }
 
     init_scene();
+    init_skybox();
     m_wasInit = true;
     m_initFromFile = false;
 }
@@ -264,8 +258,8 @@ void World::init_terrain()
     auto terrainComp = terrain->getComponent<TerrainComponent>();
 
     terrainComp->terrain = std::make_shared<Terrain>
-            (1000, 700, getResourcePath("terrain_height_map.jpg"),
-             getResourcePath("rock_2_4w.jpg"), vec3(2000.f, 100.f, 2000.f));
+            (getResourcePath("terrain/terrain_height_map.jpg"),
+             getResourcePath("terrain/rock_2_4w.jpg"), vec3(2000.f, 100.f, 2000.f));
 }
 
 
@@ -283,8 +277,8 @@ void World::init_scene()
     GLuint* texture = &scene_comp->texture;
     GLuint* rbo = &scene_comp->rbo;
 
-    int screen_width = utils::getWindowWidth<GLuint>(*Game::getWindow());
-    int screen_height = utils::getWindowHeight<GLuint>(*Game::getWindow());
+    int screen_width = utils::getWindowWidth<int>(*Game::getWindow());
+    int screen_height = utils::getWindowHeight<int>(*Game::getWindow());
 
     bool msaa = Config::getVal<bool>("MSAA");
     if (msaa) {
@@ -322,26 +316,6 @@ void World::init_scene()
     }
 
     CHECK_FRAMEBUFFER_COMPLETE();
-}
-
-void World::deallocate_scene()
-{
-    auto scene_en = m_entities[m_sceneID];
-    if (!scene_en)
-        return;
-    auto scene = scene_en->getComponent<SceneComponent>();
-    if (scene->sceneBuffer != 0)
-        glDeleteFramebuffers(1, &scene->sceneBuffer);
-    if (scene->texture != 0)
-        glDeleteTextures(1, &scene->texture);
-    if (scene->rbo != 0)
-        glDeleteRenderbuffers(1, &scene->rbo);
-    if (scene->isMsaa) {
-        if (scene->sceneBufferMSAA != 0)
-            glDeleteFramebuffers(1, &scene->sceneBufferMSAA);
-        if (scene->textureMSAA != 0)
-            glDeleteTextures(1, &scene->textureMSAA);
-    }
 }
 
 void World::init_sprites()
@@ -447,23 +421,7 @@ void World::init_sprites()
     light_comp->ambient = vec3(0.3f);
     light_comp->diffuse = vec3(0.5f);
     light_comp->specular = vec3(0.5f);
-//    std::shared_ptr<Sprite> light_sprite =
-//            make_shared<Sprite>(getResourcePath("DiscoBall.obj"), 2.f, 2.f, 2.f);
-//    light_en->getComponent<SpriteComponent>()->sprite = light_sprite;
-
     Config::addVal("LightPos", camera->getPos(), "vec3");
-
-//    auto tree = coll::buildBVH(light_sprite->getVertices()[0], min_rect);
-//    light_en->getComponent<BVHComponent>()->vbh_tree = tree;
-//    light_en->getComponent<BVHComponent>()->vbh_tree_model =
-//            coll::buildBVH(light_sprite->getVertices()[0], min_rect);
-//    mapBinaryTree(light_en->getComponent<BVHComponent>()->vbh_tree,
-//                  [light_comp, light_sprite](shared_ptr<RectPoints3D> bound_rect)
-//                  {
-//                      *bound_rect = coll::AABBtoWorldSpace(
-//                              *bound_rect, {0.f, 0.f, 0.f}, 0.f, light_comp->pos, *light_sprite
-//                      );
-//                  });
 
     for (size_t i = 0; i < 5; ++i) {
         /*auto left = createEntity(unique_id());
@@ -621,7 +579,7 @@ void World::init_skybox()
     glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 
     auto skyboxEn = createEntity(unique_id());
     skyboxEn->activate();

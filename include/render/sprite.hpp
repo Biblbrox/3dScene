@@ -40,8 +40,6 @@ public:
 //    Sprite& operator=(Sprite&&) = default;
 //    Sprite& operator=(const Sprite&) = default;
 
-    glm::vec3 getClip(GLuint idx) noexcept;
-
     void draw(ShaderProgram& program) const override;
 
     GLuint getTriangleCount() const;
@@ -50,34 +48,16 @@ public:
     GLuint getHeight() const noexcept override;
     GLuint getDepth() const noexcept override;
     vec3 getSize() const noexcept override;
-//    GLuint getTextureID() const override;
 
-    glm::vec3 getCurrentClip() const noexcept;
-    GLuint getIdx() const noexcept;
-    GLuint getSpritesCount() const noexcept;
+    std::string getModelFile() const;
+
     const std::vector<Triangle>& getTriangles() const;
     void setIdx(GLuint idx);
 
-    /*const std::vector<vec3>& getVertices() const noexcept override;
-    const std::vector<vec2>& getUv() const noexcept override;
-    const std::vector<vec3>& getNormals() const noexcept override;
-    const std::vector<GLfloat>& getVertexData() const noexcept;
-    const std::vector<std::string>& getObjFiles() const;*/
-    const std::vector<vec3>& getSizes() const;
-
-    std::vector<std::string> m_objFiles;
-    std::vector<vec3> m_sizes;
+    vec3 m_size;
 protected:
-//    std::vector<std::vector<GLfloat>> m_vertexData;
-//
-//    std::vector<std::vector<vec3>> m_vertices;
-//    std::vector<std::vector<vec2>> m_uv;
-//    std::vector<std::vector<vec3>> m_normals;
     std::vector<Triangle> m_triangles;
     Model m_model;
-//    std::vector<GLuint> m_textureIds;
-
-
 };
 
 #endif //SPRITE_HPP

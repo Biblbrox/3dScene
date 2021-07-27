@@ -13,7 +13,7 @@ using glm::vec2;
 class Terrain
 {
 public:
-    explicit Terrain(GLuint width, GLuint depth, const std::string& height_image,
+    explicit Terrain(const std::string& height_image,
                      const std::string& texture, const vec3& scale);
     ~Terrain();
 

@@ -30,6 +30,8 @@ namespace render
 
     void drawTriangles(const std::vector<vec3> &points);
 
+    void drawSkybox(GLuint skybox_vao, GLuint skybox_texture);
+
     void drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
                            size_t size, const TextureBase &texture,
                            const vec3& position, GLfloat angle = 0.f,

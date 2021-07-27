@@ -226,3 +226,12 @@ void render::drawVerticesVAO(ShaderProgram& program, const GLfloat* points,
     scaling = glm::scale(mat4(1.f), 1 / scale);
     program.leftMult("ModelMatrix", translation * rotation * scaling);
 }
+
+void render::drawSkybox(GLuint skybox_vao, GLuint skybox_texture)
+{
+    glDepthFunc(GL_LEQUAL);
+    glBindVertexArray(skybox_vao);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glDepthFunc(GL_LESS);
+}

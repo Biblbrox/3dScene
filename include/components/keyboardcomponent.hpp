@@ -1,5 +1,5 @@
-#ifndef MOONLANDER_KEYBOARDCOMPONENT_HPP
-#define MOONLANDER_KEYBOARDCOMPONENT_HPP
+#ifndef KEYBOARDCOMPONENT_HPP
+#define KEYBOARDCOMPONENT_HPP
 
 #include <functional>
 #include <SDL_quit.h>
@@ -11,4 +11,4 @@ struct KeyboardComponent : ecs::Component
     std::function<void(const Uint8*)> event_handler;
 };
 
-#endif //MOONLANDER_KEYBOARDCOMPONENT_HPP
+#endif //KEYBOARDCOMPONENT_HPP

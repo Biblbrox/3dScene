@@ -11,10 +11,8 @@ using std::pair;
 using utils::log::Logger;
 using math::barry_centric;
 
-Terrain::Terrain(GLuint width, GLuint height,
-                 const std::string& height_image,
-                 const std::string& texture,
-                 const vec3& scale) :
+Terrain::Terrain(const std::string& height_image,
+                 const std::string& texture, const vec3& scale) :
         m_vao(0), m_scale(scale), m_heightImage(height_image),
         m_textureFile(texture)
 {
