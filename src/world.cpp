@@ -56,7 +56,7 @@ using utils::data::mapBinaryTree;
 
 using coll::buildBVH;
 
-size_t unique_id()
+size_t genUniqueId()
 {
     static size_t idx = 0;
     return idx++;
@@ -64,6 +64,10 @@ size_t unique_id()
 
 World::World() : m_wasInit(false), m_initFromFile(false)
 {
+    if (!Config::hasKey("SelectedObj"))
+        Config::addVal("SelectedObj", 0, "int");
+    if (!Config::hasKey("IsSelected"))
+        Config::addVal("IsSelected", false, "bool");
     if (!Config::hasKey("DrawVertices"))
         Config::addVal("DrawVertices", true, "bool");
     if (!Config::hasKey("DrawBoundingBoxes"))
@@ -98,6 +102,8 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("Theme", 0, "int");
     if (!Config::hasKey("ShowCameraPos"))
         Config::addVal("ShowCameraPos", false, "bool");
+    if (!Config::hasKey("ShowMoveSpeed"))
+        Config::addVal("ShowMoveSpeed", false, "bool");
     if (!Config::hasKey("EnableLight"))
         Config::addVal("EnableLight", false, "bool");
     if (!Config::hasKey("LightPos"))
@@ -175,6 +181,7 @@ void World::init()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     m_systems.clear();
 
+    Config::getVal<bool>("IsSelected") = false;
 
     if (!m_wasInit) {
 //        deallocate_imgui();
@@ -203,7 +210,9 @@ void World::init(const std::string& init_file)
 
 void World::init_from_file(const std::string& init_file)
 {
-    auto entities = utils::fs::loadSimJson(init_file);
+    auto entities = utils::fs::loadSimJson(init_file, *this);
+
+    Config::getVal<bool>("IsSelected") = false;
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     m_systems.clear();
@@ -221,7 +230,7 @@ void World::init_from_file(const std::string& init_file)
     for (auto& en: entities) {
         auto e = std::make_shared<ecs::Entity>(en);
         e->activate();
-        m_entities.emplace(unique_id(), e);
+        m_entities.emplace(e->getId(), e);
     }
 
     init_scene();
@@ -250,7 +259,7 @@ void World::filter_entities()
 
 void World::init_terrain()
 {
-    m_terrainID = unique_id();
+    m_terrainID = genUniqueId();
     auto terrain = createEntity(m_terrainID);
     terrain->activate();
     terrain->addComponent<TerrainComponent>();
@@ -259,13 +268,13 @@ void World::init_terrain()
 
     terrainComp->terrain = std::make_shared<Terrain>
             (getResourcePath("terrain/terrain_height_map.jpg"),
-             getResourcePath("terrain/rock_2_4w.jpg"), vec3(2000.f, 100.f, 2000.f));
+             getResourcePath("terrain/rock_2_4w.jpg"), vec3(20000.f, 100.f, 20000.f));
 }
 
 
 void World::init_scene()
 {
-    m_sceneID = unique_id();
+    m_sceneID = genUniqueId();
     auto scene = createEntity(m_sceneID);
     scene->activate();
     scene->addComponent<SceneComponent>();
@@ -282,6 +291,7 @@ void World::init_scene()
 
     bool msaa = Config::getVal<bool>("MSAA");
     if (msaa) {
+        scene_comp->isMsaa = true;
         // Generate multisampled framebuffer
         glGenFramebuffers(1, scene_fbmsaa);
         glBindFramebuffer(GL_FRAMEBUFFER, *scene_fbmsaa);
@@ -320,7 +330,7 @@ void World::init_scene()
 
 void World::init_sprites()
 {
-    auto lidarEn = createEntity(unique_id());
+    auto lidarEn = createEntity(genUniqueId());
     lidarEn->activate();
     lidarEn->addComponents<PositionComponent, LidarComponent>();
     auto lidar_pos = lidarEn->getComponent<PositionComponent>();
@@ -364,7 +374,7 @@ void World::init_sprites()
     man_sprite = make_shared<Sprite>(getModelPath("police/police.obj"), man_size);
     chair_sprite = make_shared<Sprite>(getModelPath("Wooden_Chair/Wooden_Chair.obj"), chair_size);
 
-    auto chair_en = createEntity(unique_id());
+    auto chair_en = createEntity(genUniqueId());
     chair_en->activate();
     chair_en->addComponents<SpriteComponent, PositionComponent,
             SelectableComponent, BVHComponent, MaterialComponent>();
@@ -389,7 +399,7 @@ void World::init_sprites()
     material->specular = vec3(0.f);
     material->shininess = 32.f;
 
-    auto man_en = createEntity(unique_id());
+    auto man_en = createEntity(genUniqueId());
     man_en->activate();
     man_en->addComponents<SpriteComponent, PositionComponent,
             SelectableComponent, BVHComponent, MaterialComponent>();
@@ -412,7 +422,7 @@ void World::init_sprites()
     material->specular = vec3(0.f);
     material->shininess = 32.f;
 
-    auto light_en = createEntity(unique_id());
+    auto light_en = createEntity(genUniqueId());
     light_en->activate();
     light_en->addComponent<LightComponent>();
 
@@ -498,7 +508,7 @@ void World::init_sprites()
 
 
         */
-        auto house = createEntity(unique_id());
+        auto house = createEntity(genUniqueId());
         house->activate();
         house->addComponents<SpriteComponent, PositionComponent,
                 SelectableComponent, BVHComponent, MaterialComponent>();
@@ -581,7 +591,7 @@ void World::init_skybox()
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 
-    auto skyboxEn = createEntity(unique_id());
+    auto skyboxEn = createEntity(genUniqueId());
     skyboxEn->activate();
     skyboxEn->addComponent<SkyboxComponent>();
     auto skybox = skyboxEn->getComponent<SkyboxComponent>();
@@ -598,5 +608,38 @@ void World::init_skybox()
 
     skybox->vao = skyboxVAO;
     skybox->skybox_id = utils::texture::loadCubemap(faces);
+}
+
+void World::addEntityFromFile(const std::string &model_file)
+{
+    std::shared_ptr<Sprite> sprite = std::make_shared<Sprite>(model_file,
+                                                              vec3(1.f, 1.f, 1.f));
+    auto terrainEn = m_entities[m_terrainID];
+    auto terrain = terrainEn->getComponent<TerrainComponent>()->terrain;
+
+    auto en = createEntity(genUniqueId());
+    en->activate();
+    en->addComponents<SpriteComponent, PositionComponent,
+            SelectableComponent, BVHComponent, MaterialComponent>();
+    auto sprite_comp = en->getComponent<SpriteComponent>();
+    sprite_comp->sprite = sprite;
+    auto pos_chair = en->getComponent<PositionComponent>();
+    pos_chair->pos.x = 200.f;
+    pos_chair->pos.z = 400.f;
+    pos_chair->pos.y = terrain->getAltitude(
+            {pos_chair->pos.x, pos_chair->pos.z}) + 40.f;
+    auto triangles = sprite->getTriangles();
+    mat4 chair_transform = math::createTransform(pos_chair->pos, 0,
+                                                 {0.f, 1.f, 1.f}, {1.f, 1.f, 1.f});
+    triangles = math::transformTriangles(triangles, chair_transform);
+    en->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(
+            triangles);
+    en->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(
+            triangles);
+    auto material = en->getComponent<MaterialComponent>();
+    material->ambient = vec3(1.f);
+    material->diffuse = vec3(0.8f);
+    material->specular = vec3(0.f);
+    material->shininess = 32.f;
 }
 

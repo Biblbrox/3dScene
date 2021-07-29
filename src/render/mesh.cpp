@@ -1,11 +1,14 @@
 #include <cstddef>
+#include <utility>
 
 #include "render/mesh.hpp"
 
-Mesh::Mesh(const std::vector<Vertex> &vertices,
-           const std::vector<GLuint> &indices,
-           const std::vector<Texture> &textures) :
-        m_vertices(vertices), m_indices(indices), m_textures(textures)
+Mesh::Mesh(std::vector<Vertex> vertices,
+           std::vector<GLuint> indices,
+           std::vector<Texture> textures)
+        : m_vertices(std::move(vertices)),
+          m_indices(std::move(indices)),
+          m_textures(std::move(textures))
 {
     setupMesh();
 }

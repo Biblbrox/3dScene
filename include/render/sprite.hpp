@@ -47,17 +47,24 @@ public:
     GLuint getWidth() const noexcept override;
     GLuint getHeight() const noexcept override;
     GLuint getDepth() const noexcept override;
-    vec3 getSize() const noexcept override;
+    const vec3& getSize() const noexcept override;
+    vec3& getSize() noexcept override;
+
+    bool isUvFlipped() const noexcept;
+
+    void flipUV();
 
     std::string getModelFile() const;
 
     const std::vector<Triangle>& getTriangles() const;
     void setIdx(GLuint idx);
-
-    vec3 m_size;
 protected:
     std::vector<Triangle> m_triangles;
     Model m_model;
+    bool m_isUvFlipped;
+
+private:
+    void init_triangles();
 };
 
 #endif //SPRITE_HPP

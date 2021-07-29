@@ -29,6 +29,8 @@ public:
     void init(const std::string& init_file) override;
     void update(size_t delta) override;
 
+    void addEntityFromFile(const std::string& model_file) override;
+
 private:
     utils::Fps m_fps;
 
@@ -37,6 +39,7 @@ private:
     void init_terrain();
     void init_imgui();
     void init_skybox();
+
     void init_from_file(const std::string& json_file);
 
     void deallocate_imgui();

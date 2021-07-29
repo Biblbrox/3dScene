@@ -29,7 +29,8 @@ namespace utils::fs
     void saveSimJson(const std::string &file_name,
                      std::unordered_map<size_t, std::shared_ptr<Entity>>& entities);
 
-    std::vector<ecs::Entity> loadSimJson(const std::string& file_name);
+    std::vector<ecs::Entity> loadSimJson(const std::string& file_name,
+                                         ecs::EcsManager& ecsManager);
 
     void saveLidarDataCart(const std::string &data_file,
                            const std::string &res_file);

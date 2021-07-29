@@ -16,14 +16,14 @@ public:
     const std::vector<Mesh>& getMeshes() const;
 
     std::string getModelFile() const;
+
+    void loadModel(const std::string &path, bool flip_uv);
 private:
 
     std::vector<Mesh> m_meshes;
     std::vector<Texture> m_textureLoaded;
     std::string m_directory;
     std::string m_modelFile;
-
-    void loadModel(const std::string &path, bool flip_uv);
 
     void processNode(aiNode *node, const aiScene *scene);
     Mesh processMesh(aiMesh *mesh, const aiScene *scene);

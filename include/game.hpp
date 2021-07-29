@@ -1,5 +1,5 @@
-#ifndef MOONLANDER_GAME_HPP
-#define MOONLANDER_GAME_HPP
+#ifndef GAME_HPP
+#define GAME_HPP
 
 #include <GL/glew.h>
 #include <memory>
@@ -56,4 +56,4 @@ private:
     static SDL_GLContext m_glcontext;
 };
 
-#endif //MOONLANDER_GAME_HPP
+#endif //GAME_HPP

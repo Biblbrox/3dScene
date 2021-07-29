@@ -7,7 +7,6 @@
 #include <imgui_internal.h>
 #include <imgui_impl_sdl.h>
 #include <ImGuiFileDialog.h>
-#include <ImGuiFileDialogConfig.h>
 #include <filesystem>
 
 #include "systems/renderguisystem.hpp"
@@ -16,6 +15,7 @@
 #include "components/scenecomponent.hpp"
 #include "utils/logger.hpp"
 #include "utils/fs.hpp"
+#include "utils/collision.hpp"
 #include "sceneprogram.hpp"
 #include "game.hpp"
 #include "config.hpp"
@@ -44,7 +44,9 @@ using glm::scale;
 RenderGuiSystem::RenderGuiSystem() : m_videoSettingsOpen(false),
                                      m_colorSettingsOpen(false),
                                      m_exportSettingsOpen(false),
-                                     m_laserSettingsOpen(false)
+                                     m_laserSettingsOpen(false),
+                                     m_openExportDialog(false),
+                                     m_selSettingsOpen(false)
 
 {
     ImGuiIO &io = ImGui::GetIO();
@@ -153,6 +155,11 @@ void RenderGuiSystem::update_state(size_t delta)
                     Config::addVal("ShowCameraPos",
                                    !Config::getVal<bool>("ShowCameraPos"), "bool");
                 }
+
+                if (MenuItem(_("Show move speed"), _("Ctrl+E"))) {
+                    Config::addVal("ShowMoveSpeed",
+                                   !Config::getVal<bool>("ShowMoveSpeed"), "bool");
+                }
                 EndMenu();
             }
             EndMenuBar();
@@ -167,7 +174,7 @@ void RenderGuiSystem::update_state(size_t delta)
         {
             TableNextRow();
             TableSetColumnIndex(0);
-            Text("Settings");
+            Text(_("Settings"));
             Separator();
 
             Checkbox(_("Draw Vertices"),
@@ -180,12 +187,8 @@ void RenderGuiSystem::update_state(size_t delta)
                      &Config::getVal<bool>("DrawBoundingBoxes"));
             Checkbox(_("Check collision"),
                      &Config::getVal<bool>("CheckCollision"));
-            Checkbox(_("Enable lighting"), &Config::getVal<bool>("EnableLight"));
-
-            Text(_("Minimal rect fraction size"));
-            InputFloat3("##min_rect", glm::value_ptr(
-                    Config::getVal<glm::vec3>("MinRectSize")));
-
+            Checkbox(_("Enable lighting"),
+                     &Config::getVal<bool>("EnableLight"));
 
             if (ImGui::Button(_("Laser Settings")))
                 m_laserSettingsOpen = true;
@@ -195,12 +198,12 @@ void RenderGuiSystem::update_state(size_t delta)
 
             Text(_("Light position"));
             InputFloat3("##light_pos", glm::value_ptr(
-             Config::getVal<glm::vec3>("LightPos")));
+                    Config::getVal<glm::vec3>("LightPos")));
 
             Text(_("Tree level show"));
             SliderInt("##tree_level",
-                             &Config::getVal<int>("TreeLevelShow"),
-                             0, 100);
+                      &Config::getVal<int>("TreeLevelShow"),
+                      0, 100);
 
             Checkbox(_("Inverse rotation"),
                      &Config::getVal<bool>("InverseRotation"));
@@ -230,8 +233,12 @@ void RenderGuiSystem::update_state(size_t delta)
 
             if (Button(_("Load simulation")))
                 ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey",
-                                                        _("Choose simulation file"), ".json", ".");
+                                                        _("Choose simulation file"),
+                                                        ".json", ".");
 
+            add_model();
+
+            // Load simulation from file dialog
             if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
                 if (ImGuiFileDialog::Instance()->IsOk()) {
                     m_simFile = ImGuiFileDialog::Instance()->GetFilePathName();
@@ -255,35 +262,10 @@ void RenderGuiSystem::update_state(size_t delta)
                 End();
             }
 
-            if (ImGui::Button(_("Export settings")))
-                m_exportSettingsOpen = true;
 
-            if (m_exportSettingsOpen)
-                export_settings();
+            export_settings();
 
-            if (Button(_("Video settings")))
-                m_videoSettingsOpen = true;
-
-            if (m_videoSettingsOpen) {
-                const char *items[] = {"Light", "Classic", "Dark"};
-                Begin(_("Video settings"), &m_videoSettingsOpen);
-                bool msaaEnabled = Config::getVal<bool>("MSAA");
-                if (Checkbox(_("Enable antialiasing(Need game restart)"),
-                             &Config::getVal<bool>("MSAA"))
-                    || msaaEnabled) {
-                    Text(_("MSAA Samples"));
-                    SameLine();
-                    InputInt("##msaa_samples",
-                                    &Config::getVal<int>("MSAASamples"));
-                }
-                Text(_("Application theme:"));
-                SameLine();
-                ListBox("", &Config::getVal<int>("Theme"), items, 3);
-                Text(_("Drag sensitivity:"));
-                SliderFloat("##mouse_sens", &Config::getVal<GLfloat>("MouseSens"),
-                            1, 100);
-                End();
-            }
+            video_settings();
 
             TableSetColumnIndex(1);
             Text(_("Render"));
@@ -298,16 +280,67 @@ void RenderGuiSystem::update_state(size_t delta)
                 Config::addVal<vec2>("ViewportPos", {pos.x, pos.y}, "vec2");
 
             if (getGameState() != GameStates::STOP)
-                ImGui::Image((ImTextureID) sceneComp->texture, size, {0, 1}, {1, 0});
+                ImGui::Image((ImTextureID) sceneComp->texture, size, {0, 1},
+                             {1, 0});
         }
 
+        std::stringstream status_str;
+        bool draw_status = false;
         if (Config::getVal<bool>("ShowCameraPos")) {
-            TableNextRow();
-            TableSetColumnIndex(1);
             auto pos = FpsCamera::getInstance()->getPos();
             std::string camera_pos = _("Camera position");
-            Text((format("%1$s: %2$.2f, %3$.2f, %4$.2f")
-                         % camera_pos % pos.x % pos.y % pos.z).str().c_str());
+            status_str << (format("%1$s: %2$.2f, %3$.2f, %4$.2f")
+                           % camera_pos % pos.x % pos.y % pos.z).str();
+            draw_status = true;
+        }
+
+        if (Config::getVal<bool>("ShowMoveSpeed")) {
+            auto camera = FpsCamera::getInstance();
+            GLfloat move_speed = camera->getMovSpeed();
+            std::string speed_msg = _("Move speed");
+            if (Config::getVal<bool>("ShowCameraPos"))
+                status_str << (format(", %1$s: %2$.2f") % speed_msg % move_speed).str();
+            else
+                status_str << (format("%1$s: %2$.2f") % speed_msg % move_speed).str();
+            draw_status = true;
+        }
+
+        if (draw_status) {
+            TableNextRow();
+            TableSetColumnIndex(1);
+            Text(status_str.str().c_str());
+        }
+
+        if (Config::getVal<bool>("IsSelected")) {
+            Begin(_("Selected settings"), &m_selSettingsOpen);
+            Text("Selected settings");
+
+            auto selEn = m_ecsManager->getEntities()[Config::getVal<int>("SelectedObj")];
+            auto spriteComp = selEn->getComponent<SpriteComponent>();
+            auto sprite = spriteComp->sprite;
+
+            if (InputFloat3("##sprite_scale", glm::value_ptr(sprite->getSize()))) {
+                auto bvh = selEn->getComponent<BVHComponent>();
+
+                if (bvh) {
+                    auto pos = selEn->getComponent<PositionComponent>();
+                    auto triangles = sprite->getTriangles();
+                    mat4 transform = math::createTransform(pos->pos, pos->angle, pos->rot_axis, sprite->getSize());
+                    triangles = math::transformTriangles(triangles, transform);
+                    bvh->bvh_tree = coll::buildBVH(triangles);
+                    bvh->triangles = std::make_shared<std::vector<Triangle>>(triangles);
+                }
+            }
+
+            bool flip_uv = sprite->isUvFlipped();
+            bool old_flip = flip_uv;
+            Text(_("Flip UV"));
+            Checkbox("##flip_uv", &flip_uv);
+
+            if (flip_uv != old_flip)
+                sprite->flipUV();
+
+            End();
         }
 
         EndTable();
@@ -323,6 +356,12 @@ void RenderGuiSystem::update_state(size_t delta)
 void RenderGuiSystem::export_settings()
 {
     using namespace ImGui;
+
+    if (ImGui::Button(_("Export settings")))
+        m_exportSettingsOpen = true;
+
+    if (!m_exportSettingsOpen)
+        return;
 
     Begin(_("Настройки экспорта"), &m_exportSettingsOpen);
     Text(_("Export file name"));
@@ -349,11 +388,10 @@ void RenderGuiSystem::export_settings()
 
 
     if (Button(_("Export"))) {
-        if (std::filesystem::exists(std::filesystem::absolute(out_file))) {
+        if (std::filesystem::exists(std::filesystem::absolute(out_file)))
             m_openExportDialog = true;
-        } else {
+        else
             write_data(tmp_file, out_file, type);
-        }
     }
 
     if (m_openExportDialog) {
@@ -483,4 +521,55 @@ void RenderGuiSystem::laser_settings()
     Checkbox("##draw_pattern", &Config::getVal<bool>("DrawPattern"));
 
     End();
+}
+
+void RenderGuiSystem::video_settings()
+{
+    using namespace ImGui;
+
+    if (Button(_("Video settings")))
+        m_videoSettingsOpen = true;
+
+    if (m_videoSettingsOpen) {
+        const char *items[] = {"Light", "Classic", "Dark"};
+        Begin(_("Video settings"), &m_videoSettingsOpen);
+        bool msaaEnabled = Config::getVal<bool>("MSAA");
+        if (Checkbox(_("Enable antialiasing(Need game restart)"),
+                     &Config::getVal<bool>("MSAA"))
+            || msaaEnabled) {
+            Text(_("MSAA Samples"));
+            SameLine();
+            InputInt("##msaa_samples",
+                     &Config::getVal<int>("MSAASamples"));
+        }
+        Text(_("Application theme:"));
+        SameLine();
+        ListBox("", &Config::getVal<int>("Theme"), items, 3);
+        Text(_("Drag sensitivity:"));
+        SliderFloat("##mouse_sens", &Config::getVal<GLfloat>("MouseSens"),
+                    1, 100);
+        End();
+    }
+}
+
+void RenderGuiSystem::add_model()
+{
+    using namespace ImGui;
+
+    if (Button(_("Add model")))
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseModelDlgKey",
+                                                _("Choose model file"),
+                                                ".obj", ".");
+
+    // Load model from file dialog
+    if (ImGuiFileDialog::Instance()->Display("ChooseModelDlgKey")) {
+        if (ImGuiFileDialog::Instance()->IsOk()) {
+            m_modelFile = ImGuiFileDialog::Instance()->GetFilePathName();
+            m_modelPath = ImGuiFileDialog::Instance()->GetCurrentPath();
+
+            m_ecsManager->addEntityFromFile(m_modelFile);
+        }
+
+        ImGuiFileDialog::Instance()->Close();
+    }
 }
