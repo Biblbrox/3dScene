@@ -31,6 +31,9 @@ void Model::draw(ShaderProgram& program) const
 
 void Model::loadModel(const std::string& path, bool flip_uv)
 {
+    m_meshes.clear();
+    m_textureLoaded.clear();
+
     Assimp::Importer import;
 
     // Remove trailing dots

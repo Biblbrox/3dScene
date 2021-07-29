@@ -1,5 +1,5 @@
-#ifndef MOONLANDER_CONSTANTS_HPP
-#define MOONLANDER_CONSTANTS_HPP
+#ifndef CONSTANTS_HPP
+#define CONSTANTS_HPP
 
 #include <string>
 
@@ -50,4 +50,4 @@ inline std::string getShaderPath(const std::string &fileName)
     return std::string(SHADER_PATH + fileName);
 }
 
-#endif //MOONLANDER_CONSTANTS_HPP
+#endif //CONSTANTS_HPP

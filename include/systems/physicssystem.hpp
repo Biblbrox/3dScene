@@ -1,5 +1,5 @@
-#ifndef MOONLANDER_PHYSICSSYSTEM_HPP
-#define MOONLANDER_PHYSICSSYSTEM_HPP
+#ifndef PHYSICSSYSTEM_HPP
+#define PHYSICSSYSTEM_HPP
 
 #include "ecs/system.hpp"
 
@@ -9,4 +9,4 @@ public:
     void update_state(size_t delta) override;
 };
 
-#endif //MOONLANDER_PHYSICSSYSTEM_HPP
+#endif //PHYSICSSYSTEM_HPP

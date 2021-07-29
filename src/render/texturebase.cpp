@@ -2,25 +2,29 @@
 
 #include "render/texturebase.hpp"
 
-TextureBase::TextureBase() : m_textureId(0), m_textureWidth(0),
-                     m_textureHeight(0),
-                     m_textureDepth(0)
+TextureBase::TextureBase() : m_textureId(0),
+                             m_size(0, 0, 0)
+{
+}
+
+TextureBase::TextureBase(glm::vec3 size) : m_textureId(0),
+                                           m_size(std::move(size))
 {
 }
 
 GLuint TextureBase::getWidth() const noexcept
 {
-    return m_textureWidth;
+    return m_size.x;
 }
 
 GLuint TextureBase::getHeight() const noexcept
 {
-    return m_textureHeight;
+    return m_size.y;
 }
 
 GLuint TextureBase::getDepth() const noexcept
 {
-    return m_textureDepth;
+    return m_size.z;
 }
 
 GLuint TextureBase::getTextureID() const
@@ -34,8 +38,6 @@ void TextureBase::freeTexture()
         glDeleteTextures(1, &m_textureId);
         m_textureId = 0;
     }
-
-    m_textureWidth = m_textureHeight = 0;
 }
 
 TextureBase::~TextureBase()
@@ -43,8 +45,13 @@ TextureBase::~TextureBase()
     freeTexture();
 }
 
-vec3 TextureBase::getSize() const noexcept
+const vec3& TextureBase::getSize() const noexcept
 {
-    return {m_textureWidth, m_textureHeight, m_textureDepth};
+    return m_size;
+}
+
+vec3& TextureBase::getSize() noexcept
+{
+    return m_size;
 }
 

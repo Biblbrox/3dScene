@@ -19,8 +19,11 @@ public:
     ~RenderGuiSystem();
 private:
     void update_state(size_t delta) override;
+
     void export_settings();
     void laser_settings();
+    void video_settings();
+    void add_model();
 
     GLfloat m_aspectRatio;
 
@@ -29,10 +32,14 @@ private:
     bool m_laserSettingsOpen;
     bool m_exportSettingsOpen;
     bool m_openExportDialog;
+    bool m_selSettingsOpen;
 
     // Files to load simulation
     std::string m_simFile;
     std::string m_simPath;
+
+    std::string m_modelFile;
+    std::string m_modelPath;
 
     ImFont* m_font;
 };

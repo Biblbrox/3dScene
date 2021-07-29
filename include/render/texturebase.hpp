@@ -27,7 +27,8 @@ public:
     virtual GLuint getWidth() const noexcept;
     virtual GLuint getHeight() const noexcept;
     virtual GLuint getDepth() const noexcept;
-    virtual vec3 getSize() const noexcept;
+    virtual const vec3& getSize() const noexcept;
+    virtual vec3& getSize() noexcept;
     virtual void draw(ShaderProgram& program) const = 0;
 
 //    virtual GLuint getTriangleCount() const = 0;
@@ -39,12 +40,11 @@ public:
 
 protected:
     explicit TextureBase();
+    explicit TextureBase(glm::vec3 size);
 
     GLuint m_textureId;
 
-    GLuint m_textureWidth;
-    GLuint m_textureHeight;
-    GLuint m_textureDepth;
+    glm::vec3 m_size;
 };
 
 #endif //TEXTUREBASE_HPP

@@ -60,7 +60,6 @@ void KeyboardSystem::update_state(size_t delta)
                     vec2 viewport_pos = Config::getVal<vec2>("ViewportPos");
                     mouse_pos -= viewport_pos;
 
-                    auto program = SceneProgram::getInstance();
                     program->useFramebufferProgram();
                     mat4 projection = program->getMat4("ProjectionMatrix");
                     mat4 view = program->getMat4("ViewMatrix");
@@ -90,6 +89,10 @@ void KeyboardSystem::update_state(size_t delta)
                         processMouseDrag();
                 }
 
+                if (e.button.button == SDL_BUTTON_RIGHT && !stopped) {
+                    processMouseSelect();
+                }
+
                 break;
             case SDL_MOUSEBUTTONUP:
                 if (e.button.button == SDL_BUTTON_MIDDLE && !stopped)
@@ -116,7 +119,9 @@ void KeyboardSystem::update_state(size_t delta)
                 break;
             case SDL_MOUSEWHEEL:
                 if (!stopped) {
-                    camera->processMouseScroll(e.wheel.y / 10.f);
+                    GLfloat fr = 10.f;
+                    camera->setMovSpeed(camera->getMovSpeed() + e.wheel.y / fr);
+                    camera->processMouseScroll(e.wheel.y / fr);
                     program->setMat4(VIEW, camera->getView());
                 }
                 break;
@@ -156,30 +161,65 @@ void KeyboardSystem::update_state(size_t delta)
 
 void KeyboardSystem::processMouseDrag()
 {
+    vec2 mouse_pos = utils::getMousePos<GLfloat>();
+    auto obj = findUnderPointer(mouse_pos);
+
+    if (obj.first) {
+        m_dragEnabled = true;
+        m_draggedObj = obj.second;
+        m_dragStartPos = m_draggedObj->getComponent<PositionComponent>()->pos;
+        m_draggedObj->getComponent<SelectableComponent>()->dragged = true;
+    }
+}
+
+void KeyboardSystem::processMouseSelect()
+{
+    vec2 mouse_pos = utils::getMousePos<GLfloat>();
+    auto obj = findUnderPointer(mouse_pos);
+
+    if (obj.first) {
+        Config::getVal<bool>("IsSelected") = true;
+        Config::getVal<int>("SelectedObj") = obj.second->getId();
+        m_isSelected = true;
+    } else {
+        if (m_isSelected) {
+            Config::getVal<bool>("IsSelected") = false;
+            m_isSelected = false;
+        }
+    }
+}
+
+KeyboardSystem::KeyboardSystem() : m_middlePressed(false), m_dragEnabled(false),
+                                   m_draggedObj(nullptr), m_isSelected(false)
+{
+
+}
+
+std::pair<bool, std::shared_ptr<ecs::Entity>>
+KeyboardSystem::findUnderPointer(const vec2& pos)
+{
+    const auto& entities
+            = getEntitiesByTags<SpriteComponent, BVHComponent, PositionComponent,
+                    SelectableComponent>();
+
     auto program = SceneProgram::getInstance();
     program->useFramebufferProgram();
     mat4 projection = program->getMat4("ProjectionMatrix");
     mat4 view = program->getMat4("ViewMatrix");
 
-    vec2 mouse_pos = utils::getMousePos<GLfloat>();
-    vec2 viewport_pos = Config::getVal<vec2>("ViewportPos");
-    vec2 viewport_size = Config::getVal<vec2>("ViewportSize");
-    mouse_pos -= viewport_pos;
-
-    glm::vec3 ray_world = viewportToWorld(mouse_pos, viewport_size, projection, view);
-
     auto camera = FpsCamera::getInstance();
     vec3 origin = camera->getPos();
 
-    const auto& entities
-            = getEntitiesByTags<SpriteComponent, BVHComponent, PositionComponent,
-                    SelectableComponent>();
+    vec2 viewport_pos = Config::getVal<vec2>("ViewportPos");
+    vec2 viewport_size = Config::getVal<vec2>("ViewportSize");
+    vec2 pointer_pos = pos - viewport_pos;
+
+    glm::vec3 ray_world = viewportToWorld(pointer_pos, viewport_size, projection, view);
+
     for (const auto&[key, en]: entities) {
         auto bvh_comp = en->getComponent<BVHComponent>();
         if (!bvh_comp)
             continue;
-
-        auto sprite_comp = en->getComponent<SpriteComponent>();
 
         Ray ray;
         ray.origin = Vector3(origin.x, origin.y, origin.z);
@@ -193,18 +233,9 @@ void KeyboardSystem::processMouseDrag()
         bvh::SingleRayTraverser<Bvh> traverser(*bvh);
 
         auto hit = traverser.traverse(ray, primitive_intersector);
-        if (hit) {
-            m_dragEnabled = true;
-            m_draggedObj = en;
-            m_dragStartPos = en->getComponent<PositionComponent>()->pos;
-            m_draggedObj->getComponent<SelectableComponent>()->dragged = true;
-            break;
-        }
+        if (hit)
+            return {true, en};
     }
-}
 
-KeyboardSystem::KeyboardSystem() : m_middlePressed(false), m_dragEnabled(false),
-                                   m_draggedObj(nullptr)
-{
-
+    return {false, nullptr};
 }

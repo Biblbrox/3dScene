@@ -138,6 +138,10 @@ void utils::fs::saveSimJson(const std::string &file_name,
                 sizes_obj["size"] = json(sprite->getSize());
                 comp_obj["SpriteComponent"].push_back(sizes_obj);
 
+                json uv_obj = json::object();
+                uv_obj["uv_flipped"] = json(sprite->isUvFlipped());
+                comp_obj["SpriteComponent"].push_back(uv_obj);
+
                 en_obj["Components"].push_back(comp_obj);
             } else if (type == type_id<BVHComponent>) {
                 auto comp = en->getComponent<BVHComponent>();
@@ -235,7 +239,7 @@ void utils::fs::saveSimJson(const std::string &file_name,
 }
 
 std::vector<ecs::Entity>
-utils::fs::loadSimJson(const std::string &file_name)
+utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager)
 {
     if (!std::filesystem::exists(file_name)) {
         // Throw error
@@ -247,7 +251,7 @@ utils::fs::loadSimJson(const std::string &file_name)
 
     json j = json::parse(ifs);
     for (const auto& en: j["Entities"]) {
-        ecs::Entity entity;
+        ecs::Entity entity(ecsManager.genUniqueId());
         for (const auto& comp: en["Components"]) {
             if (comp.contains("PositionComponent")) {
                 json json_pos = comp["PositionComponent"];
@@ -265,10 +269,11 @@ utils::fs::loadSimJson(const std::string &file_name)
 
                 std::string model_file = json_sprite[0]["model_file"].get<std::string>();
                 glm::vec3 size = json_sprite[1]["size"].get<glm::vec3>();
+                bool uv_flipped = json_sprite[2]["uv_flipped"].get<bool>();
 
                 entity.addComponent<SpriteComponent>();
                 auto sprite_comp = entity.getComponent<SpriteComponent>();
-                sprite_comp->sprite = std::make_shared<Sprite>(model_file, size);
+                sprite_comp->sprite = std::make_shared<Sprite>(model_file, size, uv_flipped);
             } else if (comp.contains("BVHComponent")) {
                 entity.addComponent<BVHComponent>();
             } else if (comp.contains("SceneComponent")) {

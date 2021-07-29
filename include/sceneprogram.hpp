@@ -1,5 +1,5 @@
-#ifndef MOONLANDER_MOONLANDERPROGRAM_HPP
-#define MOONLANDER_MOONLANDERPROGRAM_HPP
+#ifndef SCENEPROGRAM_HPP
+#define SCENEPROGRAM_HPP
 
 #include <glm/mat4x4.hpp>
 #include <memory>
@@ -13,8 +13,6 @@ protected:
 public:
     SceneProgram();
 
-    //TODO: fix public constructor and make_shared problem
-    //TODO: fix ugly design
     static std::shared_ptr<SceneProgram> getInstance()
     {
         if (!instance)
@@ -44,4 +42,4 @@ private:
     void free_buffers();
 };
 
-#endif //MOONLANDER_MOONLANDERPROGRAM_HPP
+#endif //SCENERPROGRAM_HPP

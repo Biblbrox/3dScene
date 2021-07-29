@@ -1,5 +1,5 @@
-#ifndef MOONLANDER_COLLISIONSYSTEM_HPP
-#define MOONLANDER_COLLISIONSYSTEM_HPP
+#ifndef COLLISIONSYSTEM_HPP
+#define COLLISIONSYSTEM_HPP
 
 #include "components/collisioncomponent.hpp"
 #include "components/spritecomponent.hpp"
@@ -21,4 +21,4 @@ private:
                               const std::vector<vec2>& stars, GLfloat angle);
 };
 
-#endif //MOONLANDER_COLLISIONSYSTEM_HPP
+#endif //COLLISIONSYSTEM_HPP

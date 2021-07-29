@@ -41,29 +41,22 @@ public:
 
     virtual ~FpsCamera(){};
 
-    FpsCamera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
-              glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
-              float yaw = YAW, float pitch = PITCH) :
-            m_front(glm::vec3(0.0f, 0.0f, -1.0f)),
-            m_movSpeed(SPEED), m_mouseSens(SENSITIVITY), m_zoom(ZOOM)
-    {
-        m_pos = position;
-        m_worldUp = up;
-        m_yaw = yaw;
-        m_pitch = pitch;
-        updateCameraVectors();
-    }
+    explicit FpsCamera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
+                       glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
+                       float yaw = YAW, float pitch = PITCH) :
+            FpsCamera(position.x, position.y, position.z, up.x, up.y, up.z,
+                      yaw, pitch) {}
 
 
-    FpsCamera(float posX, float posY, float posZ, float upX, float upY, float upZ,
-              float yaw, float pitch) :
+    explicit FpsCamera(float posX, float posY, float posZ, float upX, float upY, float upZ,
+                       float yaw, float pitch) :
             m_front(glm::vec3(0.0f, 0.0f, -1.0f)), m_movSpeed(SPEED),
-            m_mouseSens(SENSITIVITY), m_zoom(ZOOM)
+            m_mouseSens(SENSITIVITY), m_zoom(ZOOM),
+            m_pos(posX, posY, posZ),
+            m_worldUp(upX, upY, upZ),
+            m_yaw(yaw),
+            m_pitch(pitch)
     {
-        m_pos = glm::vec3(posX, posY, posZ);
-        m_worldUp = glm::vec3(upX, upY, upZ);
-        m_yaw = yaw;
-        m_pitch = pitch;
         updateCameraVectors();
     }
 
@@ -73,9 +66,22 @@ public:
         return glm::lookAt(m_pos, m_pos + m_front, m_up);
     }
 
-    glm::vec3 getPos() const
+    glm::vec3 getPos() const noexcept
     {
         return m_pos;
+    }
+
+    GLfloat getMovSpeed() const noexcept
+    {
+        return m_movSpeed;
+    }
+
+    void setMovSpeed(GLfloat mov_speed) noexcept
+    {
+        if (mov_speed < 0.f)
+            m_movSpeed = 0.f;
+        else
+            m_movSpeed = mov_speed;
     }
 
     void setPos(const glm::vec3& pos)
