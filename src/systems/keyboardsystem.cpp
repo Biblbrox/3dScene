@@ -23,7 +23,6 @@ using glm::vec4;
 using glm::vec3;
 using utils::log::Logger;
 using math::viewportToWorld;
-//using coll::BVHAABBTraversal;
 using utils::data::mapBinaryTree;
 
 void KeyboardSystem::update_state(size_t delta)
@@ -38,8 +37,8 @@ void KeyboardSystem::update_state(size_t delta)
     auto camera = FpsCamera::getInstance();
     auto program = SceneProgram::getInstance();
     bool stopped = getGameState() == GameStates::STOP;
+    program->useFramebufferProgram();
     while (SDL_PollEvent(&e)) {
-        program->useFramebufferProgram();
         ImGui_ImplSDL2_ProcessEvent(&e);
         switch (e.type) {
             case SDL_QUIT:
@@ -68,13 +67,15 @@ void KeyboardSystem::update_state(size_t delta)
                     vec3 dir = viewportToWorld(mouse_pos * sens, viewport_size,
                                                projection, view);
                     Ray ray;
-                    ray.origin = Vector3(camera->getPos().x, camera->getPos().y, camera->getPos().z);
+                    ray.origin = Vector3(camera->getPos().x, camera->getPos().y,
+                                         camera->getPos().z);
                     ray.direction = Vector3(dir.x, dir.y, dir.z);
                     ray.tmin = 0;
                     ray.tmax = 100000;
                     auto terrain_en = getEntitiesByTag<TerrainComponent>().begin()->second;
                     auto terrain = terrain_en->getComponent<TerrainComponent>()->terrain;
-                    auto [col, pos_on_ter] = coll::rayTerrainIntersection(*terrain, ray, 0, 10000.f, 1000);
+                    auto[col, pos_on_ter] = coll::rayTerrainIntersection(
+                            *terrain, ray, 0, 10000.f, 1000);
 
                     pos->pos = pos_on_ter;
                 }
@@ -101,7 +102,8 @@ void KeyboardSystem::update_state(size_t delta)
                 if (e.button.button == SDL_BUTTON_LEFT && !stopped)
                     m_leftMousePressed = false;
 
-                if (e.button.button == SDL_BUTTON_LEFT && !stopped && m_draggedObj) {
+                if (e.button.button == SDL_BUTTON_LEFT && !stopped &&
+                    m_draggedObj) {
                     m_draggedObj->getComponent<SelectableComponent>()->dragged = false;
                     m_dragEnabled = false;
                     auto bvh = m_draggedObj->getComponent<BVHComponent>();
@@ -109,10 +111,15 @@ void KeyboardSystem::update_state(size_t delta)
                         auto sprite = m_draggedObj->getComponent<SpriteComponent>()->sprite;
                         auto pos = m_draggedObj->getComponent<PositionComponent>();
                         auto triangles = sprite->getTriangles();
-                        mat4 transform = math::createTransform(pos->pos, pos->angle, pos->rot_axis, sprite->getSize());
-                        triangles = math::transformTriangles(triangles, transform);
+                        mat4 transform = math::createTransform(pos->pos,
+                                                               pos->angle,
+                                                               pos->rot_axis,
+                                                               sprite->getSize());
+                        triangles = math::transformTriangles(triangles,
+                                                             transform);
                         bvh->bvh_tree = coll::buildBVH(triangles);
-                        bvh->triangles = std::make_shared<std::vector<Triangle>>(triangles);
+                        bvh->triangles = std::make_shared<std::vector<Triangle>>(
+                                triangles);
                     }
                     m_draggedObj = nullptr;
                 }
@@ -130,32 +137,24 @@ void KeyboardSystem::update_state(size_t delta)
                     glViewport(0.f, 0.f, screen_width, screen_height);
                 }
                 break;
-            case SDL_KEYDOWN:
-                if (!stopped) {
-                    switch (e.key.keysym.sym)
-                    {
-                        case SDLK_w:
-                            camera->processKeyboard(FORWARD, delta);
-                            break;
-                        case SDLK_s:
-                            camera->processKeyboard(BACKWARD, delta);
-                            break;
-                        case SDLK_a:
-                            camera->processKeyboard(LEFT, delta);
-                            break;
-                        case SDLK_d:
-                            camera->processKeyboard(RIGHT, delta);
-                            break;
-                    }
-                }
-                break;
             default:
                 break;
         }
+    }
 
-        if (!stopped) {
-            program->setMat4(VIEW, camera->getView());
-        }
+    if (!stopped) {
+        const Uint8 *state = SDL_GetKeyboardState(NULL);
+
+        if (state[SDL_SCANCODE_W])
+            camera->processKeyboard(Movement::FORWARD, delta);
+        if (state[SDL_SCANCODE_S])
+            camera->processKeyboard(Movement::BACKWARD, delta);
+        if (state[SDL_SCANCODE_A])
+            camera->processKeyboard(Movement::LEFT, delta);
+        if (state[SDL_SCANCODE_D])
+            camera->processKeyboard(Movement::RIGHT, delta);
+
+        program->setMat4(VIEW, camera->getView());
     }
 }
 
@@ -196,9 +195,9 @@ KeyboardSystem::KeyboardSystem() : m_middlePressed(false), m_dragEnabled(false),
 }
 
 std::pair<bool, std::shared_ptr<ecs::Entity>>
-KeyboardSystem::findUnderPointer(const vec2& pos)
+KeyboardSystem::findUnderPointer(const vec2 &pos)
 {
-    const auto& entities
+    const auto &entities
             = getEntitiesByTags<SpriteComponent, BVHComponent, PositionComponent,
                     SelectableComponent>();
 
@@ -214,7 +213,8 @@ KeyboardSystem::findUnderPointer(const vec2& pos)
     vec2 viewport_size = Config::getVal<vec2>("ViewportSize");
     vec2 pointer_pos = pos - viewport_pos;
 
-    glm::vec3 ray_world = viewportToWorld(pointer_pos, viewport_size, projection, view);
+    glm::vec3 ray_world = viewportToWorld(pointer_pos, viewport_size,
+                                          projection, view);
 
     for (const auto&[key, en]: entities) {
         auto bvh_comp = en->getComponent<BVHComponent>();
@@ -229,7 +229,8 @@ KeyboardSystem::findUnderPointer(const vec2& pos)
 
         auto triangles = bvh_comp->triangles;
         auto bvh = bvh_comp->bvh_tree;
-        bvh::ClosestPrimitiveIntersector<Bvh, Triangle> primitive_intersector(*bvh, triangles->data());
+        bvh::ClosestPrimitiveIntersector<Bvh, Triangle> primitive_intersector(
+                *bvh, triangles->data());
         bvh::SingleRayTraverser<Bvh> traverser(*bvh);
 
         auto hit = traverser.traverse(ray, primitive_intersector);

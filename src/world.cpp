@@ -231,6 +231,8 @@ void World::init_from_file(const std::string& init_file)
         auto e = std::make_shared<ecs::Entity>(en);
         e->activate();
         m_entities.emplace(e->getId(), e);
+        if (e->getComponent<TerrainComponent>())
+            m_terrainID = e->getId();
     }
 
     init_scene();

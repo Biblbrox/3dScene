@@ -33,8 +33,8 @@ namespace utils::texture
  * @return textureID
  */
     GLuint
-    loadTextureFromPixels32(const GLuint *pixels, GLuint width, GLuint height,
-                            GLenum textureType = GL_RGBA);
+    loadTextureFromPixels32(const void *pixels, GLuint width, GLuint height,
+                            GLenum textureType = GL_RGBA, GLenum type = GL_UNSIGNED_BYTE);
 
     /**
      * Parse obj file
@@ -85,6 +85,20 @@ namespace utils::texture
             else
                 format = GL_BGR;
         } else if (color_num == 1) {
+            format = GL_RG8;
+        }
+
+        return format;
+    }
+
+    constexpr GLenum surfByNumChannels(GLuint num_channels)
+    {
+        GLenum format = 0;
+        if (num_channels == 4) {     // contains an alpha channel
+            format = GL_RGBA;
+        } else if (num_channels == 3) {     // no alpha channel
+            format = GL_RGB;
+        } else if (num_channels == 1) {
             format = GL_RG8;
         }
 

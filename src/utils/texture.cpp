@@ -14,9 +14,11 @@
 #include "utils/logger.hpp"
 #include "utils/string.hpp"
 #include "constants.hpp"
+#include "sceneprogram.hpp"
 #include "exceptions/fsexception.hpp"
 #include "exceptions/sdlexception.hpp"
 #include "exceptions/glexception.hpp"
+
 
 using boost::format;
 using utils::string::split;
@@ -132,33 +134,37 @@ SDL_Surface* utils::texture::loadSurface(const std::string& file, bool flip)
 
 GLuint utils::texture::loadTexture(const std::string &file,
                                    GLuint *textureWidth,
-                                   GLuint *textureHeight) {
+                                   GLuint *textureHeight)
+{
     using namespace utils::texture;
 
     SDL_Surface* surface = loadSurface(file);
 
-    GLenum texture_format = getSurfaceFormatInfo(*surface);
+    GLenum channels = getSurfaceFormatInfo(*surface);
 
-    GLuint tw = surface->w;
-    GLuint th = surface->h;
+    int tw, th;
+    tw = surface->w;
+    th = surface->h;
+
+    auto* pixels = static_cast<GLuint*>(surface->pixels);
+
+    SDL_FreeSurface(surface);
 
     if (textureWidth)
         *textureWidth = tw;
     if (textureHeight)
         *textureHeight = th;
 
-    GLuint textureId = loadTextureFromPixels32(
-            static_cast<GLuint*>(surface->pixels),
-            tw, th, texture_format);
-
-    SDL_FreeSurface(surface);
+    GLuint textureId = loadTextureFromPixels32(pixels, tw, th,
+                                               channels,
+                                               GL_UNSIGNED_BYTE);
 
     return textureId;
 }
 
 GLuint
-utils::texture::loadTextureFromPixels32(const GLuint *pixels, GLuint width, GLuint height,
-                                        GLenum texture_format)
+utils::texture::loadTextureFromPixels32(const void *pixels, GLuint width, GLuint height,
+                                        GLenum texture_format, GLenum type)
 {
     assert(pixels);
     GLuint textureID;
@@ -171,7 +177,7 @@ utils::texture::loadTextureFromPixels32(const GLuint *pixels, GLuint width, GLui
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, texture_format,
-                 GL_UNSIGNED_BYTE, pixels);
+                 type, pixels);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     glBindTexture(GL_TEXTURE_2D, 0);

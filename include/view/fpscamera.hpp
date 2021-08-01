@@ -9,7 +9,7 @@
 #include <SDL_opengl.h>
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
-enum LidarMovement
+enum class Movement
 {
     FORWARD,
     BACKWARD,
@@ -90,16 +90,16 @@ public:
     }
 
     // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-    void processKeyboard(LidarMovement direction, float deltaTime)
+    void processKeyboard(Movement direction, float deltaTime)
     {
         float velocity = m_movSpeed * deltaTime;
-        if (direction == FORWARD)
+        if (direction == Movement::FORWARD)
             m_pos += m_front * velocity;
-        if (direction == BACKWARD)
+        if (direction == Movement::BACKWARD)
             m_pos -= m_front * velocity;
-        if (direction == LEFT)
+        if (direction == Movement::LEFT)
             m_pos -= m_right * velocity;
-        if (direction == RIGHT)
+        if (direction == Movement::RIGHT)
             m_pos += m_right * velocity;
     }
 
