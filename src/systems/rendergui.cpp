@@ -272,12 +272,14 @@ void RenderGuiSystem::update_state(size_t delta)
             auto size = ImGui::GetContentRegionAvail();
             GLfloat image_height = size.x / m_aspectRatio;
             size.y = image_height;
-            if (!Config::hasKey("ViewportSize"))
-                Config::addVal<vec2>("ViewportSize", {size.x, size.y}, "vec2");
+//            if (!Config::hasKey("ViewportSize"))
+//                Config::addVal<vec2>("ViewportSize", {size.x, size.y}, "vec2");
 
             auto pos = ImGui::GetCursorPos();
-            if (!Config::hasKey("ViewportPos"))
-                Config::addVal<vec2>("ViewportPos", {pos.x, pos.y}, "vec2");
+            Config::getVal<vec2>("ViewportPos") = {pos.x, pos.y};
+            Config::getVal<vec2>("ViewportSize") = {size.x, size.y};
+//            if (!Config::hasKey("ViewportPos"))
+//                Config::addVal<vec2>("ViewportPos", {pos.x, pos.y}, "vec2");
 
             if (getGameState() != GameStates::STOP)
                 ImGui::Image((ImTextureID) sceneComp->texture, size, {0, 1},

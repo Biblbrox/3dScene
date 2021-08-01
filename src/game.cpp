@@ -208,6 +208,7 @@ void Game::initGL()
 
     glDisable(GL_DEPTH_CLAMP);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
     glEnable(GL_STENCIL_TEST);
     glEnable(GL_STENCIL_TEST);
     glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
