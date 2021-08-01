@@ -176,6 +176,10 @@ utils::texture::loadTextureFromPixels32(const void *pixels, GLuint width, GLuint
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
+//    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+//    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+//    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+//    glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, texture_format,
                  type, pixels);
     glGenerateMipmap(GL_TEXTURE_2D);

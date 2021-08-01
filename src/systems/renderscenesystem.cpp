@@ -250,7 +250,9 @@ void RenderSceneSystem::drawTerrain()
     auto terrain_en = getEntitiesByTag<TerrainComponent>().begin()->second;
     auto terrain = terrain_en->getComponent<TerrainComponent>()->terrain;
 
+    glCullFace(GL_FRONT);
     render::renderTerrain(*program, *terrain);
+    glCullFace(GL_BACK);
 }
 
 
