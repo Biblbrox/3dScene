@@ -82,8 +82,8 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("PrismFreq", glm::vec2(90.f, 45.f), "vec2");
     if (!Config::hasKey("PrismStartAngle"))
         Config::addVal("PrismStartAngle", glm::vec2(0.f, 0.f), "vec2");
-    if (!Config::hasKey("LaserPos"))
-        Config::addVal("LaserPos", glm::vec3(0.f), "vec3");
+//    if (!Config::hasKey("LaserPos"))
+//        Config::addVal("LaserPos", glm::vec3(0.f), "vec3");
     if (!Config::hasKey("DrawLeafs"))
         Config::addVal("DrawLeafs", false, "bool");
     if (!Config::hasKey("EditMode"))
@@ -108,10 +108,10 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("EnableLight", false, "bool");
     if (!Config::hasKey("LightPos"))
         Config::addVal("LightPos", glm::vec3(0.f), "vec3");
-    if (!Config::hasKey("LaserYaw"))
-        Config::addVal("LaserYaw", 0.f, "float");
-    if (!Config::hasKey("LaserPitch"))
-        Config::addVal("LaserPitch", 0.f, "float");
+//    if (!Config::hasKey("LaserYaw"))
+//        Config::addVal("LaserYaw", 0.f, "float");
+//    if (!Config::hasKey("LaserPitch"))
+//        Config::addVal("LaserPitch", 0.f, "float");
     if (!Config::hasKey("RayLength"))
         Config::addVal("RayLength", 10.f, "float");
     if (!Config::hasKey("DotDens"))
@@ -332,18 +332,25 @@ void World::init_scene()
 
 void World::init_sprites()
 {
+    auto add_bvh = [](const PositionComponent& pos, const SpriteComponent& sprite,
+            BVHComponent& bvh) {
+        auto triangles = sprite.sprite->getTriangles();
+        mat4 man_transform = math::createTransform(pos.pos, pos.angle,
+                                                   pos.rot_axis, sprite.sprite->getSize());
+        triangles = math::transformTriangles(triangles, man_transform);
+        bvh.bvh_tree = coll::buildBVH(triangles);
+        bvh.triangles = make_shared<vector<Triangle>>(triangles);
+    };
+
     auto lidarEn = createEntity(genUniqueId());
     lidarEn->activate();
-    lidarEn->addComponents<PositionComponent, LidarComponent>();
+    lidarEn->addComponents<PositionComponent, LidarComponent, SpriteComponent>();
     auto lidar_pos = lidarEn->getComponent<PositionComponent>();
-    lidar_pos->pos = Config::getVal<glm::vec3>("LaserPos");
     auto lidarComp = lidarEn->getComponent<LidarComponent>();
-    lidarComp->yaw = Config::getVal<GLfloat>("LaserYaw");
-    lidarComp->pitch = Config::getVal<GLfloat>("LaserPitch");
-    lidarComp->length = Config::getVal<GLfloat>("RayLength");
-    lidarComp->freq = Config::getVal<vec2>("PrismFreq");
-    lidarComp->start_angle = Config::getVal<vec2>("PrismStartAngle");
-    lidarComp->density = Config::getVal<GLfloat>("DotDens");
+
+    auto lidarSprite = lidarEn->getComponent<SpriteComponent>();
+    lidarSprite->sprite = std::make_shared<Sprite>(getModelPath("cube/cube.obj"), vec3(100.f, 100.f, 100.f),
+                                                   false);
 
     Lidar lidar(lidarComp->length, lidar_pos->pos, {0.f, 1.f, 0.f},
                 lidarComp->yaw, lidarComp->pitch);
@@ -364,13 +371,9 @@ void World::init_sprites()
 
     vec3 man_size = {10.f, 10.f, 10.f};
     vec3 chair_size = {10.f, 10.f, 10.f};
-    vec3 palm_size = {2.f, 2.f, 2.f};
-    vec3 car_size = {2.f, 2.f, 2.f};
     vec3 house_size = {1.f, 1.f, 1.f};
     std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite, man_sprite,
             chair_sprite;
-//    car_sprite = make_shared<Sprite>(getResourcePath("ford_focus2.obj"), car_size);
-//    palm_sprite = make_shared<Sprite>(getResourcePath("lowpolypalm.obj"), palm_size);
     house_sprite = make_shared<Sprite>(getModelPath("Soviet_Panel/spah9lvl.obj"), house_size,
                                        false);
     man_sprite = make_shared<Sprite>(getModelPath("police/police.obj"), man_size);
@@ -387,14 +390,7 @@ void World::init_sprites()
     pos_chair->pos.z = 400.f + start_z;
     pos_chair->pos.y = terrain->getAltitude(
             {pos_chair->pos.x, pos_chair->pos.z}) + 40.f;
-    auto triangles = chair_sprite->getTriangles();
-    mat4 chair_transform = math::createTransform(pos_chair->pos, 0,
-                                                 {0.f, 1.f, 1.f}, chair_size);
-    triangles = math::transformTriangles(triangles, chair_transform);
-    chair_en->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(
-            triangles);
-    chair_en->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(
-            triangles);
+    add_bvh(*pos_chair, *chair_sprite_comp, *chair_en->getComponent<BVHComponent>());
     auto material = chair_en->getComponent<MaterialComponent>();
     material->ambient = vec3(1.f);
     material->diffuse = vec3(0.8f);
@@ -411,13 +407,7 @@ void World::init_sprites()
     pos_man->pos.x = 40.f + start_x;
     pos_man->pos.z = 300 + start_z;
     pos_man->pos.y = terrain->getAltitude({pos_man->pos.x, pos_man->pos.z}) + 60.f;
-    triangles = man_sprite->getTriangles();
-    mat4 man_transform = math::createTransform(pos_man->pos, 0, {0.f, 1.f, 1.f},
-                                               man_size);
-    triangles = math::transformTriangles(triangles, man_transform);
-    man_en->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(triangles);
-    man_en->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(
-            triangles);
+    add_bvh(*pos_man, *man_sprite_comp, *man_en->getComponent<BVHComponent>());
     material = man_en->getComponent<MaterialComponent>();
     material->ambient = vec3(1.f);
     material->diffuse = vec3(0.8f);
@@ -436,80 +426,6 @@ void World::init_sprites()
     Config::addVal("LightPos", camera->getPos(), "vec3");
 
     for (size_t i = 0; i < 5; ++i) {
-        /*auto left = createEntity(unique_id());
-        left->activate();
-        left->addComponents<SpriteComponent, PositionComponent,
-                SelectableComponent, BVHComponent, MaterialComponent>();
-        auto sprite_left = left->getComponent<SpriteComponent>();
-        sprite_left->sprite = palm_sprite;
-        auto pos_left = left->getComponent<PositionComponent>();
-        pos_left->pos.x = i * 30.f + start_x;
-        pos_left->pos.z = 0 + start_z;
-        pos_left->pos.y = terrain->getAltitude({pos_left->pos.x, pos_left->pos.z});
-        triangles = palm_sprite->getTriangles();
-        mat4 palm_transform = math::createTransform(pos_left->pos, pos_left->angle, pos_left->rot_axis,
-                                                    palm_size);
-        triangles = math::transformTriangles(triangles, palm_transform);
-        left->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(triangles);
-        left->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(
-                triangles);
-        material = left->getComponent<MaterialComponent>();
-        material->ambient = vec3(1.f);
-        material->diffuse = vec3(0.8f);
-        material->specular = vec3(0.f);
-        material->shininess = 32.f;
-
-        auto right = createEntity(unique_id());
-        right->activate();
-        right->addComponents<SpriteComponent, PositionComponent,
-                SelectableComponent, BVHComponent, MaterialComponent>();
-        auto sprite_right = right->getComponent<SpriteComponent>();
-        sprite_right->sprite = palm_sprite;
-        auto pos_right = right->getComponent<PositionComponent>();
-        pos_right->pos.x = i * 30.f + start_x;
-        pos_right->pos.z = 30.f + start_z;
-        pos_right->pos.y = terrain->getAltitude({pos_right->pos.x, pos_right->pos.z});
-        triangles = palm_sprite->getTriangles();
-        palm_transform = math::createTransform(pos_right->pos, pos_right->angle, pos_right->rot_axis,
-                                               palm_size);
-        triangles = math::transformTriangles(triangles, palm_transform);
-        right->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(triangles);
-        right->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(
-                triangles);
-
-        material = right->getComponent<MaterialComponent>();
-        material->ambient = vec3(1.f);
-        material->diffuse = vec3(0.8f);
-        material->specular = vec3(0.f);
-        material->shininess = 32.f;
-
-        auto car = createEntity(unique_id());
-        car->activate();
-        car->addComponents<SpriteComponent, PositionComponent,
-                SelectableComponent, BVHComponent, MaterialComponent>();
-        auto car_sprite_comp = car->getComponent<SpriteComponent>();
-        car_sprite_comp->sprite = car_sprite;
-        auto car_pos = car->getComponent<PositionComponent>();
-        car_pos->pos.x = i * 30.f + start_x;
-        car_pos->pos.z = rand.generateu(30.f, 40.f) + start_z;
-        car_pos->pos.y = terrain->getAltitude({car_pos->pos.x, car_pos->pos.z});
-        car_pos->angle = -glm::half_pi<GLfloat>();
-        car_pos->rot_axis = vec3(0.f, 1.f, 0.f);
-        triangles = palm_sprite->getTriangles();
-        auto car_transform = math::createTransform(car_pos->pos, car_pos->angle,
-                                                   car_pos->rot_axis, car_size);
-        triangles = math::transformTriangles(triangles, car_transform);
-        car->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(triangles);
-        car->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(
-                triangles);
-        material = car->getComponent<MaterialComponent>();
-        material->ambient = vec3(1.f);
-        material->diffuse = vec3(1.f);
-        material->specular = vec3(0.5f);
-        material->shininess = 32.f;
-
-
-        */
         auto house = createEntity(genUniqueId());
         house->activate();
         house->addComponents<SpriteComponent, PositionComponent,
@@ -522,13 +438,7 @@ void World::init_sprites()
         house_pos->pos.y = terrain->getAltitude({house_pos->pos.x, house_pos->pos.z});
         house_pos->angle = -glm::half_pi<GLfloat>();
         house_pos->rot_axis = vec3(0.f, 1.f, 0.f);
-        triangles = house_sprite->getTriangles();
-        auto house_transform = math::createTransform(house_pos->pos, house_pos->angle,
-                                                     house_pos->rot_axis, house_size);
-        triangles = math::transformTriangles(triangles, house_transform);
-        house->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(triangles);
-        house->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(
-                triangles);
+        add_bvh(*house_pos, *house_sprite_comp, *house->getComponent<BVHComponent>());
         material = house->getComponent<MaterialComponent>();
         material->ambient = vec3(1.f);
         material->diffuse = vec3(1.f);

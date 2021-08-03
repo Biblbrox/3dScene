@@ -66,6 +66,8 @@ namespace coll {
      */
     TreePtr buildBVH(const std::vector<Triangle>& triangles) noexcept;
 
+
+
     std::pair<bool, vec3>
     BVHCollision(TreePtr tree, const Ray& ray, const std::vector<Triangle>& triangles);
 
