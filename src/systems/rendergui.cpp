@@ -13,6 +13,7 @@
 #include "components/lidarcomponent.hpp"
 #include "components/bvhcomponent.hpp"
 #include "components/scenecomponent.hpp"
+#include "components/movablecomponent.hpp"
 #include "utils/logger.hpp"
 #include "utils/fs.hpp"
 #include "utils/collision.hpp"
@@ -54,7 +55,7 @@ RenderGuiSystem::RenderGuiSystem() : m_videoSettingsOpen(false),
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     io.WantCaptureMouse = true;
-    io.WantCaptureKeyboard = true;
+    io.WantCaptureKeyboard = false;
 
     ImGuiStyle &style = ImGui::GetStyle();
     style.WindowRounding = 8.f;
@@ -167,9 +168,9 @@ void RenderGuiSystem::update_state(size_t delta)
 
         Spacing();
         BeginTable("table1", 2, ImGuiTableFlags_Borders
-                                       | ImGuiTableFlags_Resizable
-                                       | ImGuiTableFlags_NoHostExtendX
-                                       | ImGuiTableFlags_NoHostExtendY,
+                                | ImGuiTableFlags_Resizable
+                                | ImGuiTableFlags_NoHostExtendX
+                                | ImGuiTableFlags_NoHostExtendY,
                           {0, -1});
         {
             TableNextRow();
@@ -185,8 +186,8 @@ void RenderGuiSystem::update_state(size_t delta)
                      &Config::getVal<bool>("DrawRays"));
             Checkbox(_("Draw bounding boxes"),
                      &Config::getVal<bool>("DrawBoundingBoxes"));
-            Checkbox(_("Check collision"),
-                     &Config::getVal<bool>("CheckCollision"));
+            if (Button(_("Check collision")))
+                Config::getVal<bool>("CheckCollision") = true;
             Checkbox(_("Enable lighting"),
                      &Config::getVal<bool>("EnableLight"));
 
@@ -262,7 +263,6 @@ void RenderGuiSystem::update_state(size_t delta)
                 End();
             }
 
-
             export_settings();
 
             video_settings();
@@ -272,14 +272,10 @@ void RenderGuiSystem::update_state(size_t delta)
             auto size = ImGui::GetContentRegionAvail();
             GLfloat image_height = size.x / m_aspectRatio;
             size.y = image_height;
-//            if (!Config::hasKey("ViewportSize"))
-//                Config::addVal<vec2>("ViewportSize", {size.x, size.y}, "vec2");
 
             auto pos = ImGui::GetCursorPos();
             Config::getVal<vec2>("ViewportPos") = {pos.x, pos.y};
             Config::getVal<vec2>("ViewportSize") = {size.x, size.y};
-//            if (!Config::hasKey("ViewportPos"))
-//                Config::addVal<vec2>("ViewportPos", {pos.x, pos.y}, "vec2");
 
             if (getGameState() != GameStates::STOP)
                 ImGui::Image((ImTextureID) sceneComp->texture, size, {0, 1},
@@ -313,37 +309,8 @@ void RenderGuiSystem::update_state(size_t delta)
             Text(status_str.str().c_str());
         }
 
-        if (Config::getVal<bool>("IsSelected")) {
-            Begin(_("Selected settings"), &m_selSettingsOpen);
-            Text("Selected settings");
-
-            auto selEn = m_ecsManager->getEntities()[Config::getVal<int>("SelectedObj")];
-            auto spriteComp = selEn->getComponent<SpriteComponent>();
-            auto sprite = spriteComp->sprite;
-
-            if (InputFloat3("##sprite_scale", glm::value_ptr(sprite->getSize()))) {
-                auto bvh = selEn->getComponent<BVHComponent>();
-
-                if (bvh) {
-                    auto pos = selEn->getComponent<PositionComponent>();
-                    auto triangles = sprite->getTriangles();
-                    mat4 transform = math::createTransform(pos->pos, pos->angle, pos->rot_axis, sprite->getSize());
-                    triangles = math::transformTriangles(triangles, transform);
-                    bvh->bvh_tree = coll::buildBVH(triangles);
-                    bvh->triangles = std::make_shared<std::vector<Triangle>>(triangles);
-                }
-            }
-
-            bool flip_uv = sprite->isUvFlipped();
-            bool old_flip = flip_uv;
-            Text(_("Flip UV"));
-            Checkbox("##flip_uv", &flip_uv);
-
-            if (flip_uv != old_flip)
-                sprite->flipUV();
-
-            End();
-        }
+        if (Config::getVal<bool>("IsSelected"))
+            selection_settings();
 
         EndTable();
     }
@@ -428,9 +395,7 @@ void RenderGuiSystem::laser_settings()
 
     Begin(_("Laser settings"), &m_laserSettingsOpen);
     Text(_("Laser position"));
-    if (InputFloat3("##laser_pos", glm::value_ptr(
-            Config::getVal<vec3>("LaserPos")))) {
-        pos->pos = Config::getVal<vec3>("LaserPos");
+    if (InputFloat3("##laser_pos", glm::value_ptr(pos->pos))) {
         Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                     lidarComp->yaw, lidarComp->pitch);
 
@@ -440,8 +405,7 @@ void RenderGuiSystem::laser_settings()
     }
 
     Text(_("Laser yaw"));
-    if (InputFloat("##laser_yaw", &Config::getVal<GLfloat>("LaserYaw"))) {
-        lidarComp->yaw = Config::getVal<GLfloat>("LaserYaw");
+    if (InputFloat("##laser_yaw", &lidarComp->yaw)) {
         Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                     lidarComp->yaw, lidarComp->pitch);
 
@@ -451,8 +415,7 @@ void RenderGuiSystem::laser_settings()
     }
 
     Text(_("Laser pitch"));
-    if (InputFloat("##laser_pitch", &Config::getVal<GLfloat>("LaserPitch"))) {
-        lidarComp->pitch = Config::getVal<GLfloat>("LaserPitch");
+    if (InputFloat("##laser_pitch", &lidarComp->pitch)) {
         Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                     lidarComp->yaw, lidarComp->pitch);
 
@@ -462,9 +425,7 @@ void RenderGuiSystem::laser_settings()
     }
 
     Text(_("Prism frequencies"));
-    if (InputFloat2("##prism_freq", value_ptr(
-            Config::getVal<vec2>("PrismFreq")))) {
-        lidarComp->freq = Config::getVal<vec2>("PrismFreq");
+    if (InputFloat2("##prism_freq", value_ptr(lidarComp->freq))) {
         Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                     lidarComp->yaw, lidarComp->pitch);
 
@@ -474,9 +435,7 @@ void RenderGuiSystem::laser_settings()
     }
 
     Text(_("Prism start angle"));
-    if (InputFloat2("##prism_start_angle", glm::value_ptr(
-            Config::getVal<vec2>("PrismStartAngle")))) {
-        lidarComp->start_angle = Config::getVal<vec2>("PrismStartAngle");
+    if (InputFloat2("##prism_start_angle", glm::value_ptr(lidarComp->start_angle))) {
         Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                     lidarComp->yaw, lidarComp->pitch);
 
@@ -486,9 +445,7 @@ void RenderGuiSystem::laser_settings()
     }
 
     Text(_("Object distance"));
-    if (InputFloat("##obj_distance",
-                   &Config::getVal<GLfloat>("ObjDistance"))) {
-        lidarComp->obj_distance = Config::getVal<GLfloat>("ObjDistance");
+    if (InputFloat("##obj_distance", &lidarComp->obj_distance)) {
         Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                     lidarComp->yaw, lidarComp->pitch);
 
@@ -498,8 +455,7 @@ void RenderGuiSystem::laser_settings()
     }
 
     Text(_("Length of rays"));
-    if (InputFloat("##ray_length", &Config::getVal<GLfloat>("RayLength"))) {
-        lidarComp->length = Config::getVal<GLfloat>("RayLength");
+    if (InputFloat("##ray_length", &lidarComp->length)) {
         Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                     lidarComp->yaw, lidarComp->pitch);
 
@@ -509,8 +465,7 @@ void RenderGuiSystem::laser_settings()
     }
 
     Text(_("Dots density"));
-    if (InputFloat("##dot_dens", &Config::getVal<GLfloat>("DotDens"))) {
-        lidarComp->density = Config::getVal<GLfloat>("DotDens");
+    if (InputFloat("##dot_dens", &lidarComp->density)) {
         Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                     lidarComp->yaw, lidarComp->pitch);
 
@@ -574,4 +529,99 @@ void RenderGuiSystem::add_model()
 
         ImGuiFileDialog::Instance()->Close();
     }
+}
+
+void RenderGuiSystem::selection_settings()
+{
+    using namespace ImGui;
+
+    Begin(_("Selected settings"), &m_selSettingsOpen);
+    Text("Selected settings");
+
+    auto selEn = m_ecsManager->getEntities()[Config::getVal<int>("SelectedObj")];
+    auto spriteComp = selEn->getComponent<SpriteComponent>();
+    auto sprite = spriteComp->sprite;
+
+    if (InputFloat3("##sprite_scale", glm::value_ptr(sprite->getSize()))) {
+        auto bvh = selEn->getComponent<BVHComponent>();
+
+        if (bvh) {
+            auto pos = selEn->getComponent<PositionComponent>();
+            auto triangles = sprite->getTriangles();
+            mat4 transform = math::createTransform(pos->pos, pos->angle, pos->rot_axis, sprite->getSize());
+            triangles = math::transformTriangles(triangles, transform);
+            bvh->bvh_tree = coll::buildBVH(triangles);
+            bvh->triangles = std::make_shared<std::vector<Triangle>>(triangles);
+        }
+    }
+
+    bool flip_uv = sprite->isUvFlipped();
+    bool old_flip = flip_uv;
+    Text(_("Flip UV"));
+    Checkbox("##flip_uv", &flip_uv);
+
+    bool movable = false;
+    bool hasMovComp = true;
+    auto movComp = selEn->getComponent<MovableComponent>();
+    if (movComp)
+        movable = true;
+    else
+        hasMovComp = false;
+
+    if (Button(_("Copy"))) {
+        auto copy = m_ecsManager->createEntity(m_ecsManager->genUniqueId());
+        copy->activate();
+        for (auto [key, comp]: selEn->getComponents()) {
+            if (key == ecs::types::type_id<LidarComponent>) {
+                auto c = std::dynamic_pointer_cast<LidarComponent>(comp);
+                copy->addComponent(*c);
+            } else if (key == ecs::types::type_id<LightComponent>) {
+                auto c = std::dynamic_pointer_cast<LightComponent>(comp);
+                copy->addComponent(*c);
+            } else if (key == ecs::types::type_id<MaterialComponent>) {
+                auto c = std::dynamic_pointer_cast<MaterialComponent>(comp);
+                copy->addComponent(*c);
+            } else if (key == ecs::types::type_id<PositionComponent>) {
+                auto c = std::dynamic_pointer_cast<PositionComponent>(comp);
+                copy->addComponent(*c);
+            } else if (key == ecs::types::type_id<SelectableComponent>) {
+                auto c = std::dynamic_pointer_cast<SelectableComponent>(comp);
+                copy->addComponent(*c);
+            } else if (key == ecs::types::type_id<SpriteComponent>) {
+                auto c = std::dynamic_pointer_cast<SpriteComponent>(comp);
+                copy->addComponent(*c);
+            } else if (key == ecs::types::type_id<BVHComponent>) {
+                auto c = std::dynamic_pointer_cast<BVHComponent>(comp);
+                copy->addComponent(*c);
+            }
+        }
+    }
+
+    Text(_("Movable"));
+    if (Checkbox("##movable", &movable)) {
+        if (movable && !hasMovComp) {
+            selEn->addComponent<MovableComponent>();
+            movComp = selEn->getComponent<MovableComponent>();
+            hasMovComp = true;
+        }
+
+        if (!movable && hasMovComp) {
+            selEn->removeComponent<MovableComponent>();
+            hasMovComp = false;
+        }
+    }
+
+    if (hasMovComp) {
+        if (Button(_("Take control"))) {
+            movComp->controlled = true;
+        }
+
+        Text(_("Speed"));
+        InputFloat("##speed", &movComp->speed);
+    }
+
+    if (flip_uv != old_flip)
+        sprite->flipUV();
+
+    End();
 }

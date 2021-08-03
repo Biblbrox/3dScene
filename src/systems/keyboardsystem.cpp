@@ -10,6 +10,7 @@
 #include "components/spritecomponent.hpp"
 #include "components/positioncomponent.hpp"
 #include "components/terraincomponent.hpp"
+#include "components/movablecomponent.hpp"
 #include "utils/collision.hpp"
 #include "utils/logger.hpp"
 #include "utils/bvh/aabb.hpp"
@@ -52,33 +53,8 @@ void KeyboardSystem::update_state(size_t delta)
                     camera->processMouseMovement(x_offset, -y_offset);
                 }
 
-                if (m_dragEnabled) {
-                    auto pos = m_draggedObj->getComponent<PositionComponent>();
-                    vec2 mouse_pos = utils::getMousePos<GLfloat>();
-                    vec2 viewport_size = Config::getVal<vec2>("ViewportSize");
-                    vec2 viewport_pos = Config::getVal<vec2>("ViewportPos");
-                    mouse_pos -= viewport_pos;
-
-                    program->useFramebufferProgram();
-                    mat4 projection = program->getMat4("ProjectionMatrix");
-                    mat4 view = program->getMat4("ViewMatrix");
-                    GLfloat sens = Config::getVal<GLfloat>("MouseSens");
-
-                    vec3 dir = viewportToWorld(mouse_pos * sens, viewport_size,
-                                               projection, view);
-                    Ray ray;
-                    ray.origin = Vector3(camera->getPos().x, camera->getPos().y,
-                                         camera->getPos().z);
-                    ray.direction = Vector3(dir.x, dir.y, dir.z);
-                    ray.tmin = 0;
-                    ray.tmax = 100000;
-                    auto terrain_en = getEntitiesByTag<TerrainComponent>().begin()->second;
-                    auto terrain = terrain_en->getComponent<TerrainComponent>()->terrain;
-                    auto[col, pos_on_ter] = coll::rayTerrainIntersection(
-                            *terrain, ray, 0, 10000.f, 1000);
-
-                    pos->pos = pos_on_ter;
-                }
+                if (m_dragEnabled)
+                    updateDraggedPos();
                 break;
             case SDL_MOUSEBUTTONDOWN:
                 if (e.button.button == SDL_BUTTON_MIDDLE && !stopped)
@@ -90,9 +66,8 @@ void KeyboardSystem::update_state(size_t delta)
                         processMouseDrag();
                 }
 
-                if (e.button.button == SDL_BUTTON_RIGHT && !stopped) {
+                if (e.button.button == SDL_BUTTON_RIGHT && !stopped)
                     processMouseSelect();
-                }
 
                 break;
             case SDL_MOUSEBUTTONUP:
@@ -102,27 +77,8 @@ void KeyboardSystem::update_state(size_t delta)
                 if (e.button.button == SDL_BUTTON_LEFT && !stopped)
                     m_leftMousePressed = false;
 
-                if (e.button.button == SDL_BUTTON_LEFT && !stopped &&
-                    m_draggedObj) {
-                    m_draggedObj->getComponent<SelectableComponent>()->dragged = false;
-                    m_dragEnabled = false;
-                    auto bvh = m_draggedObj->getComponent<BVHComponent>();
-                    if (bvh) { // Update aabb positions in world space
-                        auto sprite = m_draggedObj->getComponent<SpriteComponent>()->sprite;
-                        auto pos = m_draggedObj->getComponent<PositionComponent>();
-                        auto triangles = sprite->getTriangles();
-                        mat4 transform = math::createTransform(pos->pos,
-                                                               pos->angle,
-                                                               pos->rot_axis,
-                                                               sprite->getSize());
-                        triangles = math::transformTriangles(triangles,
-                                                             transform);
-                        bvh->bvh_tree = coll::buildBVH(triangles);
-                        bvh->triangles = std::make_shared<std::vector<Triangle>>(
-                                triangles);
-                    }
-                    m_draggedObj = nullptr;
-                }
+                if (e.button.button == SDL_BUTTON_LEFT && !stopped && m_draggedObj)
+                    updateDraggedBVH();
                 break;
             case SDL_MOUSEWHEEL:
                 if (!stopped) {
@@ -142,20 +98,47 @@ void KeyboardSystem::update_state(size_t delta)
         }
     }
 
-    if (!stopped) {
-        const Uint8 *state = SDL_GetKeyboardState(NULL);
+    if (stopped)
+        return;
 
-        if (state[SDL_SCANCODE_W])
-            camera->processKeyboard(Movement::FORWARD, delta);
-        if (state[SDL_SCANCODE_S])
-            camera->processKeyboard(Movement::BACKWARD, delta);
-        if (state[SDL_SCANCODE_A])
-            camera->processKeyboard(Movement::LEFT, delta);
-        if (state[SDL_SCANCODE_D])
-            camera->processKeyboard(Movement::RIGHT, delta);
+    const Uint8 *state = SDL_GetKeyboardState(NULL);
 
-        program->setMat4(VIEW, camera->getView());
+    if (state[SDL_SCANCODE_W])
+        camera->processKeyboard(Movement::FORWARD, delta);
+    if (state[SDL_SCANCODE_S])
+        camera->processKeyboard(Movement::BACKWARD, delta);
+    if (state[SDL_SCANCODE_A])
+        camera->processKeyboard(Movement::LEFT, delta);
+    if (state[SDL_SCANCODE_D])
+        camera->processKeyboard(Movement::RIGHT, delta);
+
+    auto movEntities = getEntitiesByTag<MovableComponent>();
+    std::shared_ptr<ecs::Entity> movEn;
+    std::shared_ptr<MovableComponent> movComp = nullptr;
+    if (!movEntities.empty()) {
+        movEn = movEntities.begin()->second;
+        movComp = movEn->getComponent<MovableComponent>();
     }
+
+    if (movComp && movComp->controlled) {
+        auto pos = movEn->getComponent<PositionComponent>();
+        GLfloat speed = movComp->speed;
+        if (state[SDL_SCANCODE_UP])
+            pos->pos.z += speed;
+        if (state[SDL_SCANCODE_DOWN])
+            pos->pos.z -= speed;
+        if (state[SDL_SCANCODE_LEFT])
+            pos->pos.x += speed;
+        if (state[SDL_SCANCODE_RIGHT])
+            pos->pos.x -= speed;
+
+        auto terrain_en = getEntitiesByTag<TerrainComponent>().begin()->second;
+        auto terrain = terrain_en->getComponent<TerrainComponent>()->terrain;
+
+        pos->pos.y = terrain->getAltitude({pos->pos.x, pos->pos.z});
+    }
+
+    program->setMat4(VIEW, camera->getView());
 }
 
 void KeyboardSystem::processMouseDrag()
@@ -217,7 +200,7 @@ KeyboardSystem::findUnderPointer(const vec2 &pos)
                                           projection, view);
 
     for (const auto&[key, en]: entities) {
-        auto bvh_comp = en->getComponent<BVHComponent>();
+        const auto& bvh_comp = en->getComponent<BVHComponent>();
         if (!bvh_comp)
             continue;
 
@@ -239,4 +222,58 @@ KeyboardSystem::findUnderPointer(const vec2 &pos)
     }
 
     return {false, nullptr};
+}
+
+void KeyboardSystem::updateDraggedPos()
+{
+    auto program = SceneProgram::getInstance();
+    auto camera = FpsCamera::getInstance();
+
+    auto pos = m_draggedObj->getComponent<PositionComponent>();
+    vec2 mouse_pos = utils::getMousePos<GLfloat>();
+    vec2 viewport_size = Config::getVal<vec2>("ViewportSize");
+    vec2 viewport_pos = Config::getVal<vec2>("ViewportPos");
+    mouse_pos -= viewport_pos;
+
+    program->useFramebufferProgram();
+    mat4 projection = program->getMat4("ProjectionMatrix");
+    mat4 view = program->getMat4("ViewMatrix");
+    GLfloat sens = Config::getVal<GLfloat>("MouseSens");
+
+    vec3 dir = viewportToWorld(mouse_pos * sens, viewport_size,
+                               projection, view);
+    Ray ray;
+    ray.origin = Vector3(camera->getPos().x, camera->getPos().y,
+                         camera->getPos().z);
+    ray.direction = Vector3(dir.x, dir.y, dir.z);
+    ray.tmin = 0;
+    ray.tmax = 100000;
+    auto terrain_en = getEntitiesByTag<TerrainComponent>().begin()->second;
+    auto terrain = terrain_en->getComponent<TerrainComponent>()->terrain;
+    auto[col, pos_on_ter] = coll::rayTerrainIntersection(
+            *terrain, ray, 0, 10000.f, 1000);
+
+    pos->pos = pos_on_ter;
+}
+
+void KeyboardSystem::updateDraggedBVH()
+{
+    m_draggedObj->getComponent<SelectableComponent>()->dragged = false;
+    m_dragEnabled = false;
+    auto bvh = m_draggedObj->getComponent<BVHComponent>();
+    if (bvh) { // Update aabb positions in world space
+        auto sprite = m_draggedObj->getComponent<SpriteComponent>()->sprite;
+        auto pos = m_draggedObj->getComponent<PositionComponent>();
+        auto triangles = sprite->getTriangles();
+        mat4 transform = math::createTransform(pos->pos,
+                                               pos->angle,
+                                               pos->rot_axis,
+                                               sprite->getSize());
+        triangles = math::transformTriangles(triangles,
+                                             transform);
+        bvh->bvh_tree = coll::buildBVH(triangles);
+        bvh->triangles = std::make_shared<std::vector<Triangle>>(
+                triangles);
+    }
+    m_draggedObj = nullptr;
 }

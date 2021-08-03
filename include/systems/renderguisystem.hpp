@@ -23,6 +23,7 @@ private:
     void export_settings();
     void laser_settings();
     void video_settings();
+    void selection_settings();
     void add_model();
 
     GLfloat m_aspectRatio;

@@ -1,5 +1,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
+#include <omp.h>
 
 #include "sceneprogram.hpp"
 #include "systems/lidarsystem.hpp"
@@ -47,7 +48,6 @@ void LidarSystem::drawLidarIntersect()
 
     auto pattern = lidar->pattern_points;
     if (Config::getVal<bool>("DrawPattern")) {
-        auto program = SceneProgram::getInstance();
         program->useFramebufferProgram();
         program->setInt("isPrimitive", true);
 
@@ -68,22 +68,23 @@ void LidarSystem::drawLidarIntersect()
     if (!Config::getVal<bool>("CheckCollision"))
         return;
 
+    auto& entities = m_ecsManager->getEntities();
+#pragma omp declare reduction (merge : std::vector<vec3> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
     vector<vec3> coll_dots;
+#pragma omp parallel for collapse(1) reduction(merge: coll_dots) shared(entities)
     for (const auto& dot: pattern) {
-        vec3 dir = normalize(dot - pos->pos);
-        if (std::isnan(dir.x) || std::isnan(dir.y) || std::isnan(dir.z)) {
-            continue;
-        }
+        for (auto & [key, en] : entities) {
+            vec3 dir = normalize(dot - pos->pos);
+            if (std::isnan(dir.x) || std::isnan(dir.y) || std::isnan(dir.z))
+                continue;
 
-        // Check collision
-        for (const auto&[key, en]: m_ecsManager->getEntities()) {
             auto bvh_comp = en->getComponent<BVHComponent>();
 
             Ray ray;
             ray.direction = Vector3(dir.x, dir.y, dir.z);
             ray.origin = Vector3(pos->pos.x, pos->pos.y, pos->pos.z);
             ray.tmin = 0;
-            ray.tmax = 100000;
+            ray.tmax = 10000;
 
             if (!bvh_comp) {
                 auto terrainComp = en->getComponent<TerrainComponent>();
@@ -91,12 +92,10 @@ void LidarSystem::drawLidarIntersect()
                     continue;
 
                 auto terrain = terrainComp->terrain;
-                auto coll = coll::rayTerrainIntersection(*terrain, ray, 0, 1000.f, 1000);
+                auto coll = coll::rayTerrainIntersection(*terrain, ray, 0, 10000.f, 100);
                 if (coll.first) {
                     vec3 col_pos = coll.second;
-                    col_stream << col_pos.x << ", " << col_pos.y << ", "
-                               << col_pos.z << "\n";
-                    col_stream.flush();
+                    coll_dots.emplace_back(col_pos);
                 }
 
                 continue;
@@ -112,13 +111,18 @@ void LidarSystem::drawLidarIntersect()
 
             auto hit = traverser.traverse(ray, primitive_intersector);
             if (hit) {
-                auto triangle_index = hit->primitive_index;
                 auto intersection = hit->intersection;
                 vec3 col_pos = pos->pos + dir * intersection.t;
-                col_stream << col_pos.x << ", " << col_pos.y << ", "
-                           << col_pos.z << "\n";
-                col_stream.flush();
+                coll_dots.emplace_back(col_pos);
             }
         }
     }
+
+    for (const auto& dot: coll_dots) {
+        col_stream << dot.x << ", " << dot.y << ", "
+                   << dot.z << "\n";
+    }
+    col_stream.flush();
+
+    Config::getVal<bool>("CheckCollision") = false;
 }

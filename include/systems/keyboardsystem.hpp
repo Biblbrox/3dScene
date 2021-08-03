@@ -20,6 +20,8 @@ private:
     findUnderPointer(const glm::vec2& pointer_pos);
     void processMouseDrag();
     void processMouseSelect();
+    void updateDraggedPos();
+    void updateDraggedBVH();
 
     bool m_middlePressed;
     bool m_leftMousePressed;
