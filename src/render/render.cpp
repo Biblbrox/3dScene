@@ -112,17 +112,14 @@ void render::drawTexture(ShaderProgram& program, const TextureBase &texture,
     mat4 translation = translate(mat4(1.f), pos);
     mat4 scaling = glm::scale(mat4(1.f), scale);
     mat4 model = scaling * rotation * translation;
+    auto old_model = program.getMat4("ModelMatrix");
     program.leftMult("ModelMatrix", model);
     if (Config::getVal<bool>("EnableLight"))
         program.setMat3("NormalMatrix", mat3(transpose(inverse(model))));
 
     texture.draw(program);
 
-    translation[3] = vec4(-pos.x,  -pos.y, -pos.z, 1);
-    rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), -angle,
-                             rot_axis);
-    scaling = glm::scale(mat4(1.f), 1 / scale);
-    program.leftMult("ModelMatrix", translation * rotation * scaling);
+    program.setMat4("ModelMatrix", old_model);
 }
 
 void render::renderTerrain(ShaderProgram& program, const Terrain& terrain)
@@ -165,6 +162,7 @@ void render::drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
                                   rot_axis);
     mat4 translation = translate(mat4(1.f), pos);
     mat4 scaling = glm::scale(mat4(1.f), scale);
+    auto old_model = program.getMat4("ModelMatrix");
     program.leftMult("ModelMatrix", scaling * rotation * translation);
 
     GLuint verticesID = 0;
@@ -186,11 +184,7 @@ void render::drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
     glDeleteBuffers(1, &verticesID);
     glDeleteVertexArrays(1, &VAO);
 
-    translation[3] = glm::vec4(-pos.x,  -pos.y, -pos.z, 1);
-    rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), -angle,
-                             rot_axis);
-    scaling = glm::scale(mat4(1.f), 1 / scale);
-    program.leftMult("ModelMatrix", translation * rotation * scaling);
+    program.setMat4("ModelMatrix", old_model);
 }
 
 void render::drawVerticesVAO(ShaderProgram& program, const GLfloat* points,
@@ -214,17 +208,10 @@ void render::drawVerticesVAO(ShaderProgram& program, const GLfloat* points,
                                   rot_axis);
     mat4 translation = translate(mat4(1.f), pos);
     mat4 scaling = glm::scale(mat4(1.f), scale);
+    auto old_model = program.getMat4("ModelMatrix");
     program.leftMult("ModelMatrix", scaling * rotation * translation);
 
-//    glBindVertexArray(texture.getVAO());
-//    glDrawArrays(GL_TRIANGLES, 0, texture.getTriangleCount());
-//    glBindVertexArray(0);
-
-    translation[3] = vec4(-pos.x,  -pos.y, -pos.z, 1);
-    rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), -angle,
-                             rot_axis);
-    scaling = glm::scale(mat4(1.f), 1 / scale);
-    program.leftMult("ModelMatrix", translation * rotation * scaling);
+    program.setMat4("ModelMatrix", old_model);
 }
 
 void render::drawSkybox(GLuint skybox_vao, GLuint skybox_texture)
