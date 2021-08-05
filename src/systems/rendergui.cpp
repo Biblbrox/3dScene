@@ -623,5 +623,10 @@ void RenderGuiSystem::selection_settings()
     if (flip_uv != old_flip)
         sprite->flipUV();
 
+    if (Button(_("Remove"))) {
+        selEn->kill();
+        Config::getVal<bool>("IsSelected") = false;
+    }
+
     End();
 }
