@@ -5,7 +5,6 @@ uniform mat4 ViewMatrix;
 uniform mat4 ModelMatrix;
 
 uniform mat3 NormalMatrix;
-
 uniform mat4 HeightMapScaleMatrix;
 
 uniform bool DrawTerrain;

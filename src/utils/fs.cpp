@@ -212,8 +212,6 @@ void utils::fs::saveSimJson(const std::string &file_name,
                 comp_obj["TerrainComponent"] = json::array();
                 comp_obj["TerrainComponent"].push_back(json::object({{"height_image", terrain->getHeightImage()}}));
                 comp_obj["TerrainComponent"].push_back(json::object({{"texture_image", terrain->getTextureFile()}}));
-                comp_obj["TerrainComponent"].push_back(json::object({{"width", terrain->getWidth()}}));
-                comp_obj["TerrainComponent"].push_back(json::object({{"height", terrain->getHeight()}}));
                 comp_obj["TerrainComponent"].push_back(json::object({{"scale", terrain->getScale()}}));
 
                 en_obj["Components"].push_back(comp_obj);
@@ -330,7 +328,7 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
 
                 std::string height_image = json_ter[0]["height_image"].get<std::string>();
                 std::string texture_image = json_ter[1]["texture_image"].get<std::string>();
-                vec3 scale = json_ter[4]["scale"].get<vec3>();
+                vec3 scale = json_ter[2]["scale"].get<vec3>();
 
                 entity.addComponent<TerrainComponent>();
                 auto terrain = entity.getComponent<TerrainComponent>();

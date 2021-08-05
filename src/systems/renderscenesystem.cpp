@@ -103,12 +103,12 @@ void RenderSceneSystem::drawSprites()
 //                program->setVec3("material.ambient", material->ambient);
 //                program->setVec3("material.diffuse", material->diffuse);
 //                program->setVec3("material.specular", material->specular);
-                program->setFloat("material.shininess", material->shininess);
+//                program->setFloat("material.shininess", material->shininess);
             } else {
 //                program->setVec3("material.ambient", vec3(1.f, 0.5, 0.31f));
 //                program->setVec3("material.diffuse", vec3(1.f, 0.5f, 0.31f));
 //                program->setVec3("material.specular", vec3(0.5f, 0.5f, 0.5f));
-                program->setFloat("material.shininess", 32.f);
+//                program->setFloat("material.shininess", 32.f);
             }
         }
 
@@ -154,6 +154,7 @@ void RenderSceneSystem::drawSprites()
     program->useSkyboxProgram();
     program->setMat4("ProjectionMatrix", proj);
     program->setMat4("ViewMatrix", mat4(mat3(view)));
+    program->setVec3("fogColor", {0.5444, 0.62, 0.62});
     render::drawSkybox(skybox->vao, skybox->skybox_id);
 
     if (GLenum error = glGetError(); error != GL_NO_ERROR)
@@ -230,7 +231,8 @@ void RenderSceneSystem::drawToFramebuffer()
     glm::vec4 color = Config::getVal<glm::vec4>("BackgroundColor");
     glEnable(GL_DEPTH_TEST);
     glStencilFunc(GL_ALWAYS, 1, 0xFF); // all fragments should pass the stencil test
-    glClearColor(color.x, color.y, color.z, color.w);
+    glClearColor(color.x, color.y, color.z, 0.f);
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     glStencilMask(0x00);
