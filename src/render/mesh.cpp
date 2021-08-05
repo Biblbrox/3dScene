@@ -8,7 +8,18 @@ Mesh::Mesh(std::vector<Vertex> vertices,
            std::vector<Texture> textures)
         : m_vertices(std::move(vertices)),
           m_indices(std::move(indices)),
-          m_textures(std::move(textures))
+          m_textures(std::move(textures)),
+          m_colorMaterials(false)
+{
+    setupMesh();
+}
+
+Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices,
+           Material material)
+        : m_vertices(std::move(vertices)),
+          m_indices(std::move(indices)),
+          m_material(material),
+          m_colorMaterials(true)
 {
     setupMesh();
 }
@@ -51,24 +62,35 @@ void Mesh::draw(ShaderProgram &program) const
     GLuint diffuseNr = 1;
     GLuint specularNr = 1;
 
-    for (size_t i = 0; i < m_textures.size(); ++i) {
-        glActiveTexture(GL_TEXTURE0 + i);
-        std::string number;
-        std::string name = m_textures[i].type;
-        if (name == "texture_diffuse")
-            number = std::to_string(diffuseNr++);
-        else if (name == "texture_specular")
-            number = std::to_string(specularNr++);
+    // Texture materials
+    if (!m_colorMaterials) {
+        for (size_t i = 0; i < m_textures.size(); ++i) {
+            glActiveTexture(GL_TEXTURE0 + i);
+            std::string number;
+            std::string name = m_textures[i].type;
+            if (name == "texture_diffuse")
+                number = std::to_string(diffuseNr++);
+            else if (name == "texture_specular")
+                number = std::to_string(specularNr++);
 
-        program.setInt("material." + name + number, i);
-        glBindTexture(GL_TEXTURE_2D, m_textures[i].id);
+            program.setInt("textureMaterial." + name + number, i);
+            glBindTexture(GL_TEXTURE_2D, m_textures[i].id);
+        }
+        program.setFloat("textureMaterial.shininess", 32.f);
+        glActiveTexture(GL_TEXTURE0);
+    } else { // Color materials
+        program.setVec3("colorMaterial.ambient", m_material.ambient);
+        program.setVec3("colorMaterial.diffuse", m_material.diffuse);
+        program.setVec3("colorMaterial.specular", m_material.specular);
+        program.setFloat("colorMaterial.shininess", m_material.shininess);
+        program.setInt("isColorMaterial", true);
     }
-
-    glActiveTexture(GL_TEXTURE0);
 
     glBindVertexArray(m_vao);
     glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
+
+    program.setInt("isColorMaterial", false);
 }
 
 const std::vector<Vertex> &Mesh::getVertices() const

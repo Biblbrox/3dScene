@@ -270,7 +270,7 @@ void World::init_terrain()
 
     terrainComp->terrain = std::make_shared<Terrain>
             (getResourcePath("terrain/terrain_height_map.jpg"),
-             getResourcePath("terrain/rock_2_4w.jpg"), vec3(20000.f, 100.f, 20000.f));
+             getResourcePath("terrain/sand_grass_02.jpg"), vec3(20000.f, 100.f, 20000.f));
 }
 
 
@@ -344,13 +344,16 @@ void World::init_sprites()
 
     auto lidarEn = createEntity(genUniqueId());
     lidarEn->activate();
-    lidarEn->addComponents<PositionComponent, LidarComponent, SpriteComponent>();
+    lidarEn->addComponents<PositionComponent, LidarComponent, SpriteComponent,
+            BVHComponent>();
     auto lidar_pos = lidarEn->getComponent<PositionComponent>();
     auto lidarComp = lidarEn->getComponent<LidarComponent>();
 
     auto lidarSprite = lidarEn->getComponent<SpriteComponent>();
     lidarSprite->sprite = std::make_shared<Sprite>(getModelPath("cube/cube.obj"), vec3(100.f, 100.f, 100.f),
                                                    false);
+
+    add_bvh(*lidar_pos, *lidarSprite, *lidarEn->getComponent<BVHComponent>());
 
     Lidar lidar(lidarComp->length, lidar_pos->pos, {0.f, 1.f, 0.f},
                 lidarComp->yaw, lidarComp->pitch);
@@ -510,16 +513,22 @@ void World::init_skybox()
 
     vector<std::string> faces =
     {
-        getResourcePath("skybox/interstellar_skybox/xpos.png"),
-        getResourcePath("skybox/interstellar_skybox/xneg.png"),
-        getResourcePath("skybox/interstellar_skybox/ypos.png"),
-        getResourcePath("skybox/interstellar_skybox/yneg.png"),
-        getResourcePath("skybox/interstellar_skybox/zpos.png"),
-        getResourcePath("skybox/interstellar_skybox/zneg.png")
+        getResourcePath("skybox/cloudy/right.png"),
+        getResourcePath("skybox/cloudy/left.png"),
+        getResourcePath("skybox/cloudy/top.png"),
+        getResourcePath("skybox/cloudy/bottom.png"),
+        getResourcePath("skybox/cloudy/back.png"),
+        getResourcePath("skybox/cloudy/front.png")
     };
 
     skybox->vao = skyboxVAO;
     skybox->skybox_id = utils::texture::loadCubemap(faces);
+
+    if (GLenum error = glGetError(); error != GL_NO_ERROR) {
+        Logger::write(utils::log::program_log_file_name(),
+                      utils::log::Category::INITIALIZATION_ERROR,
+                      (boost::format("Unable to load skybox: %s") % glewGetErrorString(error)).str());
+    }
 }
 
 void World::addEntityFromFile(const std::string &model_file)

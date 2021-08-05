@@ -44,9 +44,15 @@ void LidarSystem::drawLidarIntersect()
 
     auto lidarEntities = getEntitiesByTag<LidarComponent>().begin()->second;
     auto pos = lidarEntities->getComponent<PositionComponent>();
-    auto lidar = lidarEntities->getComponent<LidarComponent>();
+    auto lidarComp = lidarEntities->getComponent<LidarComponent>();
 
-    auto pattern = lidar->pattern_points;
+    Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
+                lidarComp->yaw, lidarComp->pitch);
+
+    lidarComp->pattern_points = lidar.risleyPattern2(
+            lidarComp->freq, lidarComp->start_angle,
+            lidarComp->density);
+    auto pattern = lidarComp->pattern_points;
     if (Config::getVal<bool>("DrawPattern")) {
         program->useFramebufferProgram();
         program->setInt("isPrimitive", true);

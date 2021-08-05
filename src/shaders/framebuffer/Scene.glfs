@@ -12,11 +12,14 @@ uniform sampler2D TextureNum;
 uniform bool isPrimitive;
 uniform float alpha;
 uniform vec3 primColor;
+// Position of the observer
 uniform vec3 viewPos;
 
 uniform bool lighting;
+uniform bool isColorMaterial;
 
-struct Material {
+struct TextureMaterial
+{
     sampler2D texture_diffuse1;
     sampler2D texture_diffuse2;
     sampler2D texture_specular1;
@@ -24,9 +27,19 @@ struct Material {
     float shininess;
 };
 
-uniform Material material;
+struct ColorMaterial
+{
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+};
 
-struct Light {
+uniform TextureMaterial textureMaterial;
+uniform ColorMaterial colorMaterial;
+
+struct Light
+{
     vec3 direction;
     vec3 ambient;
     vec3 diffuse;
@@ -37,29 +50,73 @@ uniform Light light;
 
 out vec4 FragColor;
 
+float fog_max_dist = 3000.f;
+float fog_min_dist = 500.f;
+vec4 fog_color = vec4(0.5444, 0.62, 0.62, 0.69);
+
+float linearFog(float dst)
+{
+    float fog = (fog_max_dist - dst) / (fog_max_dist - fog_min_dist);
+    fog = clamp(fog, 0.0, 1.0);
+    return fog;
+}
+
+float expFog(float dst)
+{
+    float b = 0.0002;
+    float fog = exp(-dst * b);
+    return fog;
+}
+
 void main()
 {
     if (!isPrimitive) {
+        float diffAlpha = texture2D(textureMaterial.texture_diffuse1, TextureCoords).a;
+        float specAlpha = texture2D(textureMaterial.texture_specular1, TextureCoords).a;
+        if (diffAlpha < 0.5)
+            discard;
         FragColor = texture(TextureNum, TextureCoords);
         if (lighting) {
-            // ambient
-            vec3 ambient = light.ambient * texture(material.texture_diffuse1, TextureCoords).rgb;
+            if (!isColorMaterial) {
+                // ambient
+                vec3 ambient = light.ambient * texture(textureMaterial.texture_diffuse1, TextureCoords).rgb;
 
-            // diffuse
-            vec3 norm = normalize(Normal);
-            vec3 lightDir = normalize(-light.direction);
-            float diff = max(dot(norm, lightDir), 0.0);
-            vec3 diffuse = light.diffuse * diff * texture(material.texture_diffuse1, TextureCoords).rgb;
+                // diffuse
+                vec3 norm = normalize(Normal);
+                vec3 lightDir = normalize(-light.direction);
+                float diff = max(dot(norm, lightDir), 0.0);
+                vec3 diffuse = light.diffuse * diff * texture(textureMaterial.texture_diffuse1, TextureCoords).rgb;
 
-            // specular
-            vec3 viewDir = normalize(viewPos - FragPos);
-            vec3 reflectDir = reflect(-lightDir, norm);
-            float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-            vec3 specular = light.specular * spec * texture(material.texture_specular1, TextureCoords).rgb;
+                // specular
+                vec3 viewDir = normalize(viewPos - FragPos);
+                vec3 reflectDir = reflect(-lightDir, norm);
+                float spec = pow(max(dot(viewDir, reflectDir), 0.0), textureMaterial.shininess);
+                vec3 specular = light.specular * spec * texture(textureMaterial.texture_specular1, TextureCoords).rgb;
 
-            FragColor = vec4(ambient + diffuse + specular, 1.f);
+                FragColor = vec4(ambient + diffuse + specular, diffAlpha);
+            } else {
+                // ambient
+                vec3 ambient = light.ambient * colorMaterial.ambient;
+
+                // diffuse
+                vec3 norm = normalize(Normal);
+                vec3 lightDir = normalize(-light.direction);
+                float diff = max(dot(norm, lightDir), 0.0);
+                vec3 diffuse = light.diffuse * diff * colorMaterial.diffuse;
+
+                // specular
+                vec3 viewDir = normalize(viewPos - FragPos);
+                vec3 reflectDir = reflect(-lightDir, norm);
+                float spec = pow(max(dot(viewDir, reflectDir), 0.0), colorMaterial.shininess);
+                vec3 specular = light.specular * spec * colorMaterial.specular;
+
+                FragColor = vec4(ambient + diffuse + specular, 1.f);
+            }
         }
     } else {
         FragColor = vec4(primColor, alpha);
     }
+
+    float fog = expFog(gl_FragCoord.z / gl_FragCoord.w);
+    FragColor = mix(fog_color, FragColor, fog);
 }

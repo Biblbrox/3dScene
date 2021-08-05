@@ -32,6 +32,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
+map_Kd skin_flip_ver.png
 
 newmtl Material
 Ns 225.000000
@@ -42,6 +43,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
+map_Kd skin_flip_ver.png
 
 newmtl Pants
 Ns 225.000000
@@ -52,6 +54,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
+map_Kd skin_flip_ver.png
 
 newmtl Pupil
 Ns 225.000000
@@ -62,6 +65,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
+map_Kd skin_flip_ver.png
 
 newmtl Shirt
 Ns 225.000000
@@ -72,6 +76,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
+map_Kd skin_flip_ver.png
 
 newmtl Shoes
 Ns 225.000000
@@ -82,6 +87,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
+map_Kd skin_flip_ver.png
 
 newmtl Skin
 Ns 225.000000
@@ -92,6 +98,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
+map_Kd skin_flip_ver.png
 
 newmtl Vest
 Ns 225.000000
@@ -102,3 +109,4 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
+map_Kd skin_flip_ver.png

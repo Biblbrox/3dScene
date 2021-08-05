@@ -18,6 +18,17 @@ using utils::log::Logger;
 using utils::log::Category;
 using boost::format;
 
+bool hasTexture(aiMaterial* mat)
+{
+    bool res = false;
+    for (int i = 0; i < 18; ++i)
+        if (mat->GetTextureCount(
+                static_cast<aiTextureType>(aiTextureType_DIFFUSE + i)) != 0)
+            res = true;
+
+    return res;
+}
+
 Model::Model(const std::string& path, bool flip_uv) : m_modelFile(path)
 {
     loadModel(path, flip_uv);
@@ -98,17 +109,23 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
 
     if (mesh->mMaterialIndex >= 0) {
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-        vector<Texture> diffuseMaps =
-                loadMaterialsTextures(material,
-                                      aiTextureType_DIFFUSE, "texture_diffuse");
-        textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-        vector<Texture> specularMaps =
-                loadMaterialsTextures(material,
-                                      aiTextureType_SPECULAR, "texture_specular");
-        textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+        if (!hasTexture(material)) {
+            Material mat = loadMaterial(material);
+            return Mesh(vertices, indices, mat);
+        } else {
+            vector<Texture> diffuseMaps =
+                    loadMaterialsTextures(material,
+                                          aiTextureType_DIFFUSE, "texture_diffuse");
+            textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+            vector<Texture> specularMaps =
+                    loadMaterialsTextures(material,
+                                          aiTextureType_SPECULAR, "texture_specular");
+            textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+            return Mesh(vertices, indices, textures);
+        }
     }
 
-    return Mesh(vertices, indices, textures);
+    return Mesh(vertices, indices, Material{});
 }
 
 std::vector<Texture>
@@ -135,9 +152,9 @@ Model::loadMaterialsTextures(aiMaterial *mat, aiTextureType type,
             textures.push_back(texture);
             m_textureLoaded.push_back(texture);
         }
-
-        return textures;
     }
+
+    return textures;
 }
 
 const std::vector<Mesh> &Model::getMeshes() const
@@ -148,4 +165,25 @@ const std::vector<Mesh> &Model::getMeshes() const
 std::string Model::getModelFile() const
 {
     return m_modelFile;
+}
+
+Material Model::loadMaterial(aiMaterial* mat)
+{
+    Material material;
+    aiColor3D color(0.f, 0.f, 0.f);
+    float shininess;
+
+    mat->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+    material.diffuse = glm::vec3(color.r, color.b, color.g);
+
+    mat->Get(AI_MATKEY_COLOR_AMBIENT, color);
+    material.ambient = glm::vec3(color.r, color.b, color.g);
+
+    mat->Get(AI_MATKEY_COLOR_SPECULAR, color);
+    material.specular = glm::vec3(color.r, color.b, color.g);
+
+    mat->Get(AI_MATKEY_SHININESS, shininess);
+    material.shininess = shininess;
+
+    return material;
 }
