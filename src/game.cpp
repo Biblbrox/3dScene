@@ -162,9 +162,9 @@ void Game::initGL()
     auto screenHeight = utils::getDisplayHeight<GLuint>();
 
     Game::m_window = SDL_CreateWindow(GAME_NAME.c_str(),
-                                SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                                screenWidth, screenHeight,
-                                WINDOW_FLAGS);
+                                      SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                      screenWidth, screenHeight,
+                                      WINDOW_FLAGS);
     if (!m_window)
         throw SdlException((format("Unable to create window. Error: %1%\n")
                             % SDL_GetError()).str(),

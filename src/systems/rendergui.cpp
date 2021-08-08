@@ -7,6 +7,7 @@
 #include <imgui_internal.h>
 #include <imgui_impl_sdl.h>
 #include <ImGuiFileDialog.h>
+#include <ImGuiFileDialogConfig.h>
 #include <filesystem>
 
 #include "systems/renderguisystem.hpp"
@@ -61,6 +62,9 @@ RenderGuiSystem::RenderGuiSystem() : m_videoSettingsOpen(false),
     style.WindowRounding = 8.f;
     style.Alpha = 1.0f;
     style.AntiAliasedLines = false;
+
+    // Add custom text for .gif files (the default value is [File]
+    ImGuiFileDialog::Instance()->SetExtentionInfos(".gif", ImVec4(0, 1, 0.5, 0.9), "[GIF]");
 
     if (!io.Fonts->IsBuilt()) {
         io.Fonts->ClearFonts();
@@ -513,10 +517,12 @@ void RenderGuiSystem::add_model()
 {
     using namespace ImGui;
 
-    if (Button(_("Add model")))
+    if (Button(_("Add model"))) {
+        const char *filters = "Model files (*.fbx *.obj){.fbx,.obj}";
         ImGuiFileDialog::Instance()->OpenDialog("ChooseModelDlgKey",
                                                 _("Choose model file"),
-                                                ".obj", ".");
+                                                filters, ".");
+    }
 
     // Load model from file dialog
     if (ImGuiFileDialog::Instance()->Display("ChooseModelDlgKey")) {

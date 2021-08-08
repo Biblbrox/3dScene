@@ -18,6 +18,8 @@ private:
     void drawLidarIntersect();
 
     std::ofstream col_stream;
+    bool m_posChanged;
+    glm::vec3 m_prevPos;
 };
 
 
