@@ -1,5 +1,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
+#include <glm/gtc/epsilon.hpp>
 #include <omp.h>
 
 #include "sceneprogram.hpp"
@@ -23,7 +24,9 @@ using glm::acos;
 
 
 LidarSystem::LidarSystem() : col_stream(getResourcePath(Config::getVal<std::string>("DataFileTmp")),
-                                        std::ios_base::app)
+                                        std::ios_base::app),
+                                        m_posChanged(true),
+                                        m_prevPos{0.f, 0.f, 0.f}
 {}
 
 LidarSystem::~LidarSystem()
@@ -49,9 +52,19 @@ void LidarSystem::drawLidarIntersect()
     Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                 lidarComp->yaw, lidarComp->pitch);
 
-    lidarComp->pattern_points = lidar.risleyPattern2(
-            lidarComp->freq, lidarComp->start_angle,
-            lidarComp->density);
+    auto pos_compare = glm::epsilonEqual(m_prevPos, pos->pos, glm::epsilon<GLfloat>());
+    if (!glm::all(pos_compare) || lidarComp->pattern_points.empty()) {
+        m_posChanged = true;
+        m_prevPos = pos->pos;
+    } else {
+        m_posChanged = false;
+    }
+
+    if (m_posChanged) {
+        lidarComp->pattern_points = lidar.risleyPattern2(
+                lidarComp->freq, lidarComp->start_angle,
+                lidarComp->density);
+    }
     auto pattern = lidarComp->pattern_points;
     if (Config::getVal<bool>("DrawPattern")) {
         program->useFramebufferProgram();

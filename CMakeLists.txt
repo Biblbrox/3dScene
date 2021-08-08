@@ -46,7 +46,7 @@ endif()
 
 add_subdirectory(${EXT_PATH}/bvh)
 
-
+add_compile_definitions(GLM_FORCE_CUDA)
 
 add_library(imgui
         # Main Imgui files
