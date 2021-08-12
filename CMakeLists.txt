@@ -1,8 +1,16 @@
 cmake_minimum_required(VERSION 3.16)
 
+set(CMAKE_CXX_STANDARD 17)
 set(GAME_NAME "3DScene")
 set(EXT_PATH "cmake_modules")
 project(${GAME_NAME})
+
+set(CPU_TYPE "westmere")
+set(ARCH_PARAM "")
+if (NOT ${CPU_TYPE} STREQUAL "")
+    set(ARCH_PARAM "-march=${CPU_TYPE}")
+    message("Using cpu type ${CPU_TYPE}")
+endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules/")
 
@@ -11,13 +19,13 @@ set(CMAKE_CXX_FLAGS_DEBUG_INIT "-D_FORTIFY_SOURCE=2" "-D_GLIBCXX_ASSERTIONS"
         "-shared" "-fstack-clash-protection" "-fstack-protector"
         "-fstack-protector-strong" "-g" "-grecord-gcc-switches" "-fcf-protection"
         "-pipe" "-Wall" "-Werror=format-security" "-Wl,-z,defs" "-Wl,-z,now"
-        "-O0" "-Wl,-z,relro" "-std=c++17" "-fno-inline-functions")
+        "-O0" "-Wl,-z,relro" "-std=c++17" "-fno-inline-functions" ${ARCH_PARAM})
 
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-fasynchronous-unwind-tables" "-fexceptions"
         "-fpie" "-Wl,-pie" "-fpic" "-shared" "-fstack-clash-protection"
         "-fstack-protector" "-fstack-protector-strong" "-fcf-protection" "-pipe"
         "-Wall" "-Werror=format-security" "-Wl,-z,defs" "-Wl,-z,now" "-Wl,-z,relro"
-        "-O3" "-std=c++17")
+        "-O3" "-std=c++17" ${ARCH_PARAM})
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
     add_compile_definitions(BOOST_DISABLE_ASSERTS)
@@ -72,7 +80,6 @@ include_directories(${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIR}
         ${GLM_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} ${PCL_INCLUDE_DIRS}
         ${EXT_PATH}/ImGuiFileDialog/)
 
-set(CMAKE_CXX_STANDARD 20)
 FILE(GLOB_RECURSE CPP RELATIVE ${CMAKE_SOURCE_DIR} "src/*.cpp")
 FILE(GLOB_RECURSE HPP RELATIVE ${CMAKE_SOURCE_DIR} "include/*.hpp" "include/*.h")
 

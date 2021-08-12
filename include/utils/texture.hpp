@@ -37,18 +37,6 @@ namespace utils::texture
                             GLenum textureType = GL_RGBA, GLenum type = GL_UNSIGNED_BYTE);
 
     /**
-     * Parse obj file
-     * Return vector with such elements in row:
-     * <ver.x, ver.y, ver.z, uv.x, uv.y>
-     * @param file
-     * @return
-     */
-    vector<GLfloat> loadObj(const std::string& file,
-                            std::string& textureFile,
-                            vector<vec3>& vertices, vector<vec2>& uv,
-                            vector<vec3>& normals, vector<vec3u>& indices);
-
-    /**
      * Load texture from file
      * Return texture id.
      * textureWidth and textureHeight fields used to store texture size

@@ -10,7 +10,7 @@ utils::string::split(const std::string& str, const std::string& del)
     size_t pos = 0;
     std::string token;
     std::vector<std::string> res;
-    while (s.starts_with(del)) s.erase(0, del.length());
+    while (s.rfind(del, 0) == 0) s.erase(0, del.length());
     while ((pos = s.find(del)) != std::string::npos) {
         res.emplace_back(s.substr(0, pos));
         s.erase(0, pos + del.length());
