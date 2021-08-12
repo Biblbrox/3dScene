@@ -61,7 +61,7 @@ public:
 
     static bool hasKey(const std::string& key)
     {
-        return m_values.contains(key);
+        return m_values.find(key) != m_values.cend();
     }
 
     template<class T>

@@ -98,7 +98,7 @@ namespace utils::log {
                                                     [](auto f) {
                                                         f->close();
                                                     });
-                if (m_logFiles.contains(file_name)) {
+                if (m_logFiles.find(file_name) != m_logFiles.cend()) {
                     file = m_logFiles[file_name];
                 } else {
                     file->open(file_name, std::ios_base::app);

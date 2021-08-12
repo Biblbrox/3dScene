@@ -224,7 +224,7 @@ void ShaderProgram::setMat4(const std::string &name, const glm::mat4 &value)
 
 void ShaderProgram::useProgram(const std::string &programName)
 {
-    if (!m_programs.contains(programName)) {
+    if (m_programs.find(programName) != m_programs.cend()) {
         // TODO: throw error
         return;
     }

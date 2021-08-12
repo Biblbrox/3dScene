@@ -25,8 +25,8 @@ using glm::acos;
 
 LidarSystem::LidarSystem() : col_stream(getResourcePath(Config::getVal<std::string>("DataFileTmp")),
                                         std::ios_base::app),
-                                        m_posChanged(true),
-                                        m_prevPos{0.f, 0.f, 0.f}
+                             m_posChanged(true),
+                             m_prevPos{0.f, 0.f, 0.f}
 {}
 
 LidarSystem::~LidarSystem()
