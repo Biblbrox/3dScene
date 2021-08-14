@@ -63,7 +63,7 @@ float linearFog(float dst)
 
 float expFog(float dst)
 {
-    float b = 0.0002;
+    float b = 0.0001;
     float fog = exp(-dst * b);
     return fog;
 }

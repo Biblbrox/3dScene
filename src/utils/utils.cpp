@@ -27,7 +27,7 @@ GLuint utils::loadShaderFromFile(const std::string &path, GLenum shaderType)
     assert(!path.empty() && "Empty file path");
     GLuint shaderID = 0;
     std::string shaderString;
-    std::ifstream sourceFile(path.c_str());
+    std::ifstream sourceFile(path);
     if (!sourceFile.is_open())
         throw FSException((format("Can't open shader source file %1%\n")
                            % path).str(), program_log_file_name(),

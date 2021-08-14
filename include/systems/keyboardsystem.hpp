@@ -22,6 +22,7 @@ private:
     void processMouseSelect();
     void updateDraggedPos();
     void updateDraggedBVH();
+    void updateControlledBVH();
 
     bool m_middlePressed;
     bool m_leftMousePressed;

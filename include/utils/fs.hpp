@@ -17,7 +17,6 @@
 #include "components/lightcomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "components/bvhcomponent.hpp"
-#include "components/materialcomponent.hpp"
 #include "components/selectablecomponent.hpp"
 #include "components/terraincomponent.hpp"
 

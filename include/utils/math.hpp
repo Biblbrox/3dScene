@@ -36,7 +36,7 @@ namespace math {
  * @param angle
  * @return
  */
-    inline glm::mat4
+    FORCE_INLINE inline glm::mat4
     rotate_around(const glm::mat4 &m, const glm::vec3 &v, GLfloat angle,
                   const glm::vec3& rot_axis = glm::vec3(1.f, 0.f, 0.f))
     {
@@ -109,22 +109,24 @@ namespace math {
         return res;
     }
 
-    inline std::vector<Triangle> transformTriangles(const std::vector<Triangle>& triangles,
-                                                    const mat4& transform)
+    inline std::vector<Triangle>
+    transformTriangles(const std::vector<Triangle>& triangles,
+                       const mat4& transform)
     {
         std::vector<Triangle> res;
         res.reserve(triangles.size());
-        for (const Triangle& v: triangles) {
+
+        for (const auto & v : triangles) {
             vec3 a = vec3(v.p0[0], v.p0[1], v.p0[2]);
             vec3 b = vec3(v.p1()[0], v.p1()[1], v.p1()[2]);
             vec3 c = vec3(v.p2()[0], v.p2()[1], v.p2()[2]);
+
             a = transform * vec4(a, 1.f);
             b = transform * vec4(b, 1.f);
             c = transform * vec4(c, 1.f);
 
-            res.push_back(Triangle(Vector3(a.x, a.y, a.z),
-                                   Vector3(b.x, b.y, b.z),
-                                   Vector3(c.x, c.y, c.z)));
+            res.emplace_back(Vector3(a.x, a.y, a.z), Vector3(b.x, b.y, b.z),
+                             Vector3(c.x, c.y, c.z));
         }
 
         return res;

@@ -5,7 +5,7 @@ set(GAME_NAME "3DScene")
 set(EXT_PATH "cmake_modules")
 project(${GAME_NAME})
 
-set(CPU_TYPE "westmere")
+set(CPU_TYPE "native")
 set(ARCH_PARAM "")
 if (NOT ${CPU_TYPE} STREQUAL "")
     set(ARCH_PARAM "-march=${CPU_TYPE}")
@@ -29,7 +29,6 @@ set(CMAKE_CXX_FLAGS_RELEASE_INIT "-fasynchronous-unwind-tables" "-fexceptions"
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
     add_compile_definitions(BOOST_DISABLE_ASSERTS)
-    message("Hello from release")
 endif (${CMAKE_BUILD_TYPE} STREQUAL "Release")
 
 #find_package(PCL REQUIRED)
@@ -47,6 +46,7 @@ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 #set(PCL_DIR ${EXT_PATH}/cmake/pcl_pclconfig.cmake)
 find_package(OpenMP)
 if (OPENMP_FOUND)
+    message("OpenMP found")
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
@@ -55,6 +55,7 @@ endif()
 add_subdirectory(${EXT_PATH}/bvh)
 
 add_compile_definitions(GLM_FORCE_CUDA)
+add_compile_definitions(GLM_FORCE_INLINE)
 
 add_library(imgui
         # Main Imgui files

@@ -1,7 +1,14 @@
 #include <stack>
+#include <bvh/locally_ordered_clustering_builder.hpp>
+#include <bvh/leaf_collapser.hpp>
+#include <ecs/entity.hpp>
+#include <bvh/hierarchy_refitter.hpp>
 
 #include "utils/collision.hpp"
 #include "utils/logger.hpp"
+#include "components/bvhcomponent.hpp"
+#include "components/positioncomponent.hpp"
+#include "components/spritecomponent.hpp"
 
 using utils::RectPoints3D;
 using utils::log::Logger;
@@ -32,6 +39,54 @@ std::vector<vec3> coll::buildVerticesFromRect3D(RectPoints3D rect)
             // Bottom plane
             k, e, b, k, b, a
     };
+}
+
+void coll::updateBVH(std::shared_ptr<ecs::Entity> en)
+{
+    auto bvh = en->getComponent<BVHComponent>();
+    if (bvh) {
+        auto sprite = en->getComponent<SpriteComponent>()->sprite;
+        auto pos = en->getComponent<PositionComponent>();
+        const auto& triangles = sprite->getTriangles();
+        mat4 transform = math::createTransform(pos->pos,
+                                               pos->angle,
+                                               pos->rot_axis,
+                                               sprite->getSize());
+        std::vector<Triangle> tr_triangles
+                = math::transformTriangles(triangles, transform);
+
+        bvh::HierarchyRefitter<Tree> builder(*bvh->bvh_tree);
+        builder.refit([&](Bvh::Node& node){
+            assert(node.is_leaf());
+            auto bbox = bvh::BoundingBox<Scalar>::empty();
+            for (size_t i = 0; i < node.primitive_count; ++i) {
+                auto& triangle =
+                        tr_triangles[
+                                bvh->bvh_tree->primitive_indices[
+                                        node.first_child_or_primitive + i]];
+                bbox.extend(triangle.bounding_box());
+            }
+            node.bounding_box_proxy() = bbox;
+//            vec3 min = {node.bounds[0], node.bounds[2], node.bounds[4]};
+//            vec3 max = {node.bounds[1], node.bounds[3], node.bounds[5]};
+//
+//            min = transform * vec4(min, 1.f);
+//            max = transform * vec4(max, 1.f);
+//
+//            bvh::BoundingBox<Scalar> bbox(Vector3(min.x, min.y, min.z),
+//                                          Vector3(max.x, max.y, max.z));
+//
+//            node.bounds[0] = bbox.min[0];
+//            node.bounds[1] = bbox.max[0];
+//            node.bounds[2] = bbox.min[1];
+//            node.bounds[3] = bbox.max[1];
+//            node.bounds[4] = bbox.min[2];
+//            node.bounds[5] = bbox.max[2];
+        });
+
+//        bvh->bvh_tree = coll::buildBVH(tr_triangles);
+        bvh->triangles = std::make_shared<std::vector<Triangle>>(tr_triangles);
+    }
 }
 
 /**

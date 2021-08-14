@@ -81,4 +81,13 @@ typedef std::shared_ptr<bvh::Bvh<Scalar>> TreePtr;
 
 #define _(String) (boost::locale::gettext(String)).c_str()
 
+
+#if defined(__GNUC__) || defined(__clang__)
+#define FORCE_INLINE __attribute__((always_inline))
+#elif defined(_MSC_VER)
+#define FORCE_INLINE __forceinline
+#else
+#define FORCE_INLINE
+#endif
+
 #endif //BASE_HPP
