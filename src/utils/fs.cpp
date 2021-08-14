@@ -12,7 +12,6 @@
 #include "components/lightcomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "components/bvhcomponent.hpp"
-#include "components/materialcomponent.hpp"
 #include "components/selectablecomponent.hpp"
 #include "components/terraincomponent.hpp"
 #include "utils/fs.hpp"
@@ -181,21 +180,6 @@ void utils::fs::saveSimJson(const std::string &file_name,
                 comp_obj["LightComponent"].push_back(json::object({{"specular", {spec.x, spec.y, spec.z}}}));
 
                 en_obj["Components"].push_back(comp_obj);
-            } else if (type == type_id<MaterialComponent>) {
-                auto comp = en->getComponent<MaterialComponent>();
-                vec3 spec = comp->specular;
-                vec3 dif = comp->diffuse;
-                vec3 amb = comp->ambient;
-                GLfloat shininess = comp->shininess;
-
-                json comp_obj = json::object();
-                comp_obj["MaterialComponent"] = json::array();
-                comp_obj["MaterialComponent"].push_back(json::object({{"ambient", {amb.x, amb.y, amb.z}}}));
-                comp_obj["MaterialComponent"].push_back(json::object({{"diffuse", {dif.x, dif.y, dif.z}}}));
-                comp_obj["MaterialComponent"].push_back(json::object({{"specular", {spec.x, spec.y, spec.z}}}));
-                comp_obj["MaterialComponent"].push_back(json::object({{"shininess", shininess}}));
-
-                en_obj["Components"].push_back(comp_obj);
             } else if (type == type_id<SelectableComponent>) {
                 auto comp = en->getComponent<SelectableComponent>();
 
@@ -308,19 +292,6 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
                 light->ambient = ambient;
                 light->diffuse = diffuse;
                 light->specular = specular;
-            } else if (comp.contains("MaterialComponent")) {
-                json json_mat = comp["MaterialComponent"];
-                vec3 ambient = json_mat[0]["ambient"].get<vec3>();
-                vec3 diffuse = json_mat[1]["diffuse"].get<vec3>();
-                vec3 specular = json_mat[2]["specular"].get<vec3>();
-                GLfloat shininess = json_mat[3]["shininess"].get<GLfloat>();
-
-                entity.addComponent<MaterialComponent>();
-                auto material = entity.getComponent<MaterialComponent>();
-                material->ambient = ambient;
-                material->diffuse = diffuse;
-                material->specular = specular;
-                material->shininess = shininess;
             } else if (comp.contains("SelectableComponent")) {
                 entity.addComponent<SelectableComponent>();
             } else if (comp.contains("TerrainComponent")) {
@@ -341,6 +312,7 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
         res.push_back(entity);
     }
 
+#pragma omp parallel for shared(res)
     for (auto& en: res) {
         auto bvh = en.getComponent<BVHComponent>();
         if (bvh) {

@@ -68,6 +68,11 @@ const std::vector<Triangle>& Sprite::getTriangles() const
     return m_triangles;
 }
 
+std::vector<Triangle>& Sprite::getTriangles()
+{
+    return m_triangles;
+}
+
 void Sprite::draw(ShaderProgram& program) const
 {
     m_model.draw(program);

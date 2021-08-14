@@ -5,7 +5,6 @@
 #include "systems/renderscenesystem.hpp"
 #include "components/spritecomponent.hpp"
 #include "components/bvhcomponent.hpp"
-#include "components/materialcomponent.hpp"
 #include "components/selectablecomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "components/terraincomponent.hpp"
@@ -35,6 +34,9 @@ using math::operator/;
 using utils::texture::genRbo;
 using utils::texture::genTexture;
 
+GLuint skybox_angle = 0;
+GLuint light_dir_angle = 0;
+
 
 RenderSceneSystem::RenderSceneSystem()
 {
@@ -61,17 +63,20 @@ void RenderSceneSystem::drawSprites()
     bool lighting = Config::getVal<bool>("EnableLight");
 
     if (lighting) {
-        auto terrain = getEntitiesByTag<TerrainComponent>().begin()
-                ->second->getComponent<TerrainComponent>()->terrain;
-        GLfloat ter_half = terrain->getWorldWidth() / 2.f;
-
         program->setVec3("viewPos", camera->getPos());
         if (!getEntitiesByTag<LightComponent>().empty()) {
             auto lightEn = getEntitiesByTag<LightComponent>().begin()->second;
             auto light = lightEn->getComponent<LightComponent>();
             light->pos = Config::getVal<vec3>("LightPos");
             program->setInt("lighting", true);
-            program->setVec3("light.direction", {-0.2f, -1.f, 0.3f});
+
+            vec3 init_light_dir = {-0.2f, -1.f, 0.3f};
+            vec3 light_dir = glm::rotate(init_light_dir,
+                                         glm::radians((GLfloat)light_dir_angle),
+                                         vec3(0.f, 1.f, 0.f));
+            program->setVec3("light.direction", light_dir);
+            light_dir_angle += 1;
+
             program->setVec3("light.ambient", light->ambient);
             program->setVec3("light.diffuse", light->diffuse);
             program->setVec3("light.specular", light->specular);
@@ -96,21 +101,6 @@ void RenderSceneSystem::drawSprites()
     for (const auto&[key, en]: sprites) {
         auto posComp = en->getComponent<PositionComponent>();
         auto sprite = en->getComponent<SpriteComponent>()->sprite;
-
-        if (lighting) {
-            auto material = en->getComponent<MaterialComponent>();
-            if (material) {
-//                program->setVec3("material.ambient", material->ambient);
-//                program->setVec3("material.diffuse", material->diffuse);
-//                program->setVec3("material.specular", material->specular);
-//                program->setFloat("material.shininess", material->shininess);
-            } else {
-//                program->setVec3("material.ambient", vec3(1.f, 0.5, 0.31f));
-//                program->setVec3("material.diffuse", vec3(1.f, 0.5f, 0.31f));
-//                program->setVec3("material.specular", vec3(0.5f, 0.5f, 0.5f));
-//                program->setFloat("material.shininess", 32.f);
-            }
-        }
 
         auto selComp = en->getComponent<SelectableComponent>();
         if (getGameState() == GameStates::EDIT && selComp && selComp->dragged) {
@@ -147,7 +137,12 @@ void RenderSceneSystem::drawSprites()
 
     program->useFramebufferProgram();
     auto proj = program->getMat4("ProjectionMatrix");
+    mat4 old_view = program->getMat4("ViewMatrix");
     auto view = program->getMat4("ViewMatrix");
+    view = glm::rotate(view,
+                       glm::radians((GLfloat)skybox_angle) / 100.f,
+                       glm::vec3(0.f, 1.f, 0.f));
+    skybox_angle += 1;
 
     auto skyboxEn = getEntitiesByTag<SkyboxComponent>().begin()->second;
     auto skybox = skyboxEn->getComponent<SkyboxComponent>();
@@ -156,6 +151,7 @@ void RenderSceneSystem::drawSprites()
     program->setMat4("ViewMatrix", mat4(mat3(view)));
     program->setVec3("fogColor", {0.5444, 0.62, 0.62});
     render::drawSkybox(skybox->vao, skybox->skybox_id);
+    program->setMat4("ViewMatrix", old_view);
 
     if (GLenum error = glGetError(); error != GL_NO_ERROR)
         throw GLException((format("\n\tRender while drawing sprites: %1%\n")

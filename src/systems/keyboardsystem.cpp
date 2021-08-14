@@ -123,14 +123,26 @@ void KeyboardSystem::update_state(size_t delta)
     if (movComp && movComp->controlled) {
         auto pos = movEn->getComponent<PositionComponent>();
         GLfloat speed = movComp->speed;
-        if (state[SDL_SCANCODE_UP])
+        bool need_update_bvh = false;
+        if (state[SDL_SCANCODE_UP]) {
             pos->pos.z += speed;
-        if (state[SDL_SCANCODE_DOWN])
+            need_update_bvh = true;
+        }
+        if (state[SDL_SCANCODE_DOWN]) {
             pos->pos.z -= speed;
-        if (state[SDL_SCANCODE_LEFT])
+            need_update_bvh = true;
+        }
+        if (state[SDL_SCANCODE_LEFT]) {
             pos->pos.x += speed;
-        if (state[SDL_SCANCODE_RIGHT])
+            need_update_bvh = true;
+        }
+        if (state[SDL_SCANCODE_RIGHT]) {
             pos->pos.x -= speed;
+            need_update_bvh = true;
+        }
+
+        if (need_update_bvh)
+            updateControlledBVH();
 
         auto terrain_en = getEntitiesByTag<TerrainComponent>().begin()->second;
         auto terrain = terrain_en->getComponent<TerrainComponent>()->terrain;
@@ -260,20 +272,18 @@ void KeyboardSystem::updateDraggedBVH()
 {
     m_draggedObj->getComponent<SelectableComponent>()->dragged = false;
     m_dragEnabled = false;
-    auto bvh = m_draggedObj->getComponent<BVHComponent>();
-    if (bvh) { // Update aabb positions in world space
-        auto sprite = m_draggedObj->getComponent<SpriteComponent>()->sprite;
-        auto pos = m_draggedObj->getComponent<PositionComponent>();
-        auto triangles = sprite->getTriangles();
-        mat4 transform = math::createTransform(pos->pos,
-                                               pos->angle,
-                                               pos->rot_axis,
-                                               sprite->getSize());
-        triangles = math::transformTriangles(triangles,
-                                             transform);
-        bvh->bvh_tree = coll::buildBVH(triangles);
-        bvh->triangles = std::make_shared<std::vector<Triangle>>(
-                triangles);
-    }
+
+    coll::updateBVH(m_draggedObj);
+
     m_draggedObj = nullptr;
+}
+
+void KeyboardSystem::updateControlledBVH()
+{
+    auto movEntities = getEntitiesByTag<MovableComponent>();
+    std::shared_ptr<ecs::Entity> movEn;
+    if (!movEntities.empty()) {
+        movEn = movEntities.begin()->second;
+        coll::updateBVH(movEn);
+    }
 }

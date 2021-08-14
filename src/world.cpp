@@ -20,7 +20,6 @@
 #include "components/lightcomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "components/bvhcomponent.hpp"
-#include "components/materialcomponent.hpp"
 #include "components/selectablecomponent.hpp"
 #include "components/terraincomponent.hpp"
 #include "components/skyboxcomponent.hpp"
@@ -82,8 +81,6 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("PrismFreq", glm::vec2(90.f, 45.f), "vec2");
     if (!Config::hasKey("PrismStartAngle"))
         Config::addVal("PrismStartAngle", glm::vec2(0.f, 0.f), "vec2");
-//    if (!Config::hasKey("LaserPos"))
-//        Config::addVal("LaserPos", glm::vec3(0.f), "vec3");
     if (!Config::hasKey("DrawLeafs"))
         Config::addVal("DrawLeafs", false, "bool");
     if (!Config::hasKey("EditMode"))
@@ -108,10 +105,6 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("EnableLight", false, "bool");
     if (!Config::hasKey("LightPos"))
         Config::addVal("LightPos", glm::vec3(0.f), "vec3");
-//    if (!Config::hasKey("LaserYaw"))
-//        Config::addVal("LaserYaw", 0.f, "float");
-//    if (!Config::hasKey("LaserPitch"))
-//        Config::addVal("LaserPitch", 0.f, "float");
     if (!Config::hasKey("RayLength"))
         Config::addVal("RayLength", 10.f, "float");
     if (!Config::hasKey("DotDens"))
@@ -334,7 +327,7 @@ void World::init_sprites()
 {
     auto add_bvh = [](const PositionComponent& pos, const SpriteComponent& sprite,
             BVHComponent& bvh) {
-        auto triangles = sprite.sprite->getTriangles();
+        auto& triangles = sprite.sprite->getTriangles();
         mat4 man_transform = math::createTransform(pos.pos, pos.angle,
                                                    pos.rot_axis, sprite.sprite->getSize());
         triangles = math::transformTriangles(triangles, man_transform);
@@ -344,16 +337,13 @@ void World::init_sprites()
 
     auto lidarEn = createEntity(genUniqueId());
     lidarEn->activate();
-    lidarEn->addComponents<PositionComponent, LidarComponent, SpriteComponent,
-            BVHComponent>();
+    lidarEn->addComponents<PositionComponent, LidarComponent, SpriteComponent>();
     auto lidar_pos = lidarEn->getComponent<PositionComponent>();
     auto lidarComp = lidarEn->getComponent<LidarComponent>();
 
     auto lidarSprite = lidarEn->getComponent<SpriteComponent>();
     lidarSprite->sprite = std::make_shared<Sprite>(getModelPath("cube/cube.obj"), vec3(100.f, 100.f, 100.f),
                                                    false);
-
-    add_bvh(*lidar_pos, *lidarSprite, *lidarEn->getComponent<BVHComponent>());
 
     Lidar lidar(lidarComp->length, lidar_pos->pos, {0.f, 1.f, 0.f},
                 lidarComp->yaw, lidarComp->pitch);
@@ -385,7 +375,7 @@ void World::init_sprites()
     auto chair_en = createEntity(genUniqueId());
     chair_en->activate();
     chair_en->addComponents<SpriteComponent, PositionComponent,
-            SelectableComponent, BVHComponent, MaterialComponent>();
+            SelectableComponent, BVHComponent>();
     auto chair_sprite_comp = chair_en->getComponent<SpriteComponent>();
     chair_sprite_comp->sprite = chair_sprite;
     auto pos_chair = chair_en->getComponent<PositionComponent>();
@@ -394,16 +384,11 @@ void World::init_sprites()
     pos_chair->pos.y = terrain->getAltitude(
             {pos_chair->pos.x, pos_chair->pos.z}) + 40.f;
     add_bvh(*pos_chair, *chair_sprite_comp, *chair_en->getComponent<BVHComponent>());
-    auto material = chair_en->getComponent<MaterialComponent>();
-    material->ambient = vec3(1.f);
-    material->diffuse = vec3(0.8f);
-    material->specular = vec3(0.f);
-    material->shininess = 32.f;
 
     auto man_en = createEntity(genUniqueId());
     man_en->activate();
     man_en->addComponents<SpriteComponent, PositionComponent,
-            SelectableComponent, BVHComponent, MaterialComponent>();
+            SelectableComponent, BVHComponent>();
     auto man_sprite_comp = man_en->getComponent<SpriteComponent>();
     man_sprite_comp->sprite = man_sprite;
     auto pos_man = man_en->getComponent<PositionComponent>();
@@ -411,11 +396,6 @@ void World::init_sprites()
     pos_man->pos.z = 300 + start_z;
     pos_man->pos.y = terrain->getAltitude({pos_man->pos.x, pos_man->pos.z}) + 60.f;
     add_bvh(*pos_man, *man_sprite_comp, *man_en->getComponent<BVHComponent>());
-    material = man_en->getComponent<MaterialComponent>();
-    material->ambient = vec3(1.f);
-    material->diffuse = vec3(0.8f);
-    material->specular = vec3(0.f);
-    material->shininess = 32.f;
 
     auto light_en = createEntity(genUniqueId());
     light_en->activate();
@@ -432,7 +412,7 @@ void World::init_sprites()
         auto house = createEntity(genUniqueId());
         house->activate();
         house->addComponents<SpriteComponent, PositionComponent,
-                SelectableComponent, BVHComponent, MaterialComponent>();
+                SelectableComponent, BVHComponent>();
         auto house_sprite_comp = house->getComponent<SpriteComponent>();
         house_sprite_comp->sprite = house_sprite;
         auto house_pos = house->getComponent<PositionComponent>();
@@ -442,11 +422,6 @@ void World::init_sprites()
         house_pos->angle = -glm::half_pi<GLfloat>();
         house_pos->rot_axis = vec3(0.f, 1.f, 0.f);
         add_bvh(*house_pos, *house_sprite_comp, *house->getComponent<BVHComponent>());
-        material = house->getComponent<MaterialComponent>();
-        material->ambient = vec3(1.f);
-        material->diffuse = vec3(1.f);
-        material->specular = vec3(0.5f);
-        material->shininess = 32.f;
     }
 }
 
@@ -541,7 +516,7 @@ void World::addEntityFromFile(const std::string &model_file)
     auto en = createEntity(genUniqueId());
     en->activate();
     en->addComponents<SpriteComponent, PositionComponent,
-            SelectableComponent, BVHComponent, MaterialComponent>();
+            SelectableComponent, BVHComponent>();
     auto sprite_comp = en->getComponent<SpriteComponent>();
     sprite_comp->sprite = sprite;
     auto pos_chair = en->getComponent<PositionComponent>();
@@ -549,7 +524,7 @@ void World::addEntityFromFile(const std::string &model_file)
     pos_chair->pos.z = 400.f;
     pos_chair->pos.y = terrain->getAltitude(
             {pos_chair->pos.x, pos_chair->pos.z}) + 40.f;
-    auto triangles = sprite->getTriangles();
+    auto& triangles = sprite->getTriangles();
     mat4 chair_transform = math::createTransform(pos_chair->pos, 0,
                                                  {0.f, 1.f, 1.f}, {1.f, 1.f, 1.f});
     triangles = math::transformTriangles(triangles, chair_transform);
@@ -557,10 +532,5 @@ void World::addEntityFromFile(const std::string &model_file)
             triangles);
     en->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(
             triangles);
-    auto material = en->getComponent<MaterialComponent>();
-    material->ambient = vec3(1.f);
-    material->diffuse = vec3(0.8f);
-    material->specular = vec3(0.f);
-    material->shininess = 32.f;
 }
 

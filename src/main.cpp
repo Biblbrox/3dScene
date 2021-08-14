@@ -54,7 +54,7 @@ int main(int argc, char *args[])
         int screen_height = utils::getWindowHeight<int>(*Game::getWindow());
         program->useFramebufferProgram();
         glm::mat4 perspective = glm::perspective(45.f,
-                                                 (float)screen_width / (float)screen_height, 0.1f, 5000.f);
+                                                 (float)screen_width / (float)screen_height, 1.f, 10000.f);
         program->setMat4(PROJECTION, perspective);
         program->setMat4(MODEL, glm::mat4(1.f));
         program->setMat4(VIEW, glm::mat4(1.f));

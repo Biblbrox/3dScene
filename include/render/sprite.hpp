@@ -57,6 +57,7 @@ public:
     std::string getModelFile() const;
 
     const std::vector<Triangle>& getTriangles() const;
+    std::vector<Triangle>& getTriangles();
     void setIdx(GLuint idx);
 protected:
     std::vector<Triangle> m_triangles;

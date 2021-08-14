@@ -27,7 +27,7 @@ app = QtGui.QApplication([])
 w = gl.GLViewWidget()
 w.show()
 
-cmap = plt.get_cmap('jet')
+cmap = plt.get_cmap('gist_stern')
 
 norm = Normalize(vmin=min_y, vmax=max_y)
 rgba_img = cmap(data[:, 2] / np.max(data[:, 2]))

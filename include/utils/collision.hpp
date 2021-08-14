@@ -7,6 +7,7 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <GL/glew.h>
+#include <ecs/entity.hpp>
 #include <Eigen/Eigenvalues>
 
 #include <bvh/bvh.hpp>
@@ -66,7 +67,7 @@ namespace coll {
      */
     TreePtr buildBVH(const std::vector<Triangle>& triangles) noexcept;
 
-
+    void updateBVH(std::shared_ptr<ecs::Entity> en);
 
     std::pair<bool, vec3>
     BVHCollision(TreePtr tree, const Ray& ray, const std::vector<Triangle>& triangles);

@@ -8,7 +8,6 @@ utils::string::split(const std::string& str, const std::string& del)
 {
     std::string s(str);
     size_t pos = 0;
-    std::string token;
     std::vector<std::string> res;
     while (s.rfind(del, 0) == 0) s.erase(0, del.length());
     while ((pos = s.find(del)) != std::string::npos) {

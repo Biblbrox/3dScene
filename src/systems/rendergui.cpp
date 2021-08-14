@@ -548,18 +548,8 @@ void RenderGuiSystem::selection_settings()
     auto spriteComp = selEn->getComponent<SpriteComponent>();
     auto sprite = spriteComp->sprite;
 
-    if (InputFloat3("##sprite_scale", glm::value_ptr(sprite->getSize()))) {
-        auto bvh = selEn->getComponent<BVHComponent>();
-
-        if (bvh) {
-            auto pos = selEn->getComponent<PositionComponent>();
-            auto triangles = sprite->getTriangles();
-            mat4 transform = math::createTransform(pos->pos, pos->angle, pos->rot_axis, sprite->getSize());
-            triangles = math::transformTriangles(triangles, transform);
-            bvh->bvh_tree = coll::buildBVH(triangles);
-            bvh->triangles = std::make_shared<std::vector<Triangle>>(triangles);
-        }
-    }
+    if (InputFloat3("##sprite_scale", glm::value_ptr(sprite->getSize())))
+        coll::updateBVH(selEn);
 
     bool flip_uv = sprite->isUvFlipped();
     bool old_flip = flip_uv;
@@ -577,15 +567,13 @@ void RenderGuiSystem::selection_settings()
     if (Button(_("Copy"))) {
         auto copy = m_ecsManager->createEntity(m_ecsManager->genUniqueId());
         copy->activate();
+        bool has_bvh = false;
         for (auto [key, comp]: selEn->getComponents()) {
             if (key == ecs::types::type_id<LidarComponent>) {
                 auto c = std::dynamic_pointer_cast<LidarComponent>(comp);
                 copy->addComponent(*c);
             } else if (key == ecs::types::type_id<LightComponent>) {
                 auto c = std::dynamic_pointer_cast<LightComponent>(comp);
-                copy->addComponent(*c);
-            } else if (key == ecs::types::type_id<MaterialComponent>) {
-                auto c = std::dynamic_pointer_cast<MaterialComponent>(comp);
                 copy->addComponent(*c);
             } else if (key == ecs::types::type_id<PositionComponent>) {
                 auto c = std::dynamic_pointer_cast<PositionComponent>(comp);
@@ -597,9 +585,19 @@ void RenderGuiSystem::selection_settings()
                 auto c = std::dynamic_pointer_cast<SpriteComponent>(comp);
                 copy->addComponent(*c);
             } else if (key == ecs::types::type_id<BVHComponent>) {
-                auto c = std::dynamic_pointer_cast<BVHComponent>(comp);
-                copy->addComponent(*c);
+//                auto c = std::dynamic_pointer_cast<BVHComponent>(comp);
+//                copy->addComponent(*c);
+                copy->addComponent<BVHComponent>();
+                has_bvh = true;
             }
+        }
+
+        if (has_bvh) {
+            auto triangles = copy->getComponent<SpriteComponent>()->sprite->getTriangles();
+            auto bvh = coll::buildBVH(triangles);
+            auto bvhComp = copy->getComponent<BVHComponent>();
+            bvhComp->bvh_tree = bvh;
+            bvhComp->triangles = std::make_shared<std::vector<Triangle>>(triangles);
         }
     }
 
