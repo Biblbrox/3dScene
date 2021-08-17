@@ -11,27 +11,21 @@
 #include <bvh/single_ray_traverser.hpp>
 #include <bvh/primitive_intersectors.hpp>
 
-
+#include "base.hpp"
 #include "fpscamera.hpp"
 
 using glm::vec3;
 using glm::vec2;
 using glm::normalize;
 
-using Scalar   = float;
+/*using Scalar   = GLfloat;
 using Vector3  = bvh::Vector3<Scalar>;
 using Triangle = bvh::Triangle<Scalar>;
 using Ray      = bvh::Ray<Scalar>;
 using Tree = bvh::Bvh<Scalar>;
-using TreePtr = std::shared_ptr<bvh::Bvh<Scalar>>;
+using TreePtr = std::shared_ptr<bvh::Bvh<Scalar>>;*/
 
-//struct Ray
-//{
-//    vec3 dir;
-//    vec3 origin;
-//};
-//
-inline vec3 ray_point(const Ray& ray, GLfloat distance)
+FORCE_INLINE inline vec3 ray_point(const Ray& ray, GLfloat distance)
 {
     Vector3 pos = ray.origin + normalize(ray.direction) * distance;
     return {pos[0], pos[1], pos[2]};
@@ -40,14 +34,14 @@ inline vec3 ray_point(const Ray& ray, GLfloat distance)
 class Lidar: public FpsCamera
 {
 public:
-    explicit Lidar(float ray_length, float x, float y, float z, float up_x,
-                   float up_y,  float up_z, float yaw, float pitch)
+    explicit Lidar(GLfloat ray_length, GLfloat x, GLfloat y, GLfloat z, GLfloat up_x,
+                   GLfloat up_y, GLfloat up_z, GLfloat yaw, GLfloat pitch)
             : FpsCamera(x, y, z, up_x, up_y, up_z, yaw, pitch),
               m_rayLength(ray_length){};
 
     explicit Lidar(GLfloat ray_length, glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
                    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
-                   float yaw = YAW, float pitch = PITCH)
+                   GLfloat yaw = YAW, GLfloat pitch = PITCH)
             : FpsCamera(position, up, yaw, pitch), m_rayLength(ray_length){};
 
     GLfloat getRayLength() const;

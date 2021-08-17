@@ -147,30 +147,6 @@ namespace utils
 
         return rect;
     }
-
-    inline Tree::Node nodeTransform(const Tree::Node& in, const mat4& transform)
-    {
-        Tree::Node rect = in;
-
-
-        vec3 min = {rect.bounds[0], rect.bounds[2], rect.bounds[4]};
-        vec3 max = {rect.bounds[1], rect.bounds[3], rect.bounds[5]};
-
-        min = transform * vec4(min, 1.f);
-        max = transform * vec4(max, 1.f);
-
-        bvh::BoundingBox<Scalar> bbox(Vector3(min.x, min.y, min.z),
-                                      Vector3(max.x, max.y, max.z));
-
-        rect.bounds[0] = bbox.min[0];
-        rect.bounds[1] = bbox.max[0];
-        rect.bounds[2] = bbox.min[1];
-        rect.bounds[3] = bbox.max[1];
-        rect.bounds[4] = bbox.min[2];
-        rect.bounds[5] = bbox.max[2];
-
-        return rect;
-    }
 };
 
 #endif // DATASTRUCTS_HPP

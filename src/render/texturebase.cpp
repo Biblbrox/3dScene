@@ -12,17 +12,17 @@ TextureBase::TextureBase(glm::vec3 size) : m_textureId(0),
 {
 }
 
-GLuint TextureBase::getWidth() const noexcept
+GLfloat TextureBase::getWidth() const noexcept
 {
     return m_size.x;
 }
 
-GLuint TextureBase::getHeight() const noexcept
+GLfloat TextureBase::getHeight() const noexcept
 {
     return m_size.y;
 }
 
-GLuint TextureBase::getDepth() const noexcept
+GLfloat TextureBase::getDepth() const noexcept
 {
     return m_size.z;
 }

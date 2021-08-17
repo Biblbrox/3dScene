@@ -46,7 +46,7 @@ RectPoints3D buildAABB(const std::vector<vec3> &vertices) noexcept
 * @param rot_axis
 * @return
 */
-RectPoints3D
+/*RectPoints3D
 AABBtoWorldSpace(RectPoints3D rect,
                  const vec3& rot_axis, GLfloat angle,
                  const vec3& position, const TextureBase& texture) noexcept
@@ -69,9 +69,9 @@ AABBtoWorldSpace(RectPoints3D rect,
     rect = rectTransform(rect, transform);
 
     return rebuildAABBinWorldSpace(rect);
-}
+}*/
 
-Tree::Node
+/*Tree::Node
 NodeToWorldSpace(Tree::Node node,
                  const vec3& rot_axis, GLfloat angle,
                  const vec3& position, const TextureBase& texture) noexcept
@@ -95,11 +95,11 @@ NodeToWorldSpace(Tree::Node node,
 
     return node;
 //    return rebuildAABBinWorldSpace(node);
-}
+}*/
 
 
 
-RectPoints3D AABBTransform(RectPoints3D rect,
+/*RectPoints3D AABBTransform(RectPoints3D rect,
                            const vec3& rot_axis, GLfloat angle,
                            const vec3& position, const TextureBase& texture) noexcept
 {
@@ -118,4 +118,4 @@ RectPoints3D AABBTransform(RectPoints3D rect,
     rect = rectTransform(rect, transform);
 
     return rebuildAABBinWorldSpace(rect);
-}
+}*/

@@ -585,10 +585,10 @@ void RenderGuiSystem::selection_settings()
                 auto c = std::dynamic_pointer_cast<SpriteComponent>(comp);
                 copy->addComponent(*c);
             } else if (key == ecs::types::type_id<BVHComponent>) {
-//                auto c = std::dynamic_pointer_cast<BVHComponent>(comp);
-//                copy->addComponent(*c);
                 copy->addComponent<BVHComponent>();
                 has_bvh = true;
+            } else if (key == ecs::types::type_id<MovableComponent>) {
+                copy->addComponent<MovableComponent>();
             }
         }
 

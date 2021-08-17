@@ -4,3 +4,5 @@ Release
 res/data.txt
 res/models
 res/models/*
+.clang-format
+*~

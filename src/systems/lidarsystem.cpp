@@ -121,19 +121,12 @@ void LidarSystem::drawLidarIntersect()
             }
 
             auto pos_comp = en->getComponent<PositionComponent>();
-            auto sprite_comp = en->getComponent<SpriteComponent>();
-
+			
             auto triangles = bvh_comp->triangles;
             auto bvh = bvh_comp->bvh_tree;
-            bvh::ClosestPrimitiveIntersector<Bvh, Triangle> primitive_intersector(*bvh, triangles->data());
-            bvh::SingleRayTraverser<Bvh> traverser(*bvh);
-
-            auto hit = traverser.traverse(ray, primitive_intersector);
-            if (hit) {
-                auto intersection = hit->intersection;
-                vec3 col_pos = pos->pos + dir * intersection.t;
-                coll_dots.emplace_back(col_pos);
-            }
+			auto find_inter = coll::BVHCollision(bvh, ray, *triangles);
+			if (find_inter.first)
+                coll_dots.emplace_back(find_inter.second);	
         }
     }
 

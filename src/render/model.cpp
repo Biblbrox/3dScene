@@ -154,7 +154,7 @@ Model::loadMaterialsTextures(aiMaterial *mat, aiTextureType type,
     return textures;
 }
 
-const std::vector<Mesh> &Model::getMeshes() const
+const std::vector<Mesh>& Model::getMeshes() const
 {
     return m_meshes;
 }
@@ -168,7 +168,7 @@ Material Model::loadMaterial(aiMaterial* mat)
 {
     Material material;
     aiColor3D color(0.f, 0.f, 0.f);
-    float shininess;
+    GLfloat shininess;
 
     mat->Get(AI_MATKEY_COLOR_DIFFUSE, color);
     material.diffuse = glm::vec3(color.r, color.b, color.g);

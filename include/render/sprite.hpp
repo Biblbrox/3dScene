@@ -13,12 +13,7 @@
 #include "utils/texture.hpp"
 #include "utils/utils.hpp"
 #include "render/model.hpp"
-
-using Scalar   = float;
-using Vector3  = bvh::Vector3<Scalar>;
-using Triangle = bvh::Triangle<Scalar>;
-//using Ray      = bvh::Ray<Scalar>;
-using Bvh      = bvh::Bvh<Scalar>;
+#include "base.hpp"
 
 /**
  * Sprite class.
@@ -44,9 +39,9 @@ public:
 
     GLuint getTriangleCount() const;
 
-    GLuint getWidth() const noexcept override;
-    GLuint getHeight() const noexcept override;
-    GLuint getDepth() const noexcept override;
+    GLfloat getWidth() const noexcept override;
+    GLfloat getHeight() const noexcept override;
+    GLfloat getDepth() const noexcept override;
     const vec3& getSize() const noexcept override;
     vec3& getSize() noexcept override;
 
