@@ -24,9 +24,9 @@ public:
 
     virtual GLuint getTextureID() const;
 
-    virtual GLuint getWidth() const noexcept;
-    virtual GLuint getHeight() const noexcept;
-    virtual GLuint getDepth() const noexcept;
+    virtual GLfloat getWidth() const noexcept;
+    virtual GLfloat getHeight() const noexcept;
+    virtual GLfloat getDepth() const noexcept;
     virtual const vec3& getSize() const noexcept;
     virtual vec3& getSize() noexcept;
     virtual void draw(ShaderProgram& program) const = 0;

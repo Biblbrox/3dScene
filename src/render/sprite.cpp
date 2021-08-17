@@ -32,17 +32,17 @@ Sprite::~Sprite()
 
 }
 
-GLuint Sprite::getWidth() const noexcept
+GLfloat Sprite::getWidth() const noexcept
 {
     return m_size.x;
 }
 
-GLuint Sprite::getHeight() const noexcept
+GLfloat Sprite::getHeight() const noexcept
 {
     return m_size.y;
 }
 
-GLuint Sprite::getDepth() const noexcept
+GLfloat Sprite::getDepth() const noexcept
 {
     return m_size.z;
 }
@@ -103,6 +103,8 @@ void Sprite::init_triangles()
             vertices_ordering.emplace_back(vertices[idx].pos);
     }
 
+#pragma omp declare reduction (merge : std::vector<Triangle> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
+#pragma omp parallel for reduction(merge: m_triangles) shared(vertices_ordering)
     for (size_t i = 0; i < vertices_ordering.size() - 2; i += 3) {
         vec3 p0 = vertices_ordering[i];
         vec3 p1 = vertices_ordering[i + 1];

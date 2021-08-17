@@ -104,8 +104,7 @@ void render::drawTexture(ShaderProgram& program, const TextureBase &texture,
     const GLfloat centerY = pos.y + half;
     const GLfloat centerZ = pos.z + half;
 
-    const vec3 scale = sc * glm::vec3(texture.getWidth(), texture.getHeight(),
-                                       texture.getDepth());
+    const vec3 scale = sc * texture.getSize();
 
     mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
                                   rot_axis);

@@ -76,8 +76,8 @@ typedef float Scalar;
 typedef bvh::Vector3<Scalar> Vector3;
 typedef bvh::Triangle<Scalar> Triangle;
 typedef bvh::Ray<Scalar> Ray;
-typedef bvh::Bvh<Scalar> Tree;
-typedef std::shared_ptr<bvh::Bvh<Scalar>> TreePtr;
+typedef bvh::Bvh<Scalar> Bvh;
+typedef std::shared_ptr<bvh::Bvh<Scalar>> BvhPtr;
 
 #define _(String) (boost::locale::gettext(String)).c_str()
 

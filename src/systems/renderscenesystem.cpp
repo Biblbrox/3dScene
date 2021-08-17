@@ -9,6 +9,7 @@
 #include "components/scenecomponent.hpp"
 #include "components/terraincomponent.hpp"
 #include "components/lightcomponent.hpp"
+#include "components/lidarcomponent.hpp"
 #include "components/skyboxcomponent.hpp"
 #include "utils/bvh/aabb.hpp"
 #include "render/render.hpp"
