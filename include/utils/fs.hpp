@@ -14,7 +14,7 @@
 #include "components/positioncomponent.hpp"
 #include "components/lidarcomponent.hpp"
 #include "components/spritecomponent.hpp"
-#include "components/lightcomponent.hpp"
+#include "components/globallightcomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "components/bvhcomponent.hpp"
 #include "components/selectablecomponent.hpp"

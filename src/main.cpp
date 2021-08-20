@@ -55,10 +55,10 @@ int main(int argc, char *args[])
         program->useFramebufferProgram();
         glm::mat4 perspective = glm::perspective(45.f,
                                                  (float)screen_width / (float)screen_height, 1.f, 10000.f);
-        program->setMat4(PROJECTION, perspective);
-        program->setMat4(MODEL, glm::mat4(1.f));
-        program->setMat4(VIEW, glm::mat4(1.f));
-        program->setInt(TEXTURE_NUM, 0);
+        program->setMat4(U_PROJECTION_MATRIX, perspective);
+        program->setMat4(U_MODEL_MATRIX, glm::mat4(1.f));
+        program->setMat4(U_VIEW_MATRIX, glm::mat4(1.f));
+        program->setInt(U_TEXTURE_NUM, 0);
 
         GLfloat delta_time = 0.f;
         GLfloat last_frame = 0.f;
@@ -77,10 +77,8 @@ int main(int argc, char *args[])
                 if (SDL_CaptureMouse(SDL_TRUE) != 0)
                     utils::log::Logger::write(program_log_file_name(),
                                               Category::INITIALIZATION_ERROR,
-                                              (boost::format(
-                                                      "Warning: Unable to capture mouse. "
-                                                      "SDL Error: %s\n")
-                                               % SDL_GetError()).str());
+                                              "Warning: Unable to capture mouse. "
+                                              "SDL Error: %s\n", SDL_GetError());
                 firstRun = false;
             }
         }

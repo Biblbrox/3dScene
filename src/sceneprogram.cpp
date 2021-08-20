@@ -1,24 +1,23 @@
 #include <GL/glew.h>
+#include <filesystem>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "utils/utils.hpp"
 #include "boost/format.hpp"
-#include "utils/logger.hpp"
 #include "sceneprogram.hpp"
+#include "utils/logger.hpp"
+#include "utils/utils.hpp"
 
-using utils::loadShaderFromFile;
+using boost::format;
 using glm::mat4;
 using glm::vec3;
 using glm::vec4;
-using utils::log::Logger;
+using utils::loadShaderFromFile;
 using utils::log::Category;
+using utils::log::Logger;
 using utils::log::program_log_file_name;
 using utils::log::shader_log_file_name;
-using boost::format;
-
-const int gl_bool_size = 4;
-const int gl_int_size = 4;
-const int gl_float_size = 4;
+using std::filesystem::absolute;
+using std::filesystem::canonical;
 
 std::shared_ptr<SceneProgram> SceneProgram::instance = nullptr;
 
@@ -30,9 +29,7 @@ constexpr int next_offset(int cur_offset, int base_alignment)
     return cur_offset + base_alignment - cur_offset % base_alignment;
 }
 
-SceneProgram::SceneProgram()
-{
-}
+SceneProgram::SceneProgram() {}
 
 void SceneProgram::initPrograms()
 {

@@ -1,33 +1,33 @@
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/epsilon.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <omp.h>
 
-#include "sceneprogram.hpp"
-#include "systems/lidarsystem.hpp"
 #include "components/bvhcomponent.hpp"
+#include "components/lidarcomponent.hpp"
 #include "components/positioncomponent.hpp"
 #include "components/spritecomponent.hpp"
-#include "components/lidarcomponent.hpp"
-#include "utils/logger.hpp"
-#include "config.hpp"
-#include "utils/collision.hpp"
-#include "render/render.hpp"
 #include "components/terraincomponent.hpp"
+#include "config.hpp"
+#include "render/render.hpp"
+#include "sceneprogram.hpp"
+#include "systems/lidarsystem.hpp"
+#include "utils/collision.hpp"
+#include "utils/logger.hpp"
 
-using utils::log::Logger;
+using glm::acos;
+using glm::asin;
 using glm::cos;
 using glm::sin;
 using glm::sqrt;
-using glm::asin;
-using glm::acos;
+using utils::log::Logger;
 
-
-LidarSystem::LidarSystem() : col_stream(getResourcePath(Config::getVal<std::string>("DataFileTmp")),
-                                        std::ios_base::app),
-                             m_posChanged(true),
-                             m_prevPos{0.f, 0.f, 0.f}
-{}
+LidarSystem::LidarSystem()
+    : col_stream(getResourcePath(Config::getVal<std::string>("DataFileTmp")),
+                 std::ios_base::app),
+      m_posChanged(true), m_prevPos{0.f, 0.f, 0.f}
+{
+}
 
 LidarSystem::~LidarSystem()
 {
@@ -49,37 +49,38 @@ void LidarSystem::drawLidarIntersect()
     auto pos = lidarEntities->getComponent<PositionComponent>();
     auto lidarComp = lidarEntities->getComponent<LidarComponent>();
 
-    Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                lidarComp->yaw, lidarComp->pitch);
+    Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw,
+                lidarComp->pitch);
 
-    auto pos_compare = glm::epsilonEqual(m_prevPos, pos->pos, glm::epsilon<GLfloat>());
+    auto pos_compare =
+        glm::epsilonEqual(m_prevPos, pos->pos, glm::epsilon<GLfloat>());
     if (!glm::all(pos_compare) || lidarComp->pattern_points.empty()) {
         m_posChanged = true;
         m_prevPos = pos->pos;
-    } else {
+    }
+    else {
         m_posChanged = false;
     }
 
     if (m_posChanged) {
         lidarComp->pattern_points = lidar.risleyPattern2(
-                lidarComp->freq, lidarComp->start_angle,
-                lidarComp->density);
+            lidarComp->freq, lidarComp->start_angle, lidarComp->density);
     }
     auto pattern = lidarComp->pattern_points;
     if (Config::getVal<bool>("DrawPattern")) {
         program->useFramebufferProgram();
-        program->setInt("isPrimitive", true);
+        program->setInt(U_IS_PRIMITIVE, true);
 
-        program->setVec3("primColor", {1.f, 1.f, 1.f});
+        program->setVec3(U_PRIM_COLOR, {1.f, 1.f, 1.f});
         pattern.push_back(pos->pos);
         render::drawDots(pattern);
         if (Config::getVal<bool>("DrawRays")) {
             vector<vec3> rays;
-            for (const auto &dot: pattern) {
+            for (const auto &dot : pattern) {
                 rays.push_back(pos->pos);
                 rays.push_back(dot);
             }
-            program->setVec3("primColor", {0.1, 1.f, 0.1});
+            program->setVec3(U_PRIM_COLOR, {0.1, 1.f, 0.1});
             render::drawLinen(rays);
         }
     }
@@ -87,12 +88,14 @@ void LidarSystem::drawLidarIntersect()
     if (!Config::getVal<bool>("CheckCollision"))
         return;
 
-    auto& entities = m_ecsManager->getEntities();
-#pragma omp declare reduction (merge : std::vector<vec3> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
+    auto &entities = m_ecsManager->getEntities();
+#pragma omp declare reduction (merge : std::vector<vec3> \
+							   : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
     vector<vec3> coll_dots;
-#pragma omp parallel for collapse(1) reduction(merge: coll_dots) shared(entities)
-    for (const auto& dot: pattern) {
-        for (auto & [key, en] : entities) {
+#pragma omp parallel for collapse(1) reduction(merge                           \
+                                               : coll_dots) shared(entities), default(shared)
+    for (const auto &dot : pattern) {
+        for (auto &[key, en] : entities) {
             vec3 dir = normalize(dot - pos->pos);
             if (std::isnan(dir.x) || std::isnan(dir.y) || std::isnan(dir.z))
                 continue;
@@ -111,7 +114,8 @@ void LidarSystem::drawLidarIntersect()
                     continue;
 
                 auto terrain = terrainComp->terrain;
-                auto coll = coll::rayTerrainIntersection(*terrain, ray, 0, 10000.f, 100);
+                auto coll = coll::rayTerrainIntersection(*terrain, ray, 0,
+                                                         10000.f, 100);
                 if (coll.first) {
                     vec3 col_pos = coll.second;
                     coll_dots.emplace_back(col_pos);
@@ -121,18 +125,17 @@ void LidarSystem::drawLidarIntersect()
             }
 
             auto pos_comp = en->getComponent<PositionComponent>();
-			
+
             auto triangles = bvh_comp->triangles;
             auto bvh = bvh_comp->bvh_tree;
-			auto find_inter = coll::BVHCollision(bvh, ray, *triangles);
-			if (find_inter.first)
-                coll_dots.emplace_back(find_inter.second);	
+            auto find_inter = coll::BVHCollision(bvh, ray, *triangles);
+            if (find_inter.first)
+                coll_dots.emplace_back(find_inter.second);
         }
     }
 
-    for (const auto& dot: coll_dots) {
-        col_stream << dot.x << ", " << dot.y << ", "
-                   << dot.z << "\n";
+    for (const auto &dot : coll_dots) {
+        col_stream << dot.x << ", " << dot.y << ", " << dot.z << "\n";
     }
     col_stream.flush();
 

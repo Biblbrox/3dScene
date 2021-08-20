@@ -2,6 +2,7 @@
 #include <utility>
 
 #include "render/mesh.hpp"
+#include "base.hpp"
 
 Mesh::Mesh(std::vector<Vertex> vertices,
            std::vector<GLuint> indices,
@@ -73,24 +74,24 @@ void Mesh::draw(ShaderProgram &program) const
             else if (name == "texture_specular")
                 number = std::to_string(specularNr++);
 
-            program.setInt("textureMaterial." + name + number, i);
+            program.setInt(U_TEXTURE_MATERIAL"." + name + number, i);
             glBindTexture(GL_TEXTURE_2D, m_textures[i].id);
         }
-        program.setFloat("textureMaterial.shininess", 32.f);
+        program.setFloat(U_TEXTURE_MATERIAL".shininess", 32.f);
         glActiveTexture(GL_TEXTURE0);
     } else { // Color materials
-        program.setVec3("colorMaterial.ambient", m_material.ambient);
-        program.setVec3("colorMaterial.diffuse", m_material.diffuse);
-        program.setVec3("colorMaterial.specular", m_material.specular);
-        program.setFloat("colorMaterial.shininess", m_material.shininess);
-        program.setInt("isColorMaterial", true);
+        program.setVec3(U_COLOR_MATERIAL".ambient", m_material.ambient);
+        program.setVec3(U_COLOR_MATERIAL".diffuse", m_material.diffuse);
+        program.setVec3(U_COLOR_MATERIAL".specular", m_material.specular);
+        program.setFloat(U_COLOR_MATERIAL".shininess", m_material.shininess);
+        program.setInt(U_IS_COLOR_MATERIAL, true);
     }
 
     glBindVertexArray(m_vao);
     glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
 
-    program.setInt("isColorMaterial", false);
+    program.setInt(U_IS_COLOR_MATERIAL, false);
 }
 
 const std::vector<Vertex> &Mesh::getVertices() const

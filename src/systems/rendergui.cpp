@@ -106,6 +106,7 @@ void RenderGuiSystem::update_state(size_t delta)
                           screen_width, screen_height,
                           GL_COLOR_BUFFER_BIT, GL_NEAREST);
     }
+    program->setInt(U_TEXTURE_NUM, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.f, 0.0f, 0.0f, 1.0f);
@@ -496,8 +497,7 @@ void RenderGuiSystem::video_settings()
         Begin(_("Video settings"), &m_videoSettingsOpen);
         bool msaaEnabled = Config::getVal<bool>("MSAA");
         if (Checkbox(_("Enable antialiasing(Need game restart)"),
-                     &Config::getVal<bool>("MSAA"))
-            || msaaEnabled) {
+                     &Config::getVal<bool>("MSAA")) || msaaEnabled) {
             Text(_("MSAA Samples"));
             SameLine();
             InputInt("##msaa_samples",
@@ -507,8 +507,7 @@ void RenderGuiSystem::video_settings()
         SameLine();
         ListBox("", &Config::getVal<int>("Theme"), items, 3);
         Text(_("Drag sensitivity:"));
-        SliderFloat("##mouse_sens", &Config::getVal<GLfloat>("MouseSens"),
-                    1, 100);
+        SliderFloat("##mouse_sens", &Config::getVal<GLfloat>("MouseSens"), 1, 100);
         End();
     }
 }
@@ -572,8 +571,8 @@ void RenderGuiSystem::selection_settings()
             if (key == ecs::types::type_id<LidarComponent>) {
                 auto c = std::dynamic_pointer_cast<LidarComponent>(comp);
                 copy->addComponent(*c);
-            } else if (key == ecs::types::type_id<LightComponent>) {
-                auto c = std::dynamic_pointer_cast<LightComponent>(comp);
+            } else if (key == ecs::types::type_id<GlobalLightComponent>) {
+                auto c = std::dynamic_pointer_cast<GlobalLightComponent>(comp);
                 copy->addComponent(*c);
             } else if (key == ecs::types::type_id<PositionComponent>) {
                 auto c = std::dynamic_pointer_cast<PositionComponent>(comp);

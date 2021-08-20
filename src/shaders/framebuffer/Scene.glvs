@@ -1,13 +1,13 @@
 #version 330 core
 
-uniform mat4 ProjectionMatrix;
-uniform mat4 ViewMatrix;
-uniform mat4 ModelMatrix;
+uniform mat4 m_projectionMatrix;
+uniform mat4 m_viewMatrix;
+uniform mat4 m_modelMatrix;
 
-uniform mat3 NormalMatrix;
-uniform mat4 HeightMapScaleMatrix;
+uniform mat3 m_normalMatrix;
+uniform mat4 m_heightMapScaleMatrix;
 
-uniform bool DrawTerrain;
+uniform bool m_drawTerrain;
 
 layout (location = 0) in vec3 vPosition;
 layout (location = 1) in vec2 vTexCoords;
@@ -20,11 +20,11 @@ out vec3 FragPos;
 void main()
 {
     TextureCoords = vTexCoords;
-    FragPos = vec3(ModelMatrix * vec4(vPosition, 1.0));
-    Normal = NormalMatrix * vNormal;
-    if (DrawTerrain) {
-        gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix * HeightMapScaleMatrix * vec4(vPosition, 1.0);
+    FragPos = vec3(m_modelMatrix * vec4(vPosition, 1.0));
+    Normal = m_normalMatrix * vNormal;
+    if (m_drawTerrain) {
+        gl_Position = m_projectionMatrix * m_viewMatrix * m_modelMatrix * m_heightMapScaleMatrix * vec4(vPosition, 1.0);
     } else {
-        gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix * vec4(vPosition, 1.0);
+        gl_Position = m_projectionMatrix * m_viewMatrix * m_modelMatrix * vec4(vPosition, 1.0);
     }
 }

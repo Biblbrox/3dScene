@@ -111,25 +111,25 @@ void render::drawTexture(ShaderProgram& program, const TextureBase &texture,
     mat4 translation = translate(mat4(1.f), pos);
     mat4 scaling = glm::scale(mat4(1.f), scale);
     mat4 model = scaling * rotation * translation;
-    auto old_model = program.getMat4("ModelMatrix");
-    program.leftMult("ModelMatrix", model);
+    auto old_model = program.getMat4(U_MODEL_MATRIX);
+    program.leftMult(U_MODEL_MATRIX, model);
     if (Config::getVal<bool>("EnableLight"))
-        program.setMat3("NormalMatrix", mat3(transpose(inverse(model))));
+        program.setMat3(U_NORMAL_MATRIX, mat3(transpose(inverse(model))));
 
     texture.draw(program);
 
-    program.setMat4("ModelMatrix", old_model);
+    program.setMat4(U_MODEL_MATRIX, old_model);
 }
 
 void render::renderTerrain(ShaderProgram& program, const Terrain& terrain)
 {
-    program.setInt("DrawTerrain", true);
-    program.setMat4("HeightMapScaleMatrix", glm::scale(mat4(1.f), terrain.getScale()));
+    program.setInt(U_DRAW_TERRAIN, true);
+    program.setMat4(U_HEIGHT_MAP_SCALE_MATRIX, glm::scale(mat4(1.f), terrain.getScale()));
 
     glBindTexture(GL_TEXTURE_2D, terrain.getTextureID());
     glBindVertexArray(terrain.getVAO());
     if (Config::getVal<bool>("EnableLight"))
-        program.setMat3("NormalMatrix", mat3(1.f));
+        program.setMat3(U_NORMAL_MATRIX, mat3(1.f));
     glEnable(GL_PRIMITIVE_RESTART);
     glPrimitiveRestartIndex(terrain.getWidth() * terrain.getHeight());
     glDrawElements(GL_TRIANGLE_STRIP, terrain.getIndices().size(), GL_UNSIGNED_INT, nullptr);
@@ -137,7 +137,7 @@ void render::renderTerrain(ShaderProgram& program, const Terrain& terrain)
     glBindVertexArray(0);
     glDisable(GL_PRIMITIVE_RESTART);
 
-    program.setInt("DrawTerrain", false);
+    program.setInt(U_DRAW_TERRAIN, false);
 }
 
 void render::drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
@@ -161,8 +161,8 @@ void render::drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
                                   rot_axis);
     mat4 translation = translate(mat4(1.f), pos);
     mat4 scaling = glm::scale(mat4(1.f), scale);
-    auto old_model = program.getMat4("ModelMatrix");
-    program.leftMult("ModelMatrix", scaling * rotation * translation);
+    auto old_model = program.getMat4(U_MODEL_MATRIX);
+    program.leftMult(U_MODEL_MATRIX, scaling * rotation * translation);
 
     GLuint verticesID = 0;
     GLuint VAO = 0;
@@ -183,7 +183,7 @@ void render::drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
     glDeleteBuffers(1, &verticesID);
     glDeleteVertexArrays(1, &VAO);
 
-    program.setMat4("ModelMatrix", old_model);
+    program.setMat4(U_MODEL_MATRIX, old_model);
 }
 
 void render::drawVerticesVAO(ShaderProgram& program, const GLfloat* points,
@@ -207,10 +207,10 @@ void render::drawVerticesVAO(ShaderProgram& program, const GLfloat* points,
                                   rot_axis);
     mat4 translation = translate(mat4(1.f), pos);
     mat4 scaling = glm::scale(mat4(1.f), scale);
-    auto old_model = program.getMat4("ModelMatrix");
-    program.leftMult("ModelMatrix", scaling * rotation * translation);
+    auto old_model = program.getMat4(U_MODEL_MATRIX);
+    program.leftMult(U_MODEL_MATRIX, scaling * rotation * translation);
 
-    program.setMat4("ModelMatrix", old_model);
+    program.setMat4(U_MODEL_MATRIX, old_model);
 }
 
 void render::drawSkybox(GLuint skybox_vao, GLuint skybox_texture)
