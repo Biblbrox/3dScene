@@ -8,10 +8,9 @@
 #include "components/selectablecomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "components/terraincomponent.hpp"
-#include "components/lightcomponent.hpp"
+#include "components/globallightcomponent.hpp"
 #include "components/lidarcomponent.hpp"
 #include "components/skyboxcomponent.hpp"
-#include "utils/bvh/aabb.hpp"
 #include "render/render.hpp"
 #include "utils/logger.hpp"
 #include "exceptions/glexception.hpp"
@@ -38,6 +37,8 @@ using utils::texture::genTexture;
 GLuint skybox_angle = 0;
 GLuint light_dir_angle = 0;
 
+vec4 fog_color = {0.5444, 0.62, 0.62, 0.69};
+
 
 RenderSceneSystem::RenderSceneSystem()
 {
@@ -58,41 +59,24 @@ void RenderSceneSystem::drawSprites()
     auto camera = FpsCamera::getInstance();
 
     program->useFramebufferProgram();
-    program->setInt("isPrimitive", false);
-    program->setFloat("alpha", 1.f);
+    program->setInt(U_IS_PRIMITIVE, false);
+    program->setFloat(U_ALPHA, 1.f);
+    program->setVec4(U_FOG_COLOR, fog_color);
 
     bool lighting = Config::getVal<bool>("EnableLight");
+    bool hasLightComp = !getEntitiesByTag<GlobalLightComponent>().empty();
 
-    if (lighting) {
-        program->setVec3("viewPos", camera->getPos());
-        if (!getEntitiesByTag<LightComponent>().empty()) {
-            auto lightEn = getEntitiesByTag<LightComponent>().begin()->second;
-            auto light = lightEn->getComponent<LightComponent>();
-            light->pos = Config::getVal<vec3>("LightPos");
-            program->setInt("lighting", true);
-
-            vec3 init_light_dir = {-0.2f, -1.f, 0.3f};
-            vec3 light_dir = glm::rotate(init_light_dir,
-                                         glm::radians((GLfloat)light_dir_angle),
-                                         vec3(0.f, 1.f, 0.f));
-            program->setVec3("light.direction", light_dir);
-            light_dir_angle += 1;
-
-            program->setVec3("light.ambient", light->ambient);
-            program->setVec3("light.diffuse", light->diffuse);
-            program->setVec3("light.specular", light->specular);
-
-            auto lightSprite = lightEn->getComponent<SpriteComponent>();
-            if (lightSprite) {
-                auto sprite = lightSprite->sprite;
-                program->setInt("isPrimitive", true);
-                program->setFloat("alpha", 1.f);
-                program->setVec3("primColor", {1.f, 1.f, 1.f});
-                render::drawTexture(*program, *sprite, light->pos, 0, {0.f, 1.f, 0.f});
-            }
-        }
+    if (lighting && hasLightComp) {
+        program->setVec3(U_VIEW_POS, camera->getPos());
+        auto lightEn = getEntitiesByTag<GlobalLightComponent>().begin()->second;
+        auto light = lightEn->getComponent<GlobalLightComponent>();
+        program->setInt(U_LIGHTING, true);
+        program->setVec3(U_DIR_LIGHT_DIRECTION, light->direction);
+        program->setVec3(U_DIR_LIGHT_AMBIENT, light->ambient);
+        program->setVec3(U_DIR_LIGHT_DIFFUSE, light->diffuse);
+        program->setVec3(U_DIR_LIGHT_SPECULAR, light->specular);
     } else {
-        program->setInt("lighting", false);
+        program->setInt(U_LIGHTING, false);
     }
 
     if (!Config::getVal<bool>("DrawVertices"))
@@ -115,9 +99,9 @@ void RenderSceneSystem::drawSprites()
             glStencilMask(0x00); // disable writing to the stencil buffer
             glDisable(GL_DEPTH_TEST);
 
-            program->setInt("isPrimitive", true);
-            program->setVec3("primColor", {0.f, 0.f, 1.f});
-            program->setFloat("alpha", 0.55f);
+            program->setInt(U_IS_PRIMITIVE, true);
+            program->setVec3(U_PRIM_COLOR, {0.f, 0.f, 1.f});
+            program->setFloat(U_ALPHA, 0.55f);
 
             render::drawTexture(*program, *sprite, posComp->pos, posComp->angle,
                                 posComp->rot_axis, 1.1f);
@@ -126,7 +110,7 @@ void RenderSceneSystem::drawSprites()
             glStencilFunc(GL_ALWAYS, 1, 0xFF);
             glEnable(GL_DEPTH_TEST);
         } else {
-            program->setInt("isPrimitive", false);
+            program->setInt(U_IS_PRIMITIVE, false);
 
             render::drawTexture(*program,
                                 *en->getComponent<SpriteComponent>()->sprite,
@@ -137,22 +121,21 @@ void RenderSceneSystem::drawSprites()
     }
 
     program->useFramebufferProgram();
-    auto proj = program->getMat4("ProjectionMatrix");
-    mat4 old_view = program->getMat4("ViewMatrix");
-    auto view = program->getMat4("ViewMatrix");
-    view = glm::rotate(view,
-                       glm::radians((GLfloat)skybox_angle) / 100.f,
-                       glm::vec3(0.f, 1.f, 0.f));
+    auto proj = program->getMat4(U_PROJECTION_MATRIX);
+    mat4 old_view = program->getMat4(U_VIEW_MATRIX);
+    auto view = program->getMat4(U_VIEW_MATRIX);
+    GLfloat rot_angle = glm::radians((GLfloat) skybox_angle) / 100.f;
+    view = glm::rotate(view, rot_angle, glm::vec3(0.f, 1.f, 0.f));
     skybox_angle += 1;
 
     auto skyboxEn = getEntitiesByTag<SkyboxComponent>().begin()->second;
     auto skybox = skyboxEn->getComponent<SkyboxComponent>();
     program->useSkyboxProgram();
-    program->setMat4("ProjectionMatrix", proj);
-    program->setMat4("ViewMatrix", mat4(mat3(view)));
-    program->setVec3("fogColor", {0.5444, 0.62, 0.62});
+    program->setMat4(U_PROJECTION_MATRIX, proj);
+    program->setMat4(U_VIEW_MATRIX, mat4(mat3(view)));
+    program->setVec4(U_FOG_COLOR, fog_color);
     render::drawSkybox(skybox->vao, skybox->skybox_id);
-    program->setMat4("ViewMatrix", old_view);
+    program->setMat4(U_VIEW_MATRIX, old_view);
 
     if (GLenum error = glGetError(); error != GL_NO_ERROR)
         throw GLException((format("\n\tRender while drawing sprites: %1%\n")
@@ -244,7 +227,7 @@ void RenderSceneSystem::drawTerrain()
 {
     auto program = SceneProgram::getInstance();
     program->useFramebufferProgram();
-    program->setInt("isPrimitive", false);
+    program->setInt(U_IS_PRIMITIVE, false);
 
     auto terrain_en = getEntitiesByTag<TerrainComponent>().begin()->second;
     auto terrain = terrain_en->getComponent<TerrainComponent>()->terrain;

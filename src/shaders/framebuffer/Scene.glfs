@@ -1,23 +1,5 @@
 #version 330 core
 
-// Texture coords
-in vec2 TextureCoords;
-
-in vec3 Normal;
-in vec3 FragPos;
-
-// Texture number
-uniform sampler2D TextureNum;
-
-uniform bool isPrimitive;
-uniform float alpha;
-uniform vec3 primColor;
-// Position of the observer
-uniform vec3 viewPos;
-
-uniform bool lighting;
-uniform bool isColorMaterial;
-
 struct TextureMaterial
 {
     sampler2D texture_diffuse1;
@@ -35,10 +17,7 @@ struct ColorMaterial
     float shininess;
 };
 
-uniform TextureMaterial textureMaterial;
-uniform ColorMaterial colorMaterial;
-
-struct Light
+struct DirLight
 {
     vec3 direction;
     vec3 ambient;
@@ -46,13 +25,84 @@ struct Light
     vec3 specular;
 };
 
-uniform Light light;
+// Texture coords
+in vec2 TextureCoords;
+in vec3 Normal;
+in vec3 FragPos;
+
+// Texture number
+uniform sampler2D m_textureNum;
+
+uniform bool m_isPrimitive;
+uniform float m_alpha;
+uniform vec3 m_primColor;
+// Position of the observer
+uniform vec3 m_viewPos;
+
+uniform bool m_lighting;
+uniform bool m_isColorMaterial;
+
+uniform TextureMaterial m_textureMaterial;
+uniform ColorMaterial m_colorMaterial;
+
+uniform DirLight m_dirLight;
+
+uniform vec4 m_fogColor;
 
 out vec4 FragColor;
 
 float fog_max_dist = 3000.f;
 float fog_min_dist = 500.f;
-vec4 fog_color = vec4(0.5444, 0.62, 0.62, 0.69);
+//vec4 fog_color = vec4(0.5444, 0.62, 0.62, 0.69);
+
+/**
+* For functions
+*/
+float linearFog(float dst);
+float expFog(float dst);
+
+/**
+* Texture lighting functions
+*/
+vec3 calcAmbientTexture(DirLight light, TextureMaterial material);
+vec3 calcDiffuseTexture(DirLight light, vec3 normal, vec3 lightDir, TextureMaterial material);
+vec3 calcSpecularTexture(DirLight light, vec3 normal, vec3 lightDir, vec3 viewPos, TextureMaterial material);
+vec3 calcDirLightTexture(DirLight light, vec3 normal, vec3 viewPos, TextureMaterial material);
+
+/**
+* Material lighting functions
+*/
+vec3 calcAmbientMaterial(DirLight light, ColorMaterial material);
+vec3 calcDiffuseMaterial(DirLight light, vec3 normal, vec3 lightDir, ColorMaterial material);
+vec3 calcSpecularMaterial(DirLight light, vec3 normal, vec3 lightDir, vec3 viewPos, ColorMaterial material);
+vec3 calcDirLightMaterial(DirLight light, vec3 normal, vec3 viewPos, ColorMaterial material);
+
+void main()
+{
+    if (!m_isPrimitive) {
+        float diffAlpha = texture2D(m_textureMaterial.texture_diffuse1, TextureCoords).a;
+        if (diffAlpha < 0.5)
+            discard;
+        FragColor = texture(m_textureNum, TextureCoords);
+        if (m_lighting) {
+            vec3 norm = normalize(Normal);
+            vec3 lightDir = normalize(-m_dirLight.direction);
+            vec3 color;
+            if (!m_isColorMaterial) {
+                color = calcDirLightTexture(m_dirLight, norm, m_viewPos, m_textureMaterial);
+            } else {
+                color = calcDirLightMaterial(m_dirLight, norm, m_viewPos, m_colorMaterial);
+                diffAlpha = 1.f;
+            }
+            FragColor = vec4(color, diffAlpha);
+        }
+    } else {
+        FragColor = vec4(m_primColor, m_alpha);
+    }
+
+    float fog = expFog(gl_FragCoord.z / gl_FragCoord.w);
+    FragColor = mix(m_fogColor, FragColor, fog);
+}
 
 float linearFog(float dst)
 {
@@ -68,55 +118,69 @@ float expFog(float dst)
     return fog;
 }
 
-void main()
+
+vec3 calcAmbientTexture(DirLight light, TextureMaterial material)
 {
-    if (!isPrimitive) {
-        float diffAlpha = texture2D(textureMaterial.texture_diffuse1, TextureCoords).a;
-        float specAlpha = texture2D(textureMaterial.texture_specular1, TextureCoords).a;
-        if (diffAlpha < 0.5)
-            discard;
-        FragColor = texture(TextureNum, TextureCoords);
-        if (lighting) {
-            if (!isColorMaterial) {
-                // ambient
-                vec3 ambient = light.ambient * texture(textureMaterial.texture_diffuse1, TextureCoords).rgb;
+    return light.ambient * texture(material.texture_diffuse1, TextureCoords).rgb;
+}
 
-                // diffuse
-                vec3 norm = normalize(Normal);
-                vec3 lightDir = normalize(-light.direction);
-                float diff = max(dot(norm, lightDir), 0.0);
-                vec3 diffuse = light.diffuse * diff * texture(textureMaterial.texture_diffuse1, TextureCoords).rgb;
+vec3 calcDiffuseTexture(DirLight light, vec3 normal, vec3 lightDir, TextureMaterial material)
+{
+    float diff = max(dot(normal, lightDir), 0.0);
+    vec3 diffuse = light.diffuse * diff * texture(material.texture_diffuse1, TextureCoords).rgb;
 
-                // specular
-                vec3 viewDir = normalize(viewPos - FragPos);
-                vec3 reflectDir = reflect(-lightDir, norm);
-                float spec = pow(max(dot(viewDir, reflectDir), 0.0), textureMaterial.shininess);
-                vec3 specular = light.specular * spec * texture(textureMaterial.texture_specular1, TextureCoords).rgb;
+    return diffuse;
+}
 
-                FragColor = vec4(ambient + diffuse + specular, diffAlpha);
-            } else {
-                // ambient
-                vec3 ambient = light.ambient * colorMaterial.ambient;
+vec3 calcSpecularTexture(DirLight light, vec3 normal, vec3 lightDir, vec3 viewPos, TextureMaterial material)
+{
+    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    vec3 specular = light.specular * spec * texture(material.texture_specular1, TextureCoords).rgb;
 
-                // diffuse
-                vec3 norm = normalize(Normal);
-                vec3 lightDir = normalize(-light.direction);
-                float diff = max(dot(norm, lightDir), 0.0);
-                vec3 diffuse = light.diffuse * diff * colorMaterial.diffuse;
+    return specular;
+}
 
-                // specular
-                vec3 viewDir = normalize(viewPos - FragPos);
-                vec3 reflectDir = reflect(-lightDir, norm);
-                float spec = pow(max(dot(viewDir, reflectDir), 0.0), colorMaterial.shininess);
-                vec3 specular = light.specular * spec * colorMaterial.specular;
+vec3 calcDirLightTexture(DirLight light, vec3 normal, vec3 viewPos, TextureMaterial material)
+{
+    vec3 lightDir = normalize(-light.direction);
+    vec3 ambient = calcAmbientTexture(light, material);
+    vec3 diffuse = calcDiffuseTexture(light, normal, lightDir, material);
+    vec3 specular = calcSpecularTexture(light, normal, lightDir, viewPos, material);
 
-                FragColor = vec4(ambient + diffuse + specular, 1.f);
-            }
-        }
-    } else {
-        FragColor = vec4(primColor, alpha);
-    }
+    return (ambient + diffuse + specular);
+}
 
-    float fog = expFog(gl_FragCoord.z / gl_FragCoord.w);
-    FragColor = mix(fog_color, FragColor, fog);
+vec3 calcAmbientMaterial(DirLight light, ColorMaterial material)
+{
+    return light.ambient * material.ambient;
+}
+
+vec3 calcDiffuseMaterial(DirLight light, vec3 normal, vec3 lightDir, ColorMaterial material)
+{
+    float diff = max(dot(normal, lightDir), 0.0);
+    vec3 diffuse = light.diffuse * diff * material.diffuse;
+
+    return diffuse;
+}
+
+vec3 calcSpecularMaterial(DirLight light, vec3 normal, vec3 lightDir, vec3 viewPos, ColorMaterial material)
+{
+    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    vec3 specular = light.specular * spec * material.specular;
+
+    return specular;
+}
+
+vec3 calcDirLightMaterial(DirLight light, vec3 normal, vec3 viewPos, ColorMaterial material)
+{
+    vec3 lightDir = normalize(-light.direction);
+    vec3 ambient = calcAmbientMaterial(light, material);
+    vec3 diffuse = calcDiffuseMaterial(light, normal, lightDir, material);
+    vec3 specular = calcSpecularMaterial(light, normal, lightDir, viewPos, material);
+
+    return (ambient + diffuse + specular);
 }

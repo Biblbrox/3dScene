@@ -6,7 +6,7 @@
 
 struct SpriteComponent : ecs::Component
 {
-//    SpriteComponent() = default;
+
     SpriteComponent() : sprite(nullptr)
     {
 

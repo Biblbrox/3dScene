@@ -85,7 +85,7 @@ void KeyboardSystem::update_state(size_t delta)
                     GLfloat fr = 10.f;
                     camera->setMovSpeed(camera->getMovSpeed() + e.wheel.y / fr);
                     camera->processMouseScroll(e.wheel.y / fr);
-                    program->setMat4(VIEW, camera->getView());
+                    program->setMat4(U_VIEW_MATRIX, camera->getView());
                 }
                 break;
             case SDL_WINDOWEVENT:
@@ -150,7 +150,7 @@ void KeyboardSystem::update_state(size_t delta)
         pos->pos.y = terrain->getAltitude({pos->pos.x, pos->pos.z});
     }
 
-    program->setMat4(VIEW, camera->getView());
+    program->setMat4(U_VIEW_MATRIX, camera->getView());
 }
 
 void KeyboardSystem::processMouseDrag()
@@ -198,8 +198,8 @@ KeyboardSystem::findUnderPointer(const vec2 &pos)
 
     auto program = SceneProgram::getInstance();
     program->useFramebufferProgram();
-    mat4 projection = program->getMat4("ProjectionMatrix");
-    mat4 view = program->getMat4("ViewMatrix");
+    mat4 projection = program->getMat4(U_PROJECTION_MATRIX);
+    mat4 view = program->getMat4(U_VIEW_MATRIX);
 
     auto camera = FpsCamera::getInstance();
     vec3 origin = camera->getPos();
@@ -248,8 +248,8 @@ void KeyboardSystem::updateDraggedPos()
     mouse_pos -= viewport_pos;
 
     program->useFramebufferProgram();
-    mat4 projection = program->getMat4("ProjectionMatrix");
-    mat4 view = program->getMat4("ViewMatrix");
+    mat4 projection = program->getMat4(U_PROJECTION_MATRIX);
+    mat4 view = program->getMat4(U_VIEW_MATRIX);
     GLfloat sens = Config::getVal<GLfloat>("MouseSens");
 
     vec3 dir = viewportToWorld(mouse_pos * sens, viewport_size,

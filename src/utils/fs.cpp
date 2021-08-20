@@ -9,7 +9,7 @@
 #include "components/lidarcomponent.hpp"
 #include "components/spritecomponent.hpp"
 #include "components/skyboxcomponent.hpp"
-#include "components/lightcomponent.hpp"
+#include "components/globallightcomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "components/bvhcomponent.hpp"
 #include "components/selectablecomponent.hpp"
@@ -164,20 +164,20 @@ void utils::fs::saveSimJson(const std::string &file_name,
                 comp_obj["LidarComponent"].push_back(json::object({{"start_angle", comp->start_angle}}));
 
                 en_obj["Components"].push_back(comp_obj);
-            } else if (type == type_id<LightComponent>) {
-                auto comp = en->getComponent<LightComponent>();
+            } else if (type == type_id<GlobalLightComponent>) {
+                auto comp = en->getComponent<GlobalLightComponent>();
 
-                vec3 pos = comp->pos;
+                vec3 direction = comp->direction;
                 vec3 amb = comp->ambient;
                 vec3 dif = comp->diffuse;
                 vec3 spec = comp->specular;
 
                 json comp_obj = json::object();
-                comp_obj["LightComponent"] = json::array();
-                comp_obj["LightComponent"].push_back(json::object({{"direction", {pos.x, pos.y, pos.z}}}));
-                comp_obj["LightComponent"].push_back(json::object({{"ambient", {amb.x, amb.y, amb.z}}}));
-                comp_obj["LightComponent"].push_back(json::object({{"diffuse", {dif.x, dif.y, dif.z}}}));
-                comp_obj["LightComponent"].push_back(json::object({{"specular", {spec.x, spec.y, spec.z}}}));
+                comp_obj["GlobalLightComponent"] = json::array();
+                comp_obj["GlobalLightComponent"].push_back(json::object({{"direction", {direction.x, direction.y, direction.z}}}));
+                comp_obj["GlobalLightComponent"].push_back(json::object({{"ambient", {amb.x, amb.y, amb.z}}}));
+                comp_obj["GlobalLightComponent"].push_back(json::object({{"diffuse", {dif.x, dif.y, dif.z}}}));
+                comp_obj["GlobalLightComponent"].push_back(json::object({{"specular", {spec.x, spec.y, spec.z}}}));
 
                 en_obj["Components"].push_back(comp_obj);
             } else if (type == type_id<SelectableComponent>) {
@@ -279,16 +279,16 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
                 lidar->freq = freq;
                 lidar->pitch = pitch;
                 lidar->yaw = yaw;
-            } else if (comp.contains("LightComponent")) {
-                json json_light = comp["LightComponent"];
-                vec3 pos = json_light[0]["direction"].get<vec3>();
+            } else if (comp.contains("GlobalLightComponent")) {
+                json json_light = comp["GlobalLightComponent"];
+                vec3 direction = json_light[0]["direction"].get<vec3>();
                 vec3 ambient = json_light[1]["ambient"].get<vec3>();
                 vec3 diffuse = json_light[2]["diffuse"].get<vec3>();
                 vec3 specular = json_light[3]["specular"].get<vec3>();
 
-                entity.addComponent<LightComponent>();
-                auto light = entity.getComponent<LightComponent>();
-                light->pos = pos;
+                entity.addComponent<GlobalLightComponent>();
+                auto light = entity.getComponent<GlobalLightComponent>();
+                light->direction = direction;
                 light->ambient = ambient;
                 light->diffuse = diffuse;
                 light->specular = specular;

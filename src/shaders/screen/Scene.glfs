@@ -4,18 +4,11 @@
 in vec2 TextureCoords;
 
 // Texture number
-uniform sampler2D TextureNum;
-uniform bool isPrimitive;
-uniform vec3 primColor;
-uniform float alpha;
+uniform sampler2D m_textureNum;
 
 out vec4 FragColor;
 
 void main()
 {
-    if (isPrimitive) {
-        FragColor = texture(TextureNum, TextureCoords);
-    } else {
-        FragColor = vec4(primColor, alpha);
-    }
+    FragColor = texture(m_textureNum, TextureCoords);
 }

@@ -2,3 +2,7 @@ File IO error[Sun Jul 18 13:18:07 2021]: Can't open shader source file ../src/sh
 File IO error[Sun Jul 18 13:18:53 2021]: Can't open shader source file ../src/shaders/framebuffer/Scene.glvs
 File IO error[Tue Aug 17 17:54:52 2021]: Can't open shader source file ../src/shaders/framebuffer/Scene.glvs
 
+Unexpected error[Wed Aug 18 00:01:53 2021]: filesystem error: cannot make canonical path: No such file or directory [/home/biblbrox/autonet/3dscene/framebuffer/Scene.glfs]
+Unexpected error[Wed Aug 18 00:06:05 2021]: filesystem error: cannot make canonical path: No such file or directory [/home/biblbrox/autonet/3dscene/framebuffer/Scene.glfs]
+File IO error[Wed Aug 18 00:06:19 2021]: Can't open shader source file ../src/shaders/framebuffer/Scene.glvs
+

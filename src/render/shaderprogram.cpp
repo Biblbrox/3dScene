@@ -12,6 +12,7 @@ using utils::log::Logger;
 using utils::log::Category;
 using utils::log::program_log_file_name;
 using utils::log::shader_log_file_name;
+using utils::loadShaderFromFile;
 
 
 GLuint create_program(const std::string& vertex, const std::string& fragment,
@@ -26,15 +27,12 @@ GLuint create_program(const std::string& vertex, const std::string& fragment,
                           program_log_file_name(),
                           Category::INITIALIZATION_ERROR);
 
-    vertexShader = utils::loadShaderFromFile(
-            getShaderPath(vertex), GL_VERTEX_SHADER);
+    vertexShader = loadShaderFromFile(getShaderPath(vertex), GL_VERTEX_SHADER);
 
-    fragmentShader = utils::loadShaderFromFile(
-            getShaderPath(fragment), GL_FRAGMENT_SHADER);
+    fragmentShader = loadShaderFromFile(getShaderPath(fragment), GL_FRAGMENT_SHADER);
 
     if (!geometry.empty())
-        geometryShader = utils::loadShaderFromFile(
-                getShaderPath(geometry), GL_GEOMETRY_SHADER);
+        geometryShader = loadShaderFromFile(getShaderPath(geometry), GL_GEOMETRY_SHADER);
 
     glAttachShader(program, fragmentShader);
     glAttachShader(program, vertexShader);
@@ -78,10 +76,9 @@ ShaderProgram::~ShaderProgram()
 
 void ShaderProgram::freeProgram()
 {
-    for (auto& [key, program] : m_programs) {
+    for (auto& [key, program] : m_programs)
         if (glIsProgram(program))
             glDeleteProgram(program);
-    }
 }
 
 void ShaderProgram::bind() const
@@ -241,7 +238,7 @@ ShaderProgram::addProgram(const std::string &programName, const std::string& ver
                           const std::string& geometry)
 {
     GLuint program = create_program(vertex, fragment, geometry);
-    // TODO: check errors
+
     m_programs.emplace(programName, program);
 }
 

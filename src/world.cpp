@@ -1,57 +1,56 @@
-#include <memory>
 #include <boost/format.hpp>
-#include <imgui.h>
 #include <filesystem>
-#include <imgui_impl_sdl.h>
+#include <imgui.h>
 #include <imgui_impl_opengl3.h>
+#include <imgui_impl_sdl.h>
+#include <memory>
 
 #include "base.hpp"
-#include "world.hpp"
-#include "config.hpp"
-#include "game.hpp"
-#include "utils/fs.hpp"
-#include "utils/math.hpp"
-#include "utils/datastructs.hpp"
-#include "utils/collision.hpp"
-#include "utils/texture.hpp"
-#include "components/positioncomponent.hpp"
-#include "components/lidarcomponent.hpp"
-#include "components/spritecomponent.hpp"
-#include "components/lightcomponent.hpp"
-#include "components/scenecomponent.hpp"
 #include "components/bvhcomponent.hpp"
+#include "components/lidarcomponent.hpp"
+#include "components/globallightcomponent.hpp"
+#include "components/positioncomponent.hpp"
+#include "components/scenecomponent.hpp"
 #include "components/selectablecomponent.hpp"
-#include "components/terraincomponent.hpp"
 #include "components/skyboxcomponent.hpp"
-#include "systems/renderscenesystem.hpp"
-#include "systems/renderguisystem.hpp"
+#include "components/spritecomponent.hpp"
+#include "components/terraincomponent.hpp"
+#include "config.hpp"
+#include "exceptions/sdlexception.hpp"
+#include "game.hpp"
+#include "render/terrain.hpp"
 #include "systems/keyboardsystem.hpp"
 #include "systems/lidarsystem.hpp"
 #include "systems/physicssystem.hpp"
+#include "systems/renderguisystem.hpp"
+#include "systems/renderscenesystem.hpp"
+#include "utils/collision.hpp"
+#include "utils/datastructs.hpp"
+#include "utils/fs.hpp"
+#include "utils/math.hpp"
 #include "utils/random.hpp"
-#include "exceptions/sdlexception.hpp"
-#include "render/terrain.hpp"
+#include "utils/texture.hpp"
+#include "world.hpp"
 
-
+using std::cos;
+using std::find_if;
 using std::floor;
-using std::vector;
 using std::make_shared;
 using std::shared_ptr;
 using std::sin;
-using std::cos;
-using std::find_if;
+using std::vector;
 
 using utils::RectPoints3D;
 
 using ecs::Entity;
 
+using utils::fix_coords;
 using utils::RectPoints3D;
+using utils::data::mapBinaryTree;
 using utils::log::Logger;
 using utils::log::program_log_file_name;
-using utils::fix_coords;
 using utils::texture::genRbo;
 using utils::texture::genTexture;
-using utils::data::mapBinaryTree;
 
 using coll::buildBVH;
 
@@ -86,7 +85,8 @@ World::World() : m_wasInit(false), m_initFromFile(false)
     if (!Config::hasKey("EditMode"))
         Config::addVal("EditMode", false, "bool");
     if (!Config::hasKey("BackgroundColor"))
-        Config::addVal("BackgroundColor", glm::vec4(0.2f, 0.f, 0.2f, 1.f), "vec4");
+        Config::addVal("BackgroundColor", glm::vec4(0.2f, 0.f, 0.2f, 1.f),
+                       "vec4");
     if (!Config::hasKey("InverseRotation"))
         Config::addVal("InverseRotation", false, "bool");
     if (!Config::hasKey("MSAA"))
@@ -126,7 +126,6 @@ World::~World()
     deallocate_imgui();
 }
 
-
 void World::deallocate_imgui()
 {
     if (m_wasInit) {
@@ -135,7 +134,6 @@ void World::deallocate_imgui()
         ImGui::DestroyContext();
     }
 }
-
 
 void World::update(size_t delta)
 {
@@ -147,25 +145,25 @@ void World::update(size_t delta)
         m_initFromFile = false;
     }
 
-    if (getGameState() == GameStates::STOP
-        && getPrevGameState() != GameStates::STOP) {
+    if (getGameState() == GameStates::STOP &&
+        getPrevGameState() != GameStates::STOP) {
         setGameState(GameStates::STOP);
     }
 
-    if (getGameState() == GameStates::PLAY
-        && getPrevGameState() == GameStates::PAUSE) {
+    if (getGameState() == GameStates::PLAY &&
+        getPrevGameState() == GameStates::PAUSE) {
         setGameState(GameStates::PLAY);
     }
 
-    if (getGameState() == GameStates::PLAY
-        && getPrevGameState() == GameStates::STOP) {
+    if (getGameState() == GameStates::PLAY &&
+        getPrevGameState() == GameStates::STOP) {
         setGameState(GameStates::PLAY);
-//        init();
+        //        init();
     }
 
     filter_entities();
 
-    for (auto &[key, system]: m_systems)
+    for (auto &[key, system] : m_systems)
         system->update(delta);
 }
 
@@ -177,7 +175,7 @@ void World::init()
     Config::getVal<bool>("IsSelected") = false;
 
     if (!m_wasInit) {
-//        deallocate_imgui();
+        //        deallocate_imgui();
         init_imgui();
     }
     createSystem<RenderGuiSystem>();
@@ -194,14 +192,13 @@ void World::init()
     m_wasInit = true;
 }
 
-
-void World::init(const std::string& init_file)
+void World::init(const std::string &init_file)
 {
     m_initFromFile = true;
     m_initFile = init_file;
 }
 
-void World::init_from_file(const std::string& init_file)
+void World::init_from_file(const std::string &init_file)
 {
     auto entities = utils::fs::loadSimJson(init_file, *this);
 
@@ -211,7 +208,7 @@ void World::init_from_file(const std::string& init_file)
     m_systems.clear();
 
     if (!m_wasInit) {
-//        deallocate_imgui();
+        //        deallocate_imgui();
         init_imgui();
     }
     createSystem<RenderGuiSystem>();
@@ -220,7 +217,7 @@ void World::init_from_file(const std::string& init_file)
     createSystem<KeyboardSystem>();
 
     m_entities.clear();
-    for (auto& en: entities) {
+    for (auto &en : entities) {
         auto e = std::make_shared<ecs::Entity>(en);
         e->activate();
         m_entities.emplace(e->getId(), e);
@@ -233,7 +230,6 @@ void World::init_from_file(const std::string& init_file)
     m_wasInit = true;
     m_initFromFile = false;
 }
-
 
 void World::init_imgui()
 {
@@ -261,11 +257,11 @@ void World::init_terrain()
 
     auto terrainComp = terrain->getComponent<TerrainComponent>();
 
-    terrainComp->terrain = std::make_shared<Terrain>
-            (getResourcePath("terrain/terrain_height_map.jpg"),
-             getResourcePath("terrain/sand_grass_02.jpg"), vec3(20000.f, 100.f, 20000.f));
+    terrainComp->terrain = std::make_shared<Terrain>(
+        getResourcePath("terrain/terrain_height_map.jpg"),
+        getResourcePath("terrain/sand_grass_02.jpg"),
+        vec3(20000.f, 100.f, 20000.f));
 }
-
 
 void World::init_scene()
 {
@@ -275,11 +271,11 @@ void World::init_scene()
     scene->addComponent<SceneComponent>();
     auto scene_comp = scene->getComponent<SceneComponent>();
 
-    GLuint* scene_fb = &scene_comp->sceneBuffer;
-    GLuint* scene_fbmsaa = &scene_comp->sceneBufferMSAA;
-    GLuint* textureMSAA = &scene_comp->textureMSAA;
-    GLuint* texture = &scene_comp->texture;
-    GLuint* rbo = &scene_comp->rbo;
+    GLuint *scene_fb = &scene_comp->sceneBuffer;
+    GLuint *scene_fbmsaa = &scene_comp->sceneBufferMSAA;
+    GLuint *textureMSAA = &scene_comp->textureMSAA;
+    GLuint *texture = &scene_comp->texture;
+    GLuint *rbo = &scene_comp->rbo;
 
     int screen_width = utils::getWindowWidth<int>(*Game::getWindow());
     int screen_height = utils::getWindowHeight<int>(*Game::getWindow());
@@ -307,7 +303,8 @@ void World::init_scene()
         *texture = genTexture(screen_width, screen_height);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                GL_TEXTURE_2D, *texture, 0);
-    } else {
+    }
+    else {
         // Generate not multisampled buffer
         glGenFramebuffers(1, scene_fb);
         glBindFramebuffer(GL_FRAMEBUFFER, *scene_fb);
@@ -325,11 +322,11 @@ void World::init_scene()
 
 void World::init_sprites()
 {
-    auto add_bvh = [](const PositionComponent& pos, const SpriteComponent& sprite,
-            BVHComponent& bvh) {
-        auto& triangles = sprite.sprite->getTriangles();
-        mat4 man_transform = math::createTransform(pos.pos, pos.angle,
-                                                   pos.rot_axis, sprite.sprite->getSize());
+    auto add_bvh = [](const PositionComponent &pos,
+                      const SpriteComponent &sprite, BVHComponent &bvh) {
+        auto &triangles = sprite.sprite->getTriangles();
+        mat4 man_transform = math::createTransform(
+            pos.pos, pos.angle, pos.rot_axis, sprite.sprite->getSize());
         triangles = math::transformTriangles(triangles, man_transform);
         bvh.bvh_tree = coll::buildBVH(triangles);
         bvh.triangles = make_shared<vector<Triangle>>(triangles);
@@ -337,19 +334,19 @@ void World::init_sprites()
 
     auto lidarEn = createEntity(genUniqueId());
     lidarEn->activate();
-    lidarEn->addComponents<PositionComponent, LidarComponent, SpriteComponent>();
+    lidarEn
+        ->addComponents<PositionComponent, LidarComponent, SpriteComponent>();
     auto lidar_pos = lidarEn->getComponent<PositionComponent>();
     auto lidarComp = lidarEn->getComponent<LidarComponent>();
 
     auto lidarSprite = lidarEn->getComponent<SpriteComponent>();
-    lidarSprite->sprite = std::make_shared<Sprite>(getModelPath("cube/cube.obj"), vec3(100.f, 100.f, 100.f),
-                                                   false);
+    lidarSprite->sprite = std::make_shared<Sprite>(
+        getModelPath("cube/cube.obj"), vec3(100.f, 100.f, 100.f), false);
 
     Lidar lidar(lidarComp->length, lidar_pos->pos, {0.f, 1.f, 0.f},
                 lidarComp->yaw, lidarComp->pitch);
     lidarComp->pattern_points = lidar.risleyPattern2(
-            lidarComp->freq, lidarComp->start_angle,
-            lidarComp->density);
+        lidarComp->freq, lidarComp->start_angle, lidarComp->density);
 
     utils::Random rand;
 
@@ -366,43 +363,47 @@ void World::init_sprites()
     vec3 chair_size = {10.f, 10.f, 10.f};
     vec3 house_size = {1.f, 1.f, 1.f};
     std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite, man_sprite,
-            chair_sprite;
-    house_sprite = make_shared<Sprite>(getModelPath("Soviet_Panel/spah9lvl.obj"), house_size,
-                                       false);
-    man_sprite = make_shared<Sprite>(getModelPath("police/police.obj"), man_size);
-    chair_sprite = make_shared<Sprite>(getModelPath("Wooden_Chair/Wooden_Chair.obj"), chair_size);
+        chair_sprite;
+    house_sprite = make_shared<Sprite>(
+        getModelPath("Soviet_Panel/spah9lvl.obj"), house_size, false);
+    man_sprite =
+        make_shared<Sprite>(getModelPath("police/police.obj"), man_size);
+    chair_sprite = make_shared<Sprite>(
+        getModelPath("Wooden_Chair/Wooden_Chair.obj"), chair_size);
 
     auto chair_en = createEntity(genUniqueId());
     chair_en->activate();
     chair_en->addComponents<SpriteComponent, PositionComponent,
-            SelectableComponent, BVHComponent>();
+                            SelectableComponent, BVHComponent>();
     auto chair_sprite_comp = chair_en->getComponent<SpriteComponent>();
     chair_sprite_comp->sprite = chair_sprite;
     auto pos_chair = chair_en->getComponent<PositionComponent>();
     pos_chair->pos.x = 40.f + start_x;
     pos_chair->pos.z = 400.f + start_z;
-    pos_chair->pos.y = terrain->getAltitude(
-            {pos_chair->pos.x, pos_chair->pos.z}) + 40.f;
-    add_bvh(*pos_chair, *chair_sprite_comp, *chair_en->getComponent<BVHComponent>());
+    pos_chair->pos.y =
+        terrain->getAltitude({pos_chair->pos.x, pos_chair->pos.z}) + 40.f;
+    add_bvh(*pos_chair, *chair_sprite_comp,
+            *chair_en->getComponent<BVHComponent>());
 
     auto man_en = createEntity(genUniqueId());
     man_en->activate();
     man_en->addComponents<SpriteComponent, PositionComponent,
-            SelectableComponent, BVHComponent>();
+                          SelectableComponent, BVHComponent>();
     auto man_sprite_comp = man_en->getComponent<SpriteComponent>();
     man_sprite_comp->sprite = man_sprite;
     auto pos_man = man_en->getComponent<PositionComponent>();
     pos_man->pos.x = 40.f + start_x;
     pos_man->pos.z = 300 + start_z;
-    pos_man->pos.y = terrain->getAltitude({pos_man->pos.x, pos_man->pos.z}) + 60.f;
+    pos_man->pos.y =
+        terrain->getAltitude({pos_man->pos.x, pos_man->pos.z}) + 60.f;
     add_bvh(*pos_man, *man_sprite_comp, *man_en->getComponent<BVHComponent>());
 
     auto light_en = createEntity(genUniqueId());
     light_en->activate();
-    light_en->addComponent<LightComponent>();
+    light_en->addComponent<GlobalLightComponent>();
 
-    auto light_comp = light_en->getComponent<LightComponent>();
-    light_comp->pos = camera->getPos();
+    auto light_comp = light_en->getComponent<GlobalLightComponent>();
+    light_comp->direction = {-0.2f, -1.f, 0.3f};
     light_comp->ambient = vec3(0.3f);
     light_comp->diffuse = vec3(0.5f);
     light_comp->specular = vec3(0.5f);
@@ -412,72 +413,50 @@ void World::init_sprites()
         auto house = createEntity(genUniqueId());
         house->activate();
         house->addComponents<SpriteComponent, PositionComponent,
-                SelectableComponent, BVHComponent>();
+                             SelectableComponent, BVHComponent>();
         auto house_sprite_comp = house->getComponent<SpriteComponent>();
         house_sprite_comp->sprite = house_sprite;
         auto house_pos = house->getComponent<PositionComponent>();
         house_pos->pos.x = i * 30.f + start_x;
         house_pos->pos.z = rand.generateu(30.f, 40.f) + start_z;
-        house_pos->pos.y = terrain->getAltitude({house_pos->pos.x, house_pos->pos.z});
+        house_pos->pos.y =
+            terrain->getAltitude({house_pos->pos.x, house_pos->pos.z});
         house_pos->angle = -glm::half_pi<GLfloat>();
         house_pos->rot_axis = vec3(0.f, 1.f, 0.f);
-        add_bvh(*house_pos, *house_sprite_comp, *house->getComponent<BVHComponent>());
+        add_bvh(*house_pos, *house_sprite_comp,
+                *house->getComponent<BVHComponent>());
     }
 }
 
 void World::init_skybox()
 {
     float skyboxVertices[] = {
-            // positions
-            -1.0f,  1.0f, -1.0f,
-            -1.0f, -1.0f, -1.0f,
-            1.0f, -1.0f, -1.0f,
-            1.0f, -1.0f, -1.0f,
-            1.0f,  1.0f, -1.0f,
-            -1.0f,  1.0f, -1.0f,
+        // positions
+        -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f,
+        1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f,
 
-            -1.0f, -1.0f,  1.0f,
-            -1.0f, -1.0f, -1.0f,
-            -1.0f,  1.0f, -1.0f,
-            -1.0f,  1.0f, -1.0f,
-            -1.0f,  1.0f,  1.0f,
-            -1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f,
+        -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,
 
-            1.0f, -1.0f, -1.0f,
-            1.0f, -1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            1.0f,  1.0f, -1.0f,
-            1.0f, -1.0f, -1.0f,
+        1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f,
 
-            -1.0f, -1.0f,  1.0f,
-            -1.0f,  1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            1.0f, -1.0f,  1.0f,
-            -1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,
 
-            -1.0f,  1.0f, -1.0f,
-            1.0f,  1.0f, -1.0f,
-            1.0f,  1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            -1.0f,  1.0f,  1.0f,
-            -1.0f,  1.0f, -1.0f,
+        -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f,
 
-            -1.0f, -1.0f, -1.0f,
-            -1.0f, -1.0f,  1.0f,
-            1.0f, -1.0f, -1.0f,
-            1.0f, -1.0f, -1.0f,
-            -1.0f, -1.0f,  1.0f,
-            1.0f, -1.0f,  1.0f
-    };
+        -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f,
+        1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f};
 
     unsigned int skyboxVAO, skyboxVBO;
     glGenVertexArrays(1, &skyboxVAO);
     glGenBuffers(1, &skyboxVBO);
     glBindVertexArray(skyboxVAO);
     glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices,
+                 GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 
@@ -486,15 +465,12 @@ void World::init_skybox()
     skyboxEn->addComponent<SkyboxComponent>();
     auto skybox = skyboxEn->getComponent<SkyboxComponent>();
 
-    vector<std::string> faces =
-    {
-        getResourcePath("skybox/cloudy/right.png"),
-        getResourcePath("skybox/cloudy/left.png"),
-        getResourcePath("skybox/cloudy/top.png"),
-        getResourcePath("skybox/cloudy/bottom.png"),
-        getResourcePath("skybox/cloudy/back.png"),
-        getResourcePath("skybox/cloudy/front.png")
-    };
+    vector<std::string> faces = {getResourcePath("skybox/cloudy/right.png"),
+                                 getResourcePath("skybox/cloudy/left.png"),
+                                 getResourcePath("skybox/cloudy/top.png"),
+                                 getResourcePath("skybox/cloudy/bottom.png"),
+                                 getResourcePath("skybox/cloudy/back.png"),
+                                 getResourcePath("skybox/cloudy/front.png")};
 
     skybox->vao = skyboxVAO;
     skybox->skybox_id = utils::texture::loadCubemap(faces);
@@ -502,35 +478,35 @@ void World::init_skybox()
     if (GLenum error = glGetError(); error != GL_NO_ERROR) {
         Logger::write(utils::log::program_log_file_name(),
                       utils::log::Category::INITIALIZATION_ERROR,
-                      (boost::format("Unable to load skybox: %s") % glewGetErrorString(error)).str());
+                      (boost::format("Unable to load skybox: %s") %
+                       glewGetErrorString(error))
+                          .str());
     }
 }
 
 void World::addEntityFromFile(const std::string &model_file)
 {
-    std::shared_ptr<Sprite> sprite = std::make_shared<Sprite>(model_file,
-                                                              vec3(1.f, 1.f, 1.f));
+    std::shared_ptr<Sprite> sprite =
+        std::make_shared<Sprite>(model_file, vec3(1.f, 1.f, 1.f));
     auto terrainEn = m_entities[m_terrainID];
     auto terrain = terrainEn->getComponent<TerrainComponent>()->terrain;
 
     auto en = createEntity(genUniqueId());
     en->activate();
-    en->addComponents<SpriteComponent, PositionComponent,
-            SelectableComponent, BVHComponent>();
+    en->addComponents<SpriteComponent, PositionComponent, SelectableComponent,
+                      BVHComponent>();
     auto sprite_comp = en->getComponent<SpriteComponent>();
     sprite_comp->sprite = sprite;
     auto pos_chair = en->getComponent<PositionComponent>();
     pos_chair->pos.x = 200.f;
     pos_chair->pos.z = 400.f;
-    pos_chair->pos.y = terrain->getAltitude(
-            {pos_chair->pos.x, pos_chair->pos.z}) + 40.f;
-    auto& triangles = sprite->getTriangles();
-    mat4 chair_transform = math::createTransform(pos_chair->pos, 0,
-                                                 {0.f, 1.f, 1.f}, {1.f, 1.f, 1.f});
+    pos_chair->pos.y =
+        terrain->getAltitude({pos_chair->pos.x, pos_chair->pos.z}) + 40.f;
+    auto &triangles = sprite->getTriangles();
+    mat4 chair_transform = math::createTransform(
+        pos_chair->pos, 0, {0.f, 1.f, 1.f}, {1.f, 1.f, 1.f});
     triangles = math::transformTriangles(triangles, chair_transform);
-    en->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(
-            triangles);
-    en->getComponent<BVHComponent>()->triangles = std::make_shared<std::vector<Triangle>>(
-            triangles);
+    en->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(triangles);
+    en->getComponent<BVHComponent>()->triangles =
+        std::make_shared<std::vector<Triangle>>(triangles);
 }
-
