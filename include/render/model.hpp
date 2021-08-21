@@ -29,7 +29,7 @@ private:
     Mesh processMesh(aiMesh *mesh, const aiScene *scene);
     std::vector<Texture> loadMaterialsTextures(aiMaterial* mat, aiTextureType type,
                                                const std::string& typeName);
-    Material loadMaterial(aiMaterial* mat);
+    Material loadMaterial(aiMaterial* mat) const;
 };
 
 

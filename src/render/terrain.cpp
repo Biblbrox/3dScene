@@ -41,7 +41,7 @@ void Terrain::sampleHeightMapImage(const std::string& height_image)
         for (size_t j = 0; j < m_depth; ++j) {
             GLfloat h = pixels[j * image->pitch + i * byte_per_pixel];
             h = h / 255.f;
-            m_heightMap.at(i).at(j) = h;
+            m_heightMap[i][j] = h;
         }
     }
 
@@ -57,7 +57,7 @@ void Terrain::generateMesh()
         for (int j = 0; j < m_depth; ++j) {
             GLfloat scale_x = float(j) / float(m_depth - 1);
             GLfloat scale_z = float(i) / float(m_width - 1);
-            GLfloat h = m_heightMap.at(j).at(i);
+            GLfloat h = m_heightMap[j][i];
 
             vec3 vertex = {-0.5f + scale_x, h, -0.5f + scale_z};
             // Need to repeat texture every 10 rows and 10 columns
