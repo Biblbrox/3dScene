@@ -403,7 +403,7 @@ void World::init_sprites()
     light_en->addComponent<GlobalLightComponent>();
 
     auto light_comp = light_en->getComponent<GlobalLightComponent>();
-    light_comp->direction = {-0.2f, -1.f, 0.3f};
+    light_comp->direction = vec3(-0.2f, -1.f, 0.3f);
     light_comp->ambient = vec3(0.3f);
     light_comp->diffuse = vec3(0.5f);
     light_comp->specular = vec3(0.5f);

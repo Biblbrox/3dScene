@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <utility>
+#include <glm/gtc/constants.hpp>
 
 #include "render/mesh.hpp"
 #include "base.hpp"
@@ -19,7 +20,7 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices,
            Material material)
         : m_vertices(std::move(vertices)),
           m_indices(std::move(indices)),
-          m_material(material),
+          m_material(std::move(material)),
           m_colorMaterials(true)
 {
     setupMesh();
@@ -83,7 +84,10 @@ void Mesh::draw(ShaderProgram &program) const
         program.setVec3(U_COLOR_MATERIAL".ambient", m_material.ambient);
         program.setVec3(U_COLOR_MATERIAL".diffuse", m_material.diffuse);
         program.setVec3(U_COLOR_MATERIAL".specular", m_material.specular);
-        program.setFloat(U_COLOR_MATERIAL".shininess", m_material.shininess);
+        if (std::abs(m_material.shininess) < glm::epsilon<GLfloat>())
+            program.setFloat(U_COLOR_MATERIAL".shininess", 32.f);
+        else
+            program.setFloat(U_COLOR_MATERIAL".shininess", m_material.shininess);
         program.setInt(U_IS_COLOR_MATERIAL, true);
     }
 

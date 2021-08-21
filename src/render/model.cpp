@@ -94,13 +94,11 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
                       mesh->mVertices[i].z};
         vertex.normal = {mesh->mNormals[i].x, mesh->mNormals[i].y,
                          mesh->mNormals[i].z};
-        if (mesh->mTextureCoords[0]) {
+        if (mesh->mTextureCoords[0])
             vertex.uv = {mesh->mTextureCoords[0][i].x,
                          mesh->mTextureCoords[0][i].y};
-        }
-        else {
+        else
             vertex.uv = {0.f, 0.f};
-        }
 
         vertices.push_back(vertex);
     }
@@ -114,18 +112,14 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     if (mesh->mMaterialIndex >= 0) {
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
         if (!hasTexture(material)) {
-            Material mat = loadMaterial(material);
-            return Mesh(vertices, indices, mat);
-        }
-        else {
+            return Mesh(vertices, indices, loadMaterial(material));
+        } else {
             vector<Texture> diffuseMaps = loadMaterialsTextures(
                 material, aiTextureType_DIFFUSE, "texture_diffuse");
-            textures.insert(textures.end(), diffuseMaps.begin(),
-                            diffuseMaps.end());
+            textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
             vector<Texture> specularMaps = loadMaterialsTextures(
                 material, aiTextureType_SPECULAR, "texture_specular");
-            textures.insert(textures.end(), specularMaps.begin(),
-                            specularMaps.end());
+            textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
             return Mesh(vertices, indices, textures);
         }
     }
@@ -133,9 +127,10 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     return Mesh(vertices, indices, Material{});
 }
 
-std::vector<Texture> Model::loadMaterialsTextures(aiMaterial *mat,
-                                                  aiTextureType type,
-                                                  const std::string &typeName)
+std::vector<Texture>
+Model::loadMaterialsTextures(aiMaterial *mat,
+                             aiTextureType type,
+                             const std::string &typeName)
 {
     vector<Texture> textures;
     for (size_t i = 0; i < mat->GetTextureCount(type); ++i) {
@@ -172,7 +167,7 @@ std::string Model::getModelFile() const
     return m_modelFile;
 }
 
-Material Model::loadMaterial(aiMaterial *mat)
+Material Model::loadMaterial(aiMaterial *mat) const
 {
     Material material;
     aiColor3D color(0.f, 0.f, 0.f);
