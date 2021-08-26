@@ -40,7 +40,7 @@ void Model::draw(ShaderProgram &program) const
         mesh.draw(program);
 }
 
-void Model::loadModel(const std::string &path, bool flip_uv)
+void Model::loadModel(std::string model_path, bool flip_uv)
 {
     m_meshes.clear();
     m_textureLoaded.clear();
@@ -48,7 +48,6 @@ void Model::loadModel(const std::string &path, bool flip_uv)
     Assimp::Importer import;
 
     // Remove trailing dots
-    std::string model_path = path;
     if (std::filesystem::path(model_path).is_relative())
         model_path = canonical(absolute(model_path));
 
@@ -70,7 +69,7 @@ void Model::loadModel(const std::string &path, bool flip_uv)
     processNode(scene->mRootNode, scene);
 }
 
-void Model::processNode(aiNode *node, const aiScene *scene)
+void Model::processNode(const aiNode *node, const aiScene *scene)
 {
     for (size_t i = 0; i < node->mNumMeshes; ++i) {
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
@@ -81,7 +80,7 @@ void Model::processNode(aiNode *node, const aiScene *scene)
         processNode(node->mChildren[i], scene);
 }
 
-Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
+Mesh Model::processMesh(const aiMesh *mesh, const aiScene *scene)
 {
     vector<Vertex> vertices;
     vector<GLuint> indices;
@@ -162,7 +161,7 @@ const std::vector<Mesh> &Model::getMeshes() const
     return m_meshes;
 }
 
-std::string Model::getModelFile() const
+const std::string& Model::getModelFile() const
 {
     return m_modelFile;
 }

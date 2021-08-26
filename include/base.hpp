@@ -111,4 +111,14 @@ typedef std::shared_ptr<bvh::Bvh<Scalar>> BvhPtr;
 #define FORCE_INLINE
 #endif
 
+/*template <typename T, int N>
+bvh_always_inline
+bvh::Vector<T, N>& operator=(bvh::Vector<T, N>& v, const glm::vec<N, T>& other)
+{
+    for (unsigned char i = 0; i < N; ++i)
+        v.values[i] = other[i];
+
+    return v;
+}*/
+
 #endif //BASE_HPP

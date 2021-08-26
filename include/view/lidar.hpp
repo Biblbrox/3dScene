@@ -10,6 +10,7 @@
 #include <bvh/sweep_sah_builder.hpp>
 #include <bvh/single_ray_traverser.hpp>
 #include <bvh/primitive_intersectors.hpp>
+#include <variant>
 
 #include "base.hpp"
 #include "fpscamera.hpp"
@@ -18,18 +19,16 @@ using glm::vec3;
 using glm::vec2;
 using glm::normalize;
 
-/*using Scalar   = GLfloat;
-using Vector3  = bvh::Vector3<Scalar>;
-using Triangle = bvh::Triangle<Scalar>;
-using Ray      = bvh::Ray<Scalar>;
-using Tree = bvh::Bvh<Scalar>;
-using TreePtr = std::shared_ptr<bvh::Bvh<Scalar>>;*/
-
 FORCE_INLINE inline vec3 ray_point(const Ray& ray, GLfloat distance)
 {
     Vector3 pos = ray.origin + normalize(ray.direction) * distance;
     return {pos[0], pos[1], pos[2]};
 }
+
+struct Frame
+{
+    std::variant<std::vector<glm::vec3>, std::vector<glm::vec4>> points;
+};
 
 class Lidar: public FpsCamera
 {

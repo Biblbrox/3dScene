@@ -94,11 +94,11 @@ void render::drawDots(const std::vector<vec3>& dots)
 
 void render::drawTexture(ShaderProgram& program, const TextureBase &texture,
                          const glm::vec3& position, GLfloat angle,
-                         glm::vec3 rot_axis, GLfloat sc)
+                         glm::vec3 rot_axis, bool light, GLfloat sc)
 {
-    vec3 pos = {position.x / (sc * texture.getWidth()),
-                position.y / (sc * texture.getHeight()),
-                position.z / (sc * texture.getDepth())};
+    const vec3 pos = {position.x / (sc * texture.getWidth()),
+                      position.y / (sc * texture.getHeight()),
+                      position.z / (sc * texture.getDepth())};
     const GLfloat half = 1.f;
     const GLfloat centerX = pos.x + half;
     const GLfloat centerY = pos.y + half;
@@ -106,14 +106,13 @@ void render::drawTexture(ShaderProgram& program, const TextureBase &texture,
 
     const vec3 scale = sc * texture.getSize();
 
-    mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
-                                  rot_axis);
+    mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle, rot_axis);
     mat4 translation = translate(mat4(1.f), pos);
     mat4 scaling = glm::scale(mat4(1.f), scale);
     mat4 model = scaling * rotation * translation;
-    auto old_model = program.getMat4(U_MODEL_MATRIX);
+    mat4 old_model = program.getMat4(U_MODEL_MATRIX);
     program.leftMult(U_MODEL_MATRIX, model);
-    if (Config::getVal<bool>("EnableLight"))
+    if (light)
         program.setMat3(U_NORMAL_MATRIX, mat3(transpose(inverse(model))));
 
     texture.draw(program);
@@ -140,7 +139,7 @@ void render::renderTerrain(ShaderProgram& program, const Terrain& terrain)
     program.setInt(U_DRAW_TERRAIN, false);
 }
 
-void render::drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
+/*void render::drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
                                size_t size, const TextureBase &texture,
                                const vec3& position,
                                GLfloat angle, vec3 rot_axis, GLfloat sc)
@@ -184,7 +183,7 @@ void render::drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
     glDeleteVertexArrays(1, &VAO);
 
     program.setMat4(U_MODEL_MATRIX, old_model);
-}
+} */
 
 void render::drawVerticesVAO(ShaderProgram& program, const GLfloat* points,
                              size_t size, const TextureBase &texture,

@@ -22,7 +22,7 @@ public:
     Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices,
          std::vector<Texture> textures);
     Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices,
-         Material material);
+         std::optional<Material> material);
     void draw(ShaderProgram& program) const;
 
     const std::vector<Vertex>& getVertices() const;
@@ -33,13 +33,11 @@ private:
     std::vector<Vertex> m_vertices;
     std::vector<GLuint> m_indices;
     std::vector<Texture> m_textures;
-    Material m_material;
+    std::optional<Material> m_material;
 
     GLuint m_vao;
     GLuint m_vbo;
     GLuint m_ebo;
-
-    bool m_colorMaterials;
 
     void setupMesh();
 };

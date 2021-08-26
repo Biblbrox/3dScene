@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <glm/glm.hpp>
+#include <boost/type.hpp>
 #include <json/json.hpp>
 #include <glm/exponential.hpp>
 
@@ -312,15 +313,15 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
         res.push_back(entity);
     }
 
-#pragma omp parallel for shared(res)
+//#pragma omp parallel for shared(res)
     for (auto& en: res) {
         auto bvh = en.getComponent<BVHComponent>();
         if (bvh) {
             auto sprite = en.getComponent<SpriteComponent>()->sprite;
             auto pos = en.getComponent<PositionComponent>();
             auto triangles = sprite->getTriangles();
-            mat4 transform = math::createTransform(pos->pos, pos->angle, pos->rot_axis, sprite->getSize());
-            triangles = math::transformTriangles(triangles, transform);
+            mat4 transform = createTransform(pos->pos, pos->angle, pos->rot_axis, sprite->getSize());
+            triangles = transformTriangles(triangles, transform);
             bvh->bvh_tree = coll::buildBVH(triangles);
             bvh->triangles = std::make_shared<std::vector<Triangle>>(triangles);
         }
@@ -329,6 +330,47 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
     ifs.close();
 
     return res;
+}
+
+void
+utils::fs::saveFrameToFileTxt(const Frame &frame, const std::string &file_name, bool intensity)
+{
+    std::ofstream out(file_name, std::ios::out | std::ios::app);
+
+    if (intensity) {
+        for (const auto& point: std::get<std::vector<glm::vec4>>(frame.points))
+            out << point.x << ", " << point.y << ", " << point.z << point.w << "\n";
+    } else {
+        for (const auto& point: std::get<std::vector<glm::vec3>>(frame.points))
+            out << point.x << ", " << point.y << ", " << point.z << "\n";
+    }
+
+    out.close();
+}
+
+void
+utils::fs::saveFrameToFileVel(const Frame &frame, const std::string &file_name, bool intensity)
+{
+    using glm::float32;
+
+    std::ofstream out(file_name, std::ios::out | std::ios::binary);
+
+    if (intensity) {
+        for (const auto& point: std::get<std::vector<glm::vec4>>(frame.points)) {
+            out.write((char*)&point.x, sizeof(glm::float32_t));
+            out.write((char*)&point.y, sizeof(glm::float32_t));
+            out.write((char*)&point.z, sizeof(glm::float32_t));
+            out.write((char*)&point.w, sizeof(glm::float32_t));
+        }
+    } else {
+        for (const auto& point: std::get<std::vector<glm::vec3>>(frame.points)) {
+            out.write((char*)&point.x, sizeof(glm::float32_t));
+            out.write((char*)&point.y, sizeof(glm::float32_t));
+            out.write((char*)&point.z, sizeof(glm::float32_t));
+        }
+    }
+
+    out.close();
 }
 
 

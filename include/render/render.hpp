@@ -22,7 +22,7 @@ namespace render
      */
     void drawTexture(ShaderProgram& program, const TextureBase &texture,
                      const vec3& pos, GLfloat angle = 0,
-                     vec3 rot_axis = {1.f, 0.f, 0.f}, GLfloat scale = 1.f);
+                     vec3 rot_axis = {1.f, 0.f, 0.f}, bool light = false, GLfloat scale = 1.f);
     
     void drawLinen(const std::vector<vec3>& points, bool adjacency = false);
 
@@ -32,17 +32,39 @@ namespace render
 
     void drawSkybox(GLuint skybox_vao, GLuint skybox_texture);
 
-    void drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
+    /**
+     * Draw vertices with transformation
+     * @param program
+     * @param points
+     * @param size
+     * @param texture
+     * @param position
+     * @param angle
+     * @param rot_axis
+     * @param scale
+     */
+    /*void drawVerticesTrans(ShaderProgram& program, const GLfloat* points,
                            size_t size, const TextureBase &texture,
                            const vec3& position, GLfloat angle = 0.f,
-                           vec3 rot_axis = {1.f, 0.f, 0.f}, GLfloat scale = 1.f);
+                           vec3 rot_axis = {1.f, 0.f, 0.f}, GLfloat scale = 1.f);*/
 
 
+    /**
+     * Draw vertices
+     * @param program
+     * @param points
+     * @param size
+     * @param texture
+     * @param position
+     * @param angle
+     * @param rot_axis
+     * @param scale
+     */
     void drawVerticesVAO(ShaderProgram& program, const GLfloat* points,
-                             size_t size, const TextureBase &texture,
-                             const vec3& position,
-                             GLfloat angle = 0.f,
-                             vec3 rot_axis = {1.f, 0.f, 0.f}, GLfloat scale = 1.f);
+                         size_t size, const TextureBase &texture,
+                         const vec3& position,
+                         GLfloat angle = 0.f,
+                         vec3 rot_axis = {1.f, 0.f, 0.f}, GLfloat scale = 1.f);
 
     /**
      * Render terrain

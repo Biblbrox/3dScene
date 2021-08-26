@@ -53,7 +53,6 @@ out vec4 FragColor;
 
 float fog_max_dist = 3000.f;
 float fog_min_dist = 500.f;
-//vec4 fog_color = vec4(0.5444, 0.62, 0.62, 0.69);
 
 vec3 calcDirLightTexture(DirLight light, vec3 normal, vec3 viewPos, TextureMaterial material);
 vec3 calcDirLightMaterial(DirLight light, vec3 normal, vec3 viewPos, ColorMaterial material);
@@ -79,7 +78,6 @@ void main()
                 color = calcDirLightTexture(m_dirLight, norm, m_viewPos, m_textureMaterial);
             } else {
                 color = calcDirLightMaterial(m_dirLight, norm, m_viewPos, m_colorMaterial);
-//                diffAlpha = 1.f;
             }
             FragColor = vec4(color, diffAlpha);
         }
@@ -108,7 +106,7 @@ float expFog(float dst)
 vec3 calcDirLightTexture(DirLight light, vec3 normal, vec3 viewPos, TextureMaterial material)
 {
     vec3 lightDir = normalize(light.direction);
-
+    
     vec3 ambient = light.ambient * texture(material.texture_diffuse1, TextureCoords).rgb;
 
     float diff = max(dot(normal, lightDir), 0.0);

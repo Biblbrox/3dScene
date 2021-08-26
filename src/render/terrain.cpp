@@ -26,8 +26,9 @@ Terrain::Terrain(const std::string& height_image,
 
 void Terrain::sampleHeightMapImage(const std::string& height_image)
 {
-    SDL_Surface *image = loadSurface(height_image);
-    uint8_t* pixels = (uint8_t *) image->pixels;
+    assert(!height_image.empty() && "Height image file name is empty");
+    SDL_Surface* image = loadSurface(height_image);
+    const uint8_t* pixels = (uint8_t *) image->pixels;
 
     m_width = image->w;
     m_depth = image->h;
@@ -40,7 +41,7 @@ void Terrain::sampleHeightMapImage(const std::string& height_image)
     for (size_t i = 0; i < m_width; ++i) {
         for (size_t j = 0; j < m_depth; ++j) {
             GLfloat h = pixels[j * image->pitch + i * byte_per_pixel];
-            h = h / 255.f;
+            h /= 255.f;
             m_heightMap[i][j] = h;
         }
     }
@@ -137,8 +138,6 @@ void Terrain::computeNormals()
             m_normals[i][j] = glm::normalize(normal);
         }
     }
-
-
 }
 
 void Terrain::generateBuffers()
@@ -175,17 +174,17 @@ void Terrain::generateBuffers()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * m_indices.size(), m_indices.data(),
                  GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, // Pos of vertices
-                          8 * sizeof(GLfloat), nullptr);
+    // Pos of vertices
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), nullptr);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
-                          8 * sizeof(GLfloat), // UV coords
+    // UV coords
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat),
                           (void *) (3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
-                          8 * sizeof(GLfloat), // Normals
+    // Normals
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat),
                           (void *) (5 * sizeof(GLfloat)));
     glEnableVertexAttribArray(2);
 
@@ -255,17 +254,16 @@ GLfloat Terrain::getAltitude(const glm::vec2 &point) const
     GLfloat z_cord = fmodf(ter_z, grid_size) / grid_size;
 
     GLfloat height;
-    if (x_cord <= (1 - z_cord)) {
+    if (x_cord <= (1 - z_cord)) // Left triangle
         height = barry_centric({0.f, m_heightMap[grid_x][grid_z], 0.f},
                                {1.f, m_heightMap[grid_x + 1][grid_z], 0.f},
                                {0.f, m_heightMap[grid_x][grid_z + 1], 1.f},
                                {x_cord, z_cord});
-    } else {
+    else // Right triangle
         height = barry_centric({1.f, m_heightMap[grid_x + 1][grid_z], 0.f},
                                {1.f, m_heightMap[grid_x + 1][grid_z + 1], 1.f},
                                {0.f, m_heightMap[grid_x][grid_z + 1], 1.f},
                                {x_cord, z_cord});
-    }
 
     return height * m_scale.y;
 }
@@ -294,5 +292,8 @@ const std::string &Terrain::getTextureFile() const
 
 Terrain::~Terrain()
 {
-    glDeleteVertexArrays(1, &m_vao);
+    if (glIsVertexArray(m_vao))
+        glDeleteVertexArrays(1, &m_vao);
+    if (glIsTexture(m_textureId))
+        glDeleteTextures(1, &m_textureId);
 }

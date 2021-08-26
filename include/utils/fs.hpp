@@ -11,6 +11,7 @@
 #include "ecs/entity.hpp"
 #include "config.hpp"
 #include "game.hpp"
+#include "view/lidar.hpp"
 #include "components/positioncomponent.hpp"
 #include "components/lidarcomponent.hpp"
 #include "components/spritecomponent.hpp"
@@ -22,17 +23,21 @@
 
 namespace utils::fs
 {
-
     using ecs::Entity;
+
+    /**
+     * Save point cloud frame to txt file.
+     */
+    void saveFrameToFileTxt(const Frame& frame, const std::string& file_name, bool intensity = false);
+    void saveFrameToFileVel(const Frame& frame, const std::string& file_name, bool intensity = false);
 
     void saveSimJson(const std::string &file_name,
                      std::unordered_map<size_t, std::shared_ptr<Entity>>& entities);
 
-    std::vector<ecs::Entity> loadSimJson(const std::string& file_name,
-                                         ecs::EcsManager& ecsManager);
+    std::vector<ecs::Entity>
+    loadSimJson(const std::string& file_name, ecs::EcsManager& ecsManager);
 
-    void saveLidarDataCart(const std::string &data_file,
-                           const std::string &res_file);
+    void saveLidarDataCart(const std::string &data_file, const std::string &res_file);
 
     void
     saveLidarDataSphere(const std::string &data_file, const std::string &res_file,

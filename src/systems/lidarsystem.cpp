@@ -14,33 +14,28 @@
 #include "systems/lidarsystem.hpp"
 #include "utils/collision.hpp"
 #include "utils/logger.hpp"
+#include "utils/fs.hpp"
 
 using glm::acos;
 using glm::asin;
+using std::string;
 using glm::cos;
 using glm::sin;
 using glm::sqrt;
 using utils::log::Logger;
+using utils::fs::saveFrameToFileTxt;
+using coll::rayTerrainIntersection;
 
-LidarSystem::LidarSystem()
-    : col_stream(getResourcePath(Config::getVal<std::string>("DataFileTmp")),
-                 std::ios_base::app),
-      m_posChanged(true), m_prevPos{0.f, 0.f, 0.f}
+LidarSystem::LidarSystem() : m_posChanged(true), m_prevPos{0.f, 0.f, 0.f}
 {
-}
-
-LidarSystem::~LidarSystem()
-{
-    col_stream.flush();
-    col_stream.close();
 }
 
 void LidarSystem::update_state(size_t delta)
 {
-    drawLidarIntersect();
+    collision();
 }
 
-void LidarSystem::drawLidarIntersect()
+void LidarSystem::collision()
 {
     auto program = SceneProgram::getInstance();
     program->useFramebufferProgram();
@@ -52,8 +47,7 @@ void LidarSystem::drawLidarIntersect()
     Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw,
                 lidarComp->pitch);
 
-    auto pos_compare =
-        glm::epsilonEqual(m_prevPos, pos->pos, glm::epsilon<GLfloat>());
+    auto pos_compare = glm::epsilonEqual(m_prevPos, pos->pos, glm::epsilon<GLfloat>());
     if (!glm::all(pos_compare) || lidarComp->pattern_points.empty()) {
         m_posChanged = true;
         m_prevPos = pos->pos;
@@ -66,14 +60,15 @@ void LidarSystem::drawLidarIntersect()
         lidarComp->pattern_points = lidar.risleyPattern2(
             lidarComp->freq, lidarComp->start_angle, lidarComp->density);
     }
-    auto pattern = lidarComp->pattern_points;
+
+    const auto& pattern = lidarComp->pattern_points;
     if (Config::getVal<bool>("DrawPattern")) {
         program->useFramebufferProgram();
         program->setInt(U_IS_PRIMITIVE, true);
 
         program->setVec3(U_PRIM_COLOR, {1.f, 1.f, 1.f});
-        pattern.push_back(pos->pos);
         render::drawDots(pattern);
+        render::drawDots({pos->pos});
         if (Config::getVal<bool>("DrawRays")) {
             vector<vec3> rays;
             for (const auto &dot : pattern) {
@@ -88,16 +83,16 @@ void LidarSystem::drawLidarIntersect()
     if (!Config::getVal<bool>("CheckCollision"))
         return;
 
-    auto &entities = m_ecsManager->getEntities();
-#pragma omp declare reduction (merge : std::vector<vec3> \
-							   : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
+    const auto &entities = m_ecsManager->getEntities();
+//#pragma omp declare reduction (merge : std::vector<vec3> \
+//							   : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
     vector<vec3> coll_dots;
-#pragma omp parallel for collapse(1) reduction(merge                           \
-                                               : coll_dots) shared(entities), default(shared)
+//#pragma omp parallel for collapse(1) reduction(merge                           \
+//                                               : coll_dots) shared(entities), default(shared)
     for (const auto &dot : pattern) {
-        for (auto &[key, en] : entities) {
+        for (const auto &[key, en] : entities) {
             vec3 dir = normalize(dot - pos->pos);
-            if (std::isnan(dir.x) || std::isnan(dir.y) || std::isnan(dir.z))
+            if (glm::any(glm::isnan(dir)))
                 continue;
 
             auto bvh_comp = en->getComponent<BVHComponent>();
@@ -114,30 +109,26 @@ void LidarSystem::drawLidarIntersect()
                     continue;
 
                 auto terrain = terrainComp->terrain;
-                auto coll = coll::rayTerrainIntersection(*terrain, ray, 0,
-                                                         10000.f, 100);
-                if (coll.first) {
-                    vec3 col_pos = coll.second;
-                    coll_dots.emplace_back(col_pos);
-                }
+                auto coll = rayTerrainIntersection(*terrain, ray, 0, 10000.f, 100);
+                if (coll.first)
+                    coll_dots.emplace_back(coll.second);
+            } else {
+                auto pos_comp = en->getComponent<PositionComponent>();
 
-                continue;
+                auto triangles = bvh_comp->triangles;
+                auto bvh = bvh_comp->bvh_tree;
+                auto find_inter = coll::BVHCollision(bvh, ray, *triangles);
+                if (find_inter.first)
+                    coll_dots.emplace_back(find_inter.second);
             }
-
-            auto pos_comp = en->getComponent<PositionComponent>();
-
-            auto triangles = bvh_comp->triangles;
-            auto bvh = bvh_comp->bvh_tree;
-            auto find_inter = coll::BVHCollision(bvh, ray, *triangles);
-            if (find_inter.first)
-                coll_dots.emplace_back(find_inter.second);
         }
     }
 
-    for (const auto &dot : coll_dots) {
-        col_stream << dot.x << ", " << dot.y << ", " << dot.z << "\n";
-    }
-    col_stream.flush();
+    std::vector<glm::vec4> points_intens(coll_dots.size());
+    for (size_t i = 0; i < coll_dots.size(); ++i)
+        points_intens[i] = glm::vec4(coll_dots[i] - pos->pos, 1.f);
 
+    Frame frame = {points_intens};
+    utils::fs::saveFrameToFileVel(frame, getResourcePath(Config::getVal<string>("DataFileTmp")), true);
     Config::getVal<bool>("CheckCollision") = false;
 }
