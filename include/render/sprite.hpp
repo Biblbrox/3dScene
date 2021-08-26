@@ -22,14 +22,13 @@
 class Sprite: public TextureBase
 {
 public:
-    explicit Sprite(const std::string& objFile,
+    explicit Sprite(std::string objFile,
                     GLfloat textureWidth,
                     GLfloat textureHeight, GLfloat textureDepth,
                     bool flip_uv = true);
 
-    explicit Sprite(const std::string& objFile,
-                    const vec3& size, bool flip_uv = true);
-    ~Sprite();
+    explicit Sprite(std::string objFile, const vec3& size, bool flip_uv = true);
+    ~Sprite() = default;
 //    Sprite(Sprite&& en) = default;
 //    Sprite(Sprite& en) = default;
 //    Sprite& operator=(Sprite&&) = default;
@@ -49,11 +48,10 @@ public:
 
     void flipUV();
 
-    std::string getModelFile() const;
+    const std::string& getModelFile() const;
 
     const std::vector<Triangle>& getTriangles() const;
     std::vector<Triangle>& getTriangles();
-    void setIdx(GLuint idx);
 protected:
     std::vector<Triangle> m_triangles;
     Model m_model;

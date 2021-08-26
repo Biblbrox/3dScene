@@ -63,8 +63,6 @@ GLuint utils::texture::loadTexture(const std::string &file,
 
     auto* pixels = static_cast<GLuint*>(surface->pixels);
 
-    SDL_FreeSurface(surface);
-
     if (textureWidth)
         *textureWidth = tw;
     if (textureHeight)
@@ -73,6 +71,8 @@ GLuint utils::texture::loadTexture(const std::string &file,
     GLuint textureId = loadTextureFromPixels32(pixels, tw, th,
                                                channels,
                                                GL_UNSIGNED_BYTE);
+
+    SDL_FreeSurface(surface);
 
     return textureId;
 }

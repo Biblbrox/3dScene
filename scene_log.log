@@ -6,3 +6,5 @@ Unexpected error[Wed Aug 18 00:01:53 2021]: filesystem error: cannot make canoni
 Unexpected error[Wed Aug 18 00:06:05 2021]: filesystem error: cannot make canonical path: No such file or directory [/home/biblbrox/autonet/3dscene/framebuffer/Scene.glfs]
 File IO error[Wed Aug 18 00:06:19 2021]: Can't open shader source file ../src/shaders/framebuffer/Scene.glvs
 
+File IO error[Thu Aug 26 16:18:47 2021]: Can't open shader source file ../src/shaders/framebuffer/Scene.glvs
+

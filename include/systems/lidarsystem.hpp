@@ -10,14 +10,13 @@
 class LidarSystem: public ecs::System<>
 {
 public:
-    ~LidarSystem();
+    ~LidarSystem() = default;
     LidarSystem();
 private:
     void update_state(size_t delta) override;
 
-    void drawLidarIntersect();
+    void collision();
 
-    std::ofstream col_stream;
     bool m_posChanged;
     glm::vec3 m_prevPos;
 };

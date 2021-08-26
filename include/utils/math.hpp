@@ -132,6 +132,16 @@ namespace math {
         return res;
     }
 
+    FORCE_INLINE inline mat4 buildTransformMat(const vec3& pos, const vec3& rot_axis,
+                                               const vec3& scale, GLfloat angle)
+    {
+        mat4 translating = glm::translate(mat4(1.f), pos);
+        mat4 rotating = glm::rotate(mat4(1.f), angle, rot_axis);
+        mat4 scaling = glm::scale(mat4(1.f), scale);
+
+        return scaling * rotating * translating;
+    }
+
     constexpr vec3 viewportToNDC(const vec2& pos, const vec2& clip)
     {
         GLfloat width = clip.x;

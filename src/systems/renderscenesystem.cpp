@@ -93,7 +93,7 @@ void RenderSceneSystem::drawSprites()
             glStencilMask(0xFF); // enable writing to the stencil buffer
 
             render::drawTexture(*program, *sprite, posComp->pos,
-                                posComp->angle, posComp->rot_axis);
+                                posComp->angle, posComp->rot_axis, lighting);
 
             glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
             glStencilMask(0x00); // disable writing to the stencil buffer
@@ -104,7 +104,7 @@ void RenderSceneSystem::drawSprites()
             program->setFloat(U_ALPHA, 0.55f);
 
             render::drawTexture(*program, *sprite, posComp->pos, posComp->angle,
-                                posComp->rot_axis, 1.1f);
+                                posComp->rot_axis, false, 1.1f);
 
             glStencilMask(0xFF);
             glStencilFunc(GL_ALWAYS, 1, 0xFF);
@@ -116,7 +116,8 @@ void RenderSceneSystem::drawSprites()
                                 *en->getComponent<SpriteComponent>()->sprite,
                                 posComp->pos,
                                 posComp->angle,
-                                posComp->rot_axis);
+                                posComp->rot_axis,
+                                lighting);
         }
     }
 
