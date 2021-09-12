@@ -47,8 +47,7 @@ SDL_Surface* utils::texture::loadSurface(const std::string& file, bool flip)
     return flipped;
 }
 
-GLuint utils::texture::loadTexture(const std::string &file,
-                                   GLuint *textureWidth,
+GLuint utils::texture::loadTexture(const std::string &file, GLuint *textureWidth,
                                    GLuint *textureHeight)
 {
     using namespace utils::texture;
@@ -68,9 +67,7 @@ GLuint utils::texture::loadTexture(const std::string &file,
     if (textureHeight)
         *textureHeight = th;
 
-    GLuint textureId = loadTextureFromPixels32(pixels, tw, th,
-                                               channels,
-                                               GL_UNSIGNED_BYTE);
+    GLuint textureId = loadTextureFromPixels32(pixels, tw, th, channels, GL_UNSIGNED_BYTE);
 
     SDL_FreeSurface(surface);
 

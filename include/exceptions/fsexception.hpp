@@ -13,7 +13,7 @@ class FSException: public BaseGameException
 {
 public:
     explicit FSException(std::string msg,
-                         std::string fileLog = "moonlander_log.log",
+                         std::string fileLog = program_log_file_name(),
                          Category category = Category::INTERNAL_ERROR)
                          : BaseGameException(msg, fileLog, category) {}
 };

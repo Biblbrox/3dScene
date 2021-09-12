@@ -90,14 +90,12 @@ void Game::initOnceSDL2()
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0)
         throw SdlException((format("SDL initialization error: %1%\n")
-                            % SDL_GetError()).str(),
-                           program_log_file_name(),
+                            % SDL_GetError()).str(), program_log_file_name(),
                            Category::INITIALIZATION_ERROR);
 
     if ((IMG_Init(IMG_FLAGS) & IMG_FLAGS) != IMG_FLAGS)
         throw SdlException((format("SDL_IMG initialization error: %1%\n")
-                            % IMG_GetError()).str(),
-                           program_log_file_name(),
+                            % IMG_GetError()).str(), program_log_file_name(),
                            Category::INITIALIZATION_ERROR);
 
     imgInit = true;
@@ -175,8 +173,7 @@ void Game::initGL()
     // Init OpenGL context
     if (!Game::m_glcontext)
         throw SdlException((format("Unable to create gl context. Error: %1%\n")
-                            % SDL_GetError()).str(),
-                           program_log_file_name(),
+                            % SDL_GetError()).str(), program_log_file_name(),
                            Category::INITIALIZATION_ERROR);
 
     glewExperimental = GL_TRUE;

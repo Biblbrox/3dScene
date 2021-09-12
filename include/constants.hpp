@@ -4,6 +4,7 @@
 #include <string>
 
 const std::string RESOURCE_PATH = "../res/";
+const std::string SAVE_PATH = "../savings/";
 const std::string MODEL_PATH = "../res/models/";
 const std::string LOCALE_PATH = "../locale/";
 const std::string SHADER_PATH = "../src/shaders/";
@@ -18,6 +19,16 @@ const std::string GAME_NAME = "AutoNet";
 inline std::string getResourcePath(const std::string &fileName)
 {
     return std::string(RESOURCE_PATH + fileName);
+}
+
+/**
+ * Return full path to resource fileName
+ * @param fileName
+ * @return
+ */
+inline std::string getSavePath(const std::string &fileName)
+{
+    return std::string(SAVE_PATH + fileName);
 }
 
 /**

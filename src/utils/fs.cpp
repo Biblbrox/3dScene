@@ -7,6 +7,7 @@
 #include <glm/exponential.hpp>
 
 #include "components/positioncomponent.hpp"
+#include "components/positioncomponentinst.hpp"
 #include "components/lidarcomponent.hpp"
 #include "components/spritecomponent.hpp"
 #include "components/skyboxcomponent.hpp"
@@ -15,6 +16,7 @@
 #include "components/bvhcomponent.hpp"
 #include "components/selectablecomponent.hpp"
 #include "components/terraincomponent.hpp"
+#include "exceptions/fsexception.hpp"
 #include "utils/fs.hpp"
 #include "utils/math.hpp"
 #include "utils/collision.hpp"
@@ -70,6 +72,9 @@ namespace glm
     void from_json(const json& j, vec2& v);
 }
 
+void to_json(json &j, const Position &v);
+void from_json(const json& j, Position& v);
+
 void glm::to_json(json& j, const glm::vec3& v)
 {
     j = json::array({v.x, v.y, v.z});
@@ -91,6 +96,18 @@ void glm::from_json(const json& j, glm::vec2& v)
 {
     v.x = j[0];
     v.y = j[1];
+}
+
+void to_json(json& j, const Position& v)
+{
+    j = json::array({{"pos", v.pos}, {"angle", v.angle}, {"rot_axis", v.rot_axis}});
+}
+
+void from_json(const json& j, Position& v)
+{
+    v.pos = j[0]["pos"];
+    v.angle = j[1]["angle"];
+    v.rot_axis = j[2]["rot_axis"];
 }
 
 void utils::fs::saveSimJson(const std::string &file_name,
@@ -123,6 +140,24 @@ void utils::fs::saveSimJson(const std::string &file_name,
                 comp_obj["PositionComponent"].push_back(rot_obj);
 
                 en_obj["Components"].push_back(comp_obj);
+            } else if (type == type_id<PositionComponentInst>) {
+//                auto comp = en->getComponent<PositionComponentInst>();
+//                json comp_obj = json::object();
+//                comp_obj["PositionComponent"] = json::array();
+//
+//                json pos_obj = json::object();
+//                pos_obj["pos"] = json::array({comp->pos.x, comp->pos.y, comp->pos.z});
+//                comp_obj["PositionComponent"].push_back(pos_obj);
+//
+//                json ang_obj = json::object();
+//                ang_obj["angle"] = comp->angle;
+//                comp_obj["PositionComponent"].push_back(ang_obj);
+//
+//                json rot_obj = json::object();
+//                rot_obj["rot_axis"] = json::array({comp->rot_axis.x, comp->rot_axis.y, comp->rot_axis.z});
+//                comp_obj["PositionComponent"].push_back(rot_obj);
+//
+//                en_obj["Components"].push_back(comp_obj);
             } else if (type == type_id<SpriteComponent>) {
                 auto comp = en->getComponent<SpriteComponent>();
                 auto sprite = comp->sprite;
@@ -224,9 +259,9 @@ void utils::fs::saveSimJson(const std::string &file_name,
 std::vector<ecs::Entity>
 utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager)
 {
-    if (!std::filesystem::exists(file_name)) {
-        // Throw error
-    }
+    if (!std::filesystem::exists(file_name))
+        throw FSException((boost::format("Unable to load file %1") % file_name).str(),
+                          log::program_log_file_name(), Category::FS_ERROR);
 
     std::vector<ecs::Entity> res;
 
@@ -247,6 +282,19 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
                 pos_comp->pos = pos;
                 pos_comp->rot_axis = rot_axis;
                 pos_comp->angle = angle;
+            } else if (comp.contains("PositionComponentInst")) {
+                json json_pos = comp["PositionComponentInst"];
+                std::vector<Position> position = json_pos[0]["position"].get<std::vector<Position>>();
+
+                entity.addComponent<PositionComponentInst>();
+                auto pos_comp = entity.getComponent<PositionComponentInst>();
+                for (const auto& pos: pos_comp->position) {
+                    Position p;
+                    p.pos = pos.pos;
+                    p.angle = pos.angle;
+                    p.rot_axis = pos.rot_axis;
+                    pos_comp->position.emplace_back(p);
+                }
             } else if (comp.contains("SpriteComponent")) {
                 json json_sprite = comp["SpriteComponent"];
 
@@ -349,21 +397,21 @@ utils::fs::saveFrameToFileTxt(const Frame &frame, const std::string &file_name, 
 }
 
 void
-utils::fs::saveFrameToFileVel(const Frame &frame, const std::string &file_name, bool intensity)
+utils::fs::saveFrameToFileBin(const Frame &frame, const std::string &file_name, bool intensity)
 {
     using glm::float32;
 
     std::ofstream out(file_name, std::ios::out | std::ios::binary);
 
     if (intensity) {
-        for (const auto& point: std::get<std::vector<glm::vec4>>(frame.points)) {
+        for (vec4 point: std::get<std::vector<glm::vec4>>(frame.points)) {
             out.write((char*)&point.x, sizeof(glm::float32_t));
             out.write((char*)&point.y, sizeof(glm::float32_t));
             out.write((char*)&point.z, sizeof(glm::float32_t));
             out.write((char*)&point.w, sizeof(glm::float32_t));
         }
     } else {
-        for (const auto& point: std::get<std::vector<glm::vec3>>(frame.points)) {
+        for (vec3 point: std::get<std::vector<glm::vec3>>(frame.points)) {
             out.write((char*)&point.x, sizeof(glm::float32_t));
             out.write((char*)&point.y, sizeof(glm::float32_t));
             out.write((char*)&point.z, sizeof(glm::float32_t));

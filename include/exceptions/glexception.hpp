@@ -16,7 +16,7 @@ class GLException: public BaseGameException
 {
 public:
     explicit GLException(std::string msg,
-                         std::string fileLog = "moonlander_log.log",
+                         std::string fileLog = program_log_file_name(),
                          Category category = Category::INTERNAL_ERROR)
             : BaseGameException(std::move(msg), std::move(fileLog), category) {}
 };

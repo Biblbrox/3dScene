@@ -9,6 +9,7 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/normal.hpp>
 
 #include <bvh/bvh.hpp>
 #include <bvh/primitive_intersectors.hpp>
@@ -191,7 +192,7 @@ rayTerrainIntersection(const Terrain &terrain, const Ray &ray, GLfloat start,
  */
 FORCE_INLINE inline std::pair<bool, vec3>
 BVHCollision(BvhPtr tree, const Ray &ray,
-			 const std::vector<Triangle> &triangles)
+			 const std::vector<Triangle> &triangles, GLfloat& angle)
 {
     bvh::ClosestPrimitiveIntersector<Bvh, Triangle> primitive_intersector(
         *tree, triangles.data());
@@ -199,7 +200,10 @@ BVHCollision(BvhPtr tree, const Ray &ray,
     auto hit = traverser.traverse(ray, primitive_intersector);
 
     if (hit) {
-        auto triangle_index = hit->primitive_index;
+        auto tr = triangles[hit->primitive_index];
+        Vector3 normal = bvh::normalize(bvh::cross(tr.p1() - tr.p0, tr.p2() - tr.p0));
+        angle = bvh::dot(normal, bvh::normalize(ray.direction));
+
         auto intersection = hit->intersection;
         Vector3 p = ray.origin + ray.direction * intersection.t;
 

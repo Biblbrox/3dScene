@@ -16,6 +16,7 @@ using glm::vec;
 
 #ifndef NDEBUG
 constexpr const bool debug = true;
+// TODO: #define DBG_MSG(msg) (Logger::info(msg))
 #else
 constexpr const bool debug = false;
 #endif
@@ -102,6 +103,7 @@ typedef std::shared_ptr<bvh::Bvh<Scalar>> BvhPtr;
 
 #define _(String) (boost::locale::gettext(String)).c_str()
 
+#define ARR_2D_IDX(row_idx, col_idx, row_size) (row_idx * row_size + col_idx)
 
 #if defined(__GNUC__) || defined(__clang__)
 #define FORCE_INLINE __attribute__((always_inline))

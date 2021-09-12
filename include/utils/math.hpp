@@ -2,6 +2,7 @@
 #define MATH_HPP
 
 #include <vector>
+#include <numeric>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
@@ -18,8 +19,8 @@ using glm::mat4;
 
 namespace math {
 
-    constexpr GLfloat barry_centric(const vec3& p1, const vec3& p2,
-                                    const vec3& p3, const vec2& pos)
+    constexpr GLfloat
+    barry_centric(const vec3& p1, const vec3& p2, const vec3& p3, const vec2& pos)
     {
         GLfloat det = (p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
         GLfloat l1 = ((p2.z - p3.z) * (pos.x - p3.x) + (p3.x - p2.x) * (pos.y - p3.z)) / det;
@@ -76,8 +77,9 @@ namespace math {
         return {min_x, max_x, min_y, max_y, min_z, max_z};
     }
 
-    inline mat4 createTransform(const vec3& position, GLfloat angle,
-                                const vec3& rot_axis, const vec3& sizes)
+    inline mat4
+    createTransform(const vec3& position, GLfloat angle,
+                    const vec3& rot_axis, const vec3& sizes)
     {
         vec3 pos = position / sizes;
 
@@ -88,30 +90,35 @@ namespace math {
 
         const vec3 scale = sizes;
 
-        mat4 rotation = rotate_around(mat4(1.f), vec3(centerX, centerY, centerZ), angle,
+        mat4 ident = mat4(1.f);
+        mat4 scaling = glm::scale(ident, scale);
+        mat4 translation = translate(ident, pos);
+        mat4 rotation = rotate_around(ident, vec3(centerX, centerY, centerZ), angle,
                                       rot_axis);
-        mat4 translation = translate(mat4(1.f), pos);
-        mat4 scaling = glm::scale(mat4(1.f), scale);
+
         mat4 transform = scaling * rotation * translation;
 
         return transform;
     }
 
-    inline std::vector<vec3> transformVertices(const std::vector<vec3>& vertices,
-                                               const mat4& transform)
+    inline std::vector<vec3>
+    transformVertices(const std::vector<vec3>& vertices, const mat4& transform)
     {
         std::vector<vec3> res;
         res.reserve(vertices.size());
-        for (const vec3& v: vertices) {
+        for (const vec3& v: vertices)
             res.push_back(transform * vec4(v, 1.f));
-        }
 
         return res;
     }
 
+    constexpr glm::vec3 getTranslation(const glm::mat4& m)
+    {
+        return m[3];
+    }
+
     inline std::vector<Triangle>
-    transformTriangles(const std::vector<Triangle>& triangles,
-                       const mat4& transform)
+    transformTriangles(const std::vector<Triangle>& triangles, const mat4& transform)
     {
         std::vector<Triangle> res;
         res.reserve(triangles.size());
@@ -130,16 +137,6 @@ namespace math {
         }
 
         return res;
-    }
-
-    FORCE_INLINE inline mat4 buildTransformMat(const vec3& pos, const vec3& rot_axis,
-                                               const vec3& scale, GLfloat angle)
-    {
-        mat4 translating = glm::translate(mat4(1.f), pos);
-        mat4 rotating = glm::rotate(mat4(1.f), angle, rot_axis);
-        mat4 scaling = glm::scale(mat4(1.f), scale);
-
-        return scaling * rotating * translating;
     }
 
     constexpr vec3 viewportToNDC(const vec2& pos, const vec2& clip)
@@ -162,9 +159,9 @@ namespace math {
      * @param pos
      * @return
      */
-    inline glm::vec3 viewportToWorld(const glm::vec2& pos, const glm::vec2& clip,
-                                     const glm::mat4& projection,
-                                     const glm::mat4& view)
+    inline glm::vec3
+    viewportToWorld(const glm::vec2& pos, const glm::vec2& clip,
+                    const glm::mat4& projection, const glm::mat4& view)
     {
         // To NDC space
         glm::vec3 p = viewportToNDC(pos, clip);
@@ -186,11 +183,8 @@ namespace math {
     inline glm::vec3 computeCentroid(const std::vector<vec3>& points)
     {
         glm::vec3 means{0.f};
-        for (auto point : points) {
-            means[0] += point.x;
-            means[1] += point.y;
-            means[2] += point.z;
-        }
+        for (const auto& point : points)
+            means += point;
 
         means /= points.size();
 

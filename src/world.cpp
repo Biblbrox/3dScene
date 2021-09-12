@@ -118,7 +118,7 @@ World::World() : m_wasInit(false), m_initFromFile(false)
     if (!Config::hasKey("ObjDistance"))
         Config::addVal("ObjDistance", 10.f, "float");
     if (!Config::hasKey("DataFileTmp"))
-        Config::addVal("DataFileTmp", std::string("data.txt"), "string");
+        Config::addVal("DataFileTmp", std::string("000000.txt"), "string");
 }
 
 World::~World()
@@ -419,8 +419,7 @@ void World::init_sprites()
         auto house_pos = house->getComponent<PositionComponent>();
         house_pos->pos.x = i * 30.f + start_x;
         house_pos->pos.z = rand.generateu(30.f, 40.f) + start_z;
-        house_pos->pos.y =
-            terrain->getAltitude({house_pos->pos.x, house_pos->pos.z});
+        house_pos->pos.y = terrain->getAltitude({house_pos->pos.x, house_pos->pos.z});
         house_pos->angle = -glm::half_pi<GLfloat>();
         house_pos->rot_axis = vec3(0.f, 1.f, 0.f);
         add_bvh(*house_pos, *house_sprite_comp,
@@ -430,8 +429,7 @@ void World::init_sprites()
 
 void World::init_skybox()
 {
-    float skyboxVertices[] = {
-        // positions
+    GLfloat skyboxVertices[] = {
         -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f,
         1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f,
 
@@ -448,15 +446,15 @@ void World::init_skybox()
         1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f,
 
         -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f,
-        1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f};
+        1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f
+    };
 
     unsigned int skyboxVAO, skyboxVBO;
     glGenVertexArrays(1, &skyboxVAO);
     glGenBuffers(1, &skyboxVBO);
     glBindVertexArray(skyboxVAO);
     glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices,
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 
