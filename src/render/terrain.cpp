@@ -37,6 +37,10 @@ void Terrain::sampleHeightMapImage(const std::string& height_image)
     m_normals = vector<vector<vec3>>(m_width, vector<vec3>(m_depth));
     m_uv = vector<vector<vec2>>(m_width, vector<vec2>(m_depth));
     m_heightMap = vector<vector<GLfloat>>(m_width, vector<GLfloat>(m_depth));
+
+    GLuint vertex_row_size = 8;// Vertex + UV + Normal
+    m_vertexData.reserve(m_width * m_depth * vertex_row_size);
+
     unsigned byte_per_pixel = image->format->BytesPerPixel;
     for (size_t i = 0; i < m_width; ++i) {
         for (size_t j = 0; j < m_depth; ++j) {

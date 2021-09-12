@@ -99,7 +99,7 @@ void Sprite::init_triangles()
     }
 
 #pragma omp declare reduction (merge : std::vector<Triangle> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
-#pragma omp parallel for reduction(merge: m_triangles) shared(vertices_ordering)
+#pragma omp parallel for reduction(merge: m_triangles) shared(vertices_ordering) default(none)
     for (size_t i = 0; i < vertices_ordering.size() - 2; i += 3) {
         vec3 p0 = vertices_ordering[i];
         vec3 p1 = vertices_ordering[i + 1];

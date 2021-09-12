@@ -9,7 +9,33 @@
 
 #include "utils/string.hpp"
 
-static std::string as_string(const std::any& val, const std::string& type)
+struct ConfigEqual : public std::equal_to<>
+{
+    using is_transparent = void;
+};
+
+struct string_hash {
+    using is_transparent = void;
+    using key_equal = std::equal_to<>;
+    using hash_type = std::hash<std::string_view>;
+
+    size_t operator()(std::string_view txt) const
+    {
+        return hash_type{}(txt);
+    }
+
+    size_t operator()(const std::string& txt) const
+    {
+        return hash_type{}(txt);
+    }
+
+    size_t operator()(const char* txt) const
+    {
+        return hash_type{}(txt);
+    }
+};
+
+static std::string as_string(const std::any& val, std::string_view type)
 {
     if (type == "int") {
         return std::to_string(std::any_cast<int>(val));
@@ -59,13 +85,13 @@ public:
         }
     }
 
-    static bool hasKey(const std::string& key)
+    static bool hasKey(const std::string&  key)
     {
         return m_values.find(key) != m_values.cend();
     }
 
     template<class T>
-    static T& getVal(const std::string& key)
+    static T& getVal(const std::string&  key)
     {
         return std::any_cast<T&>(m_values[key]);
     }
@@ -73,10 +99,9 @@ public:
     static void save(const std::string& file)
     {
         std::ofstream out(file);
-        for (const auto& [key, val]: m_values) {
+        for (const auto& [key, val]: m_values)
             out << key << ":" << m_types[key] <<
                 ":" << as_string(val, m_types[key]) << "\n";
-        }
         out.close();
     }
 
@@ -88,7 +113,7 @@ public:
         while ((std::getline(in, line))) {
             auto parts = split(line, ":");
             std::string key = parts[0];
-            std::string type = parts[1];
+            std::string_view type = parts[1];
             if (type == "int") {
                 int val = std::stoi(parts[2]);
                 addVal(key, val, "int");
@@ -139,8 +164,8 @@ public:
     }
 
 private:
-    static std::unordered_map<std::string, std::any> m_values;
-    static std::unordered_map<std::string, std::string> m_types;
+    static std::unordered_map<std::string, std::any, string_hash, ConfigEqual> m_values;
+    static std::unordered_map<std::string, std::string, string_hash, ConfigEqual> m_types;
 };
 
 #endif //CONFIG_HPP

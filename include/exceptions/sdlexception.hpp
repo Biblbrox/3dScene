@@ -13,7 +13,7 @@ class SdlException : public BaseGameException
 {
 public:
     explicit SdlException(std::string msg,
-                          std::string fileLog = "moonlander_log.log",
+                          std::string fileLog = program_log_file_name(),
                           Category category = Category::INTERNAL_ERROR)
             : BaseGameException(msg, fileLog, category) {}
 };

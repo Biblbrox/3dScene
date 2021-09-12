@@ -1,6 +1,3 @@
-#include <stack>
-#include <bvh/locally_ordered_clustering_builder.hpp>
-#include <bvh/leaf_collapser.hpp>
 #include <ecs/entity.hpp>
 #include <bvh/bvh.hpp>
 #include <bvh/hierarchy_refitter.hpp>

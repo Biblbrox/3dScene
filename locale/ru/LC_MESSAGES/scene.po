@@ -21,19 +21,11 @@ msgstr ""
 
 #: src/systems/rendergui.cpp:334
 msgid "Application theme:"
-msgstr ""
+msgstr "Тема приложения"
 
 #: src/systems/rendergui.cpp:302
 msgid "Background color"
 msgstr "Цвет фона"
-
-#: src/systems/rendergui.cpp:310
-msgid "Cell border color"
-msgstr ""
-
-#: src/systems/rendergui.cpp:306
-msgid "Cell color"
-msgstr ""
 
 #: src/systems/rendergui.cpp:165
 msgid "Check collision"
@@ -69,7 +61,7 @@ msgstr "Отрисовка вершин"
 
 #: src/systems/rendergui.cpp:163
 msgid "Draw bounding boxes"
-msgstr "Отрисовка aabb"
+msgstr "Отрисовка bbox"
 
 #: src/systems/rendergui.cpp:255
 msgid "Draw pattern"
@@ -79,13 +71,9 @@ msgstr "Отрисовка паттерна"
 msgid "Edit mode"
 msgstr "Редактирование"
 
-#: src/systems/rendergui.cpp:314
-msgid "Enable color game(Need simulation restart)"
-msgstr ""
-
 #: src/systems/rendergui.cpp:167
 msgid "Enable lighting"
-msgstr ""
+msgstr "Включить освещение"
 
 #: src/systems/rendergui.cpp:271
 msgid "Inverse rotation"
@@ -97,7 +85,7 @@ msgstr "Настройки лазера"
 
 #: src/systems/rendergui.cpp:198
 msgid "Laser pitch"
-msgstr "Тангаж"
+msgstr "pitch"
 
 #: src/systems/rendergui.cpp:183
 msgid "Laser position"
@@ -106,10 +94,6 @@ msgstr "Местоположение лидара"
 #: src/systems/rendergui.cpp:182
 msgid "Laser settings"
 msgstr "Настроки лидара"
-
-#: src/systems/rendergui.cpp:187
-msgid "Laser Yaw"
-msgstr "Рыскание"
 
 #: src/systems/rendergui.cpp:233
 msgid "Length of rays"
@@ -176,7 +160,7 @@ msgstr "Осановить симуляцию"
 
 #: src/systems/rendergui.cpp:265
 msgid "Tree level show"
-msgstr "Уровень BVH"
+msgstr "Уровень отрисовки BVH"
 
 #: src/systems/rendergui.cpp:319 src/systems/rendergui.cpp:324
 msgid "Video settings"
@@ -186,11 +170,23 @@ msgstr "Настройки рендера"
 msgid "View"
 msgstr "Вид"
 
+msgid "Object distance"
+msgstr "Дистанция до объекта"
+
+msgid "Laser yaw"
+msgstr "yaw"
+
+msgid "Move speed"
+msgstr "Скорость передвижения камеры"
+
 msgid "File exists. Do you want to rewrite it?"
 msgstr "Файл существует. Вы хотите перезаписать его?"
 
 msgid "Warning"
 msgstr "Внимание"
+
+msgid "Add model"
+msgstr "Добавить модель"
 
 msgid "Export settings"
 msgstr "Настройки экспорта"
