@@ -16,6 +16,7 @@ struct SceneComponent: ecs::Component
     bool isMsaa = false;
     GLuint textureMSAA = 0;
     GLuint texture = 0;
+    bool dirty = true;
 
     GLuint rbo = 0;
 

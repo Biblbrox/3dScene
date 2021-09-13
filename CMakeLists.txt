@@ -37,7 +37,7 @@ if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
     add_compile_definitions(BOOST_DISABLE_ASSERTS)
 endif (${CMAKE_BUILD_TYPE} STREQUAL "Release")
 
-#find_package(PCL REQUIRED)
+find_package(PCL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED)
 #find_package(SDL2_ttf REQUIRED)
@@ -82,11 +82,6 @@ target_include_directories(imgui PUBLIC ${EXT_PATH}/imgui/ ${EXT_PATH}/imgui/bac
 # Configure Imgui to use OpengGL through SDL2
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<SDL_opengl.h>  GL_GLEXT_PROTOTYPES=1)
 
-include_directories(${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIR}
-        ${SDL2_TTF_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS}
-        ${GLM_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} ${PCL_INCLUDE_DIRS}
-        ${EXT_PATH}/ImGuiFileDialog/)
-
 FILE(GLOB_RECURSE CPP RELATIVE ${CMAKE_SOURCE_DIR} "src/*.cpp")
 FILE(GLOB_RECURSE HPP RELATIVE ${CMAKE_SOURCE_DIR} "include/*.hpp" "include/*.h")
 
@@ -99,4 +94,8 @@ target_link_libraries(${GAME_NAME} ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES}
         libGLEW.so libGLU.so libGL.so imgui pthread Eigen3::Eigen ${ASSIMP_LIBRARIES} bvh)
 
 
-target_include_directories(${GAME_NAME} PRIVATE include)
+target_include_directories(${GAME_NAME} PRIVATE include
+        ${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIR}
+        ${SDL2_TTF_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS}
+        ${GLM_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} ${PCL_INCLUDE_DIRS}
+        ${EXT_PATH}/ImGuiFileDialog/)

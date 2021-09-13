@@ -29,10 +29,17 @@ namespace utils::fs
      * Save point cloud frame to txt file.
      */
     void saveFrameToFileTxt(const Frame& frame, const std::string& file_name, bool intensity = false);
+
     /**
      * Save point cloud frame to velodyne format file.
      */
     void saveFrameToFileBin(const Frame& frame, const std::string& file_name, bool intensity = false);
+
+    /**
+     * Save point cloud frame to velodyne format file.
+     */
+    void saveFrameToFilePcd(const Frame& frame, const std::string& file_name, bool intensity = false);
+
 
     void saveSimJson(const std::string &file_name,
                      std::unordered_map<size_t, std::shared_ptr<Entity>>& entities);

@@ -19,7 +19,6 @@
 #include "config.hpp"
 #include "utils/math.hpp"
 #include "view/fpscamera.hpp"
-#include "utils/collision.hpp"
 #include "utils/texture.hpp"
 
 using utils::log::Logger;
@@ -59,6 +58,7 @@ void RenderSceneSystem::drawSprites()
     auto camera = FpsCamera::getInstance();
 
     program->useFramebufferProgram();
+
     program->setInt(U_IS_PRIMITIVE, false);
     program->setFloat(U_ALPHA, 1.f);
     program->setVec4(U_FOG_COLOR, fog_color);
@@ -191,8 +191,43 @@ void RenderSceneSystem::drawBoundingBoxes()
 void RenderSceneSystem::update_state(size_t delta)
 {
     auto game_state = getGameState();
-    if (game_state == GameStates::PLAY || game_state == GameStates::EDIT)
+    if (game_state == GameStates::PLAY || game_state == GameStates::EDIT) {
+        auto window_size = utils::getWindowSize<GLfloat>(*Game::getWindow());
+        auto program = SceneProgram::getInstance();
+        program->useFramebufferProgram();
+        vec2 size = Config::getVal<vec2>("ViewportSize"); // TODO: change viewport size here
+        glViewport(0, 0, size.x, size.y);
+        glScissor(0, 0, size.x, size.y);
+        auto scene_comp = getEntitiesByTag<SceneComponent>().begin()->second
+                ->getComponent<SceneComponent>();
+
+        if (scene_comp->dirty) {
+            bool isMSAA = Config::getVal<bool>("MSAA");
+
+            if (isMSAA) {
+                utils::texture::cleanFBO(&scene_comp->texture, &scene_comp->sceneBuffer,
+                                         &scene_comp->rbo, isMSAA, &scene_comp->sceneBufferMSAA,
+                                         &scene_comp->textureMSAA);
+
+                utils::texture::generateFBO(true, size.x, size.y, &scene_comp->textureMSAA,
+                                            &scene_comp->rbo, &scene_comp->texture,
+                                            &scene_comp->sceneBuffer, &scene_comp->sceneBufferMSAA);
+            } else {
+                utils::texture::cleanFBO(&scene_comp->texture, &scene_comp->sceneBuffer,
+                                         &scene_comp->rbo);
+
+                utils::texture::generateFBO(false, size.x, size.y, &scene_comp->textureMSAA,
+                                            &scene_comp->rbo, &scene_comp->texture,
+                                            &scene_comp->sceneBuffer);
+            }
+
+            scene_comp->dirty = false;
+        }
+
         drawToFramebuffer();
+        glViewport(0, 0, window_size.x, window_size.y);
+        glScissor(0, 0, window_size.x, window_size.y);
+    }
 }
 
 void RenderSceneSystem::drawToFramebuffer()
@@ -233,7 +268,7 @@ void RenderSceneSystem::drawTerrain()
     auto terrain_en = getEntitiesByTag<TerrainComponent>().begin()->second;
     auto terrain = terrain_en->getComponent<TerrainComponent>()->terrain;
 
-    glCullFace(GL_FRONT);
+    glCullFace(GL_FRONT); // TODO: fix invert face culling for terrain
     render::renderTerrain(*program, *terrain);
     glCullFace(GL_BACK);
 }

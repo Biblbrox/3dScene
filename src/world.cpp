@@ -85,8 +85,7 @@ World::World() : m_wasInit(false), m_initFromFile(false)
     if (!Config::hasKey("EditMode"))
         Config::addVal("EditMode", false, "bool");
     if (!Config::hasKey("BackgroundColor"))
-        Config::addVal("BackgroundColor", glm::vec4(0.2f, 0.f, 0.2f, 1.f),
-                       "vec4");
+        Config::addVal("BackgroundColor", glm::vec4(0.2f, 0.f, 0.2f, 1.f),"vec4");
     if (!Config::hasKey("InverseRotation"))
         Config::addVal("InverseRotation", false, "bool");
     if (!Config::hasKey("MSAA"))
@@ -283,41 +282,12 @@ void World::init_scene()
     bool msaa = Config::getVal<bool>("MSAA");
     if (msaa) {
         scene_comp->isMsaa = true;
-        // Generate multisampled framebuffer
-        glGenFramebuffers(1, scene_fbmsaa);
-        glBindFramebuffer(GL_FRAMEBUFFER, *scene_fbmsaa);
-        // Create multisampled texture attachment
-        *textureMSAA = genTexture(screen_width, screen_height, true);
-        *rbo = genRbo(screen_width, screen_height, true);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D_MULTISAMPLE, *textureMSAA, 0);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                                  GL_RENDERBUFFER, *rbo);
-        CHECK_FRAMEBUFFER_COMPLETE();
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        // Generate intermediate framebuffer
-        glGenFramebuffers(1, scene_fb);
-        glBindFramebuffer(GL_FRAMEBUFFER, *scene_fb);
-        // Create color attachment texture
-        *texture = genTexture(screen_width, screen_height);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D, *texture, 0);
+        utils::texture::generateFBO(msaa, screen_width, screen_height, textureMSAA, rbo,
+                                    texture, scene_fb, scene_fbmsaa);
+    } else {
+        utils::texture::generateFBO(msaa, screen_width, screen_height, textureMSAA, rbo,
+                                    texture, scene_fb);
     }
-    else {
-        // Generate not multisampled buffer
-        glGenFramebuffers(1, scene_fb);
-        glBindFramebuffer(GL_FRAMEBUFFER, *scene_fb);
-        // Create color texture attachment
-        *texture = genTexture(screen_width, screen_height);
-        *rbo = genRbo(screen_width, screen_height);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D, *texture, 0);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                                  GL_RENDERBUFFER, *rbo);
-    }
-
-    CHECK_FRAMEBUFFER_COMPLETE();
 }
 
 void World::init_sprites()
@@ -326,7 +296,7 @@ void World::init_sprites()
                       const SpriteComponent &sprite, BVHComponent &bvh) {
         auto &triangles = sprite.sprite->getTriangles();
         mat4 man_transform = math::createTransform(
-            pos.pos, pos.angle, pos.rot_axis, sprite.sprite->getSize());
+                pos.pos, pos.angle, pos.rot_axis, sprite.sprite->getSize());
         triangles = math::transformTriangles(triangles, man_transform);
         bvh.bvh_tree = coll::buildBVH(triangles);
         bvh.triangles = make_shared<vector<Triangle>>(triangles);
@@ -334,8 +304,7 @@ void World::init_sprites()
 
     auto lidarEn = createEntity(genUniqueId());
     lidarEn->activate();
-    lidarEn
-        ->addComponents<PositionComponent, LidarComponent, SpriteComponent>();
+    lidarEn->addComponents<PositionComponent, LidarComponent, SpriteComponent>();
     auto lidar_pos = lidarEn->getComponent<PositionComponent>();
     auto lidarComp = lidarEn->getComponent<LidarComponent>();
 

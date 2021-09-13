@@ -27,9 +27,9 @@ using glm::vec3;
 using glm::vec2;
 using glm::vec;
 
-SDL_Surface* utils::texture::loadSurface(const std::string& file, bool flip)
+SDL_Surface *utils::texture::loadSurface(const std::string &file, bool flip)
 {
-    SDL_Surface* surface = IMG_Load(file.c_str());
+    SDL_Surface *surface = IMG_Load(file.c_str());
     if (!surface)
         throw SdlException((format("Unable to load image: %s"
                                    ". SDL Error: %s\n")
@@ -38,7 +38,7 @@ SDL_Surface* utils::texture::loadSurface(const std::string& file, bool flip)
     if (!flip)
         return surface;
 
-    SDL_Surface* flipped = flipVertically(surface);
+    SDL_Surface *flipped = flipVertically(surface);
     SDL_FreeSurface(surface);
 
     if (!flipped)
@@ -52,7 +52,7 @@ GLuint utils::texture::loadTexture(const std::string &file, GLuint *textureWidth
 {
     using namespace utils::texture;
 
-    SDL_Surface* surface = loadSurface(file);
+    SDL_Surface *surface = loadSurface(file);
 
     GLenum channels = getSurfaceFormatInfo(*surface);
 
@@ -60,7 +60,7 @@ GLuint utils::texture::loadTexture(const std::string &file, GLuint *textureWidth
     tw = surface->w;
     th = surface->h;
 
-    auto* pixels = static_cast<GLuint*>(surface->pixels);
+    auto *pixels = static_cast<GLuint *>(surface->pixels);
 
     if (textureWidth)
         *textureWidth = tw;
@@ -154,7 +154,7 @@ GLuint utils::texture::genRbo(GLuint width, GLuint height,
     return rbo;
 }
 
-GLuint utils::texture::loadCubemap(const vector<std::string>& faces)
+GLuint utils::texture::loadCubemap(const vector<std::string> &faces)
 {
     using namespace utils::texture;
 
@@ -163,7 +163,7 @@ GLuint utils::texture::loadCubemap(const vector<std::string>& faces)
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
 
     for (size_t i = 0; i < faces.size(); ++i) {
-        SDL_Surface* surface = loadSurface(faces[i], false);
+        SDL_Surface *surface = loadSurface(faces[i], false);
 
         GLenum texture_format = getSurfaceFormatInfo(*surface);
 
@@ -184,4 +184,59 @@ GLuint utils::texture::loadCubemap(const vector<std::string>& faces)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return cubemap;
+}
+
+void utils::texture::generateFBO(bool isMsaa, GLuint width, GLuint height, GLuint* textureMSAA,
+                                 GLuint* rbo, GLuint* texture, GLuint* scene_fb, GLuint* scene_fbms)
+{
+    if (isMsaa) {
+        // Generate multisampled framebuffer
+        glGenFramebuffers(1, scene_fbms);
+        glBindFramebuffer(GL_FRAMEBUFFER, *scene_fbms);
+        // Create multisampled texture attachment
+        *textureMSAA = genTexture(width, height, true);
+        *rbo = genRbo(width, height, true);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D_MULTISAMPLE, *textureMSAA, 0);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                  GL_RENDERBUFFER, *rbo);
+        CHECK_FRAMEBUFFER_COMPLETE();
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // Generate intermediate framebuffer
+        glGenFramebuffers(1, scene_fb);
+        glBindFramebuffer(GL_FRAMEBUFFER, *scene_fb);
+        // Create color attachment texture
+        *texture = genTexture(width, height);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *texture, 0);
+    } else {
+        // Generate not multisampled buffer
+        glGenFramebuffers(1, scene_fb);
+        glBindFramebuffer(GL_FRAMEBUFFER, *scene_fb);
+        // Create color texture attachment
+        *texture = genTexture(width, height);
+        *rbo = genRbo(width, height);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *texture, 0);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                  GL_RENDERBUFFER, *rbo);
+    }
+
+    CHECK_FRAMEBUFFER_COMPLETE();
+}
+
+void utils::texture::cleanFBO(GLuint* texture, GLuint* sceneBuffer, GLuint* rbo,
+                              bool isMSAA, GLuint* sceneBufferMSAA, GLuint* textureMSAA)
+{
+    if (sceneBuffer != nullptr)
+        glDeleteFramebuffers(1, sceneBuffer);
+    if (texture != nullptr)
+        glDeleteTextures(1, texture);
+    if (rbo != nullptr)
+        glDeleteRenderbuffers(1, rbo);
+    if (isMSAA) {
+        if (sceneBufferMSAA != nullptr)
+            glDeleteFramebuffers(1, sceneBufferMSAA);
+        if (textureMSAA != nullptr)
+            glDeleteTextures(1, textureMSAA);
+    }
 }

@@ -51,7 +51,7 @@ inline void Style()
 
     /// 0 = FLAT APPEARENCE
     /// 1 = MORE "3D" LOOK
-    int is3D = 0;
+    int is3D = 1;
 
     colors[ImGuiCol_Text]                   = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     colors[ImGuiCol_TextDisabled]           = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
@@ -170,10 +170,10 @@ RenderGuiSystem::RenderGuiSystem() : m_videoSettingsOpen(false),
         m_font = io.Fonts->Fonts[0];
     }
 
-    int screen_width = utils::getWindowWidth<GLuint>(*Game::getWindow());
-    int screen_height = utils::getWindowHeight<GLuint>(*Game::getWindow());
+    int window_width = utils::getWindowWidth<GLuint>(*Game::getWindow());
+    int window_height = utils::getWindowHeight<GLuint>(*Game::getWindow());
 
-    m_aspectRatio = static_cast<GLfloat>(screen_width) / screen_height;
+    m_aspectRatio = static_cast<GLfloat>(window_width) / window_height;
 }
 
 RenderGuiSystem::~RenderGuiSystem()
@@ -194,8 +194,11 @@ void RenderGuiSystem::update_state(size_t delta)
         // Render texture to window
         glBindFramebuffer(GL_READ_FRAMEBUFFER, sceneComp->sceneBufferMSAA);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, sceneComp->sceneBuffer);
-        glBlitFramebuffer(0, 0, screen_width, screen_height, 0, 0,
-                          screen_width, screen_height,
+        vec2 size = Config::getVal<vec2>("ViewportSize"); // TODO: change viewport size here
+//        glBlitFramebuffer(0, 0, screen_width, screen_height, 0, 0,
+//                          screen_width, screen_height,
+//                          GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        glBlitFramebuffer(0, 0, size.x, size.y, 0, 0, size.x, size.y,
                           GL_COLOR_BUFFER_BIT, GL_NEAREST);
     }
     program->setInt(U_TEXTURE_NUM, 0);
@@ -372,12 +375,18 @@ void RenderGuiSystem::update_state(size_t delta)
             size.y = image_height;
 
             auto pos = ImGui::GetCursorPos();
+            if (glm::all(glm::epsilonEqual( // If render window resized
+                    Config::getVal<vec2>("ViewportSize"), glm::vec2(size.x, size.y),
+                    glm::epsilon<GLfloat>()))) {
+                getEntitiesByTag<SceneComponent>().begin()->second
+                        ->getComponent<SceneComponent>()->dirty = true;
+            }
+
             Config::getVal<vec2>("ViewportPos") = {pos.x, pos.y};
             Config::getVal<vec2>("ViewportSize") = {size.x, size.y};
 
             if (getGameState() != GameStates::STOP)
-                ImGui::Image((ImTextureID) sceneComp->texture, size, {0, 1},
-                             {1, 0});
+                ImGui::Image((ImTextureID) sceneComp->texture, size, {0, 1}, {1, 0});
         }
 
         std::stringstream status_str;
@@ -404,7 +413,7 @@ void RenderGuiSystem::update_state(size_t delta)
         if (draw_status) {
             TableNextRow();
             TableSetColumnIndex(1);
-            Text(status_str.str().c_str());
+            Text("%s", status_str.str().c_str());
         }
 
         if (Config::getVal<bool>("IsSelected"))
@@ -557,9 +566,8 @@ void RenderGuiSystem::laser_settings()
         Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                     lidarComp->yaw, lidarComp->pitch);
 
-        lidarComp->pattern_points = lidar.risleyPattern2(
-                lidarComp->freq, lidarComp->start_angle,
-                lidarComp->density);
+        lidarComp->pattern_points = lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle,
+                                                         lidarComp->density);
     }
 
     Text(_("Dots density"));
