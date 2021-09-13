@@ -47,7 +47,39 @@ namespace utils::texture
      */
     GLuint loadTexture(const std::string &file,
                        GLuint *textureWidth = nullptr, GLuint *textureHeight = nullptr);
+    /**
+     * Generate FrameBuffer Object. Use isMsaa = true for generating multisampled
+     * framebuffer.
+     * @param isMsaa
+     * @param width
+     * @param height
+     * @param textureMSAA
+     * @param rbo
+     * @param texture
+     * @param scene_fb
+     * @param scene_fbms
+     */
+    void generateFBO(bool isMsaa, GLuint width, GLuint height, GLuint* textureMSAA,
+                     GLuint* rbo, GLuint* texture, GLuint* scene_fb, GLuint* scene_fbms = nullptr);
 
+    /**
+     * Clean FrameBuffer Object. Free texture, rbo and so on. If framebuffer multisampled
+     * use isMSAA = true
+     * @param texture
+     * @param sceneBuffer
+     * @param rbo
+     * @param isMSAA
+     * @param sceneBufferMSAA
+     * @param textureMSAA
+     */
+    void cleanFBO(GLuint* texture, GLuint* sceneBuffer, GLuint* rbo,  bool isMSAA = false,
+                  GLuint* sceneBufferMSAA = nullptr, GLuint* textureMSAA = nullptr);
+
+    /**
+     * Load cubemap images to cubemap texture. Specify faces 6 textures.
+     * @param faces
+     * @return
+     */
     GLuint loadCubemap(const std::vector<std::string>& faces);
 
     SDL_Surface* loadSurface(const std::string& file, bool flip = true);
@@ -125,10 +157,24 @@ namespace utils::texture
     }
 
 
-    GLuint genTexture(GLuint width, GLuint height, bool msaa = false,
-                      size_t samples = 4);
+    /**
+     * Generate texture
+     * @param width
+     * @param height
+     * @param msaa
+     * @param samples
+     * @return
+     */
+    GLuint genTexture(GLuint width, GLuint height, bool msaa = false, size_t samples = 4);
 
-    GLuint genRbo(GLuint width, GLuint height, bool msaa = false,
-                  size_t samples = 4);
+    /**
+     * Generate RenderBuffer Object.
+     * @param width
+     * @param height
+     * @param msaa
+     * @param samples
+     * @return
+     */
+    GLuint genRbo(GLuint width, GLuint height, bool msaa = false, size_t samples = 4);
 }
 #endif //UTILS_TEXTURE_HPP

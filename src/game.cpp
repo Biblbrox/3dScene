@@ -199,6 +199,7 @@ void Game::initGL()
     glLineWidth(1.0f);
     glPointSize(2.f);
     glEnable(GL_BLEND);
+    glEnable(GL_SCISSOR_TEST);
 
     if (Config::getVal<bool>("MSAA"))
         glEnable(GL_MULTISAMPLE);

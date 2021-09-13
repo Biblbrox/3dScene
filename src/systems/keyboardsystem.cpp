@@ -89,9 +89,9 @@ void KeyboardSystem::update_state(size_t delta)
                 }
                 break;
             case SDL_WINDOWEVENT:
-                if (e.window.event == SDL_WINDOWEVENT_RESIZED) {
-                    glViewport(0.f, 0.f, screen_width, screen_height);
-                }
+//                if (e.window.event == SDL_WINDOWEVENT_RESIZED) {
+//                    glViewport(0.f, 0.f, screen_width, screen_height);
+//                }
                 break;
             default:
                 break;
