@@ -2,9 +2,10 @@
 #include <filesystem>
 #include <fstream>
 #include <glm/glm.hpp>
-#include <boost/type.hpp>
 #include <json/json.hpp>
 #include <glm/exponential.hpp>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
 
 #include "components/positioncomponent.hpp"
 #include "components/positioncomponentinst.hpp"
@@ -12,7 +13,6 @@
 #include "components/spritecomponent.hpp"
 #include "components/skyboxcomponent.hpp"
 #include "components/globallightcomponent.hpp"
-#include "components/scenecomponent.hpp"
 #include "components/bvhcomponent.hpp"
 #include "components/selectablecomponent.hpp"
 #include "components/terraincomponent.hpp"
@@ -419,6 +419,42 @@ utils::fs::saveFrameToFileBin(const Frame &frame, const std::string &file_name, 
     }
 
     out.close();
+}
+
+void utils::fs::saveFrameToFilePcd(const Frame &frame, const std::string &file_name, bool intensity)
+{
+    if (intensity) {
+        pcl::PointCloud<pcl::PointXYZI> cloud;
+        // Fill in the cloud data
+        auto points = std::get<std::vector<vec4>>(frame.points);
+        cloud.width    = points.size();
+        cloud.height   = 1;
+        cloud.is_dense = false;
+        cloud.points.resize(cloud.width * cloud.height);
+        for (size_t i = 0; i < cloud.width; ++i) {
+            cloud[i].x = points[i].x;
+            cloud[i].y = points[i].y;
+            cloud[i].z = points[i].z;
+            cloud[i].intensity = points[i].w;
+        }
+
+        pcl::io::savePCDFileASCII (getResourcePath("000000.pcd"), cloud);
+    } else {
+        pcl::PointCloud<pcl::PointXYZ> cloud;
+        // Fill in the cloud data
+        auto points = std::get<std::vector<vec3>>(frame.points);
+        cloud.width    = points.size();
+        cloud.height   = 1;
+        cloud.is_dense = false;
+        cloud.points.resize(cloud.width * cloud.height);
+        for (size_t i = 0; i < cloud.width; ++i) {
+            cloud[i].x = points[i].x;
+            cloud[i].y = points[i].y;
+            cloud[i].z = points[i].z;
+        }
+
+        pcl::io::savePCDFileASCII(getResourcePath("000000.pcd"), cloud);
+    }
 }
 
 

@@ -24,6 +24,7 @@ using glm::sin;
 using glm::sqrt;
 using utils::log::Logger;
 using utils::fs::saveFrameToFileTxt;
+using utils::fs::saveFrameToFilePcd;
 using coll::rayTerrainIntersection;
 
 LidarSystem::LidarSystem() : m_posChanged(true), m_prevPos{0.f, 0.f, 0.f}
@@ -44,8 +45,7 @@ void LidarSystem::collision()
     auto pos = lidarEntities->getComponent<PositionComponent>();
     auto lidarComp = lidarEntities->getComponent<LidarComponent>();
 
-    Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw,
-                lidarComp->pitch);
+    Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
 
     auto pos_compare = glm::epsilonEqual(m_prevPos, pos->pos, glm::epsilon<GLfloat>());
     if (!glm::all(pos_compare) || lidarComp->pattern_points.empty()) {
@@ -56,10 +56,9 @@ void LidarSystem::collision()
         m_posChanged = false;
     }
 
-    if (m_posChanged) {
+    if (m_posChanged)
         lidarComp->pattern_points = lidar.risleyPattern2(
             lidarComp->freq, lidarComp->start_angle, lidarComp->density);
-    }
 
     const auto& pattern = lidarComp->pattern_points;
     if (Config::getVal<bool>("DrawPattern")) {
@@ -134,6 +133,6 @@ void LidarSystem::collision()
         coll_dot = glm::vec4(glm::vec3(coll_dot) - pos->pos, coll_dot.w);
 
     Frame frame = {coll_dots};
-    utils::fs::saveFrameToFileBin(frame, getResourcePath(Config::getVal<string>("DataFileTmp")), true);
+    saveFrameToFilePcd(frame, getResourcePath(Config::getVal<string>("DataFileTmp")), true);
     Config::getVal<bool>("CheckCollision") = false;
 }

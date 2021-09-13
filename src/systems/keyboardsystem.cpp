@@ -28,9 +28,6 @@ using utils::data::mapBinaryTree;
 
 void KeyboardSystem::update_state(size_t delta)
 {
-    int screen_width = utils::getWindowWidth<int>(*Game::getWindow());
-    int screen_height = utils::getWindowHeight<int>(*Game::getWindow());
-
     GLfloat x_offset = 0.f;
     GLfloat y_offset = 0.f;
     SDL_Event e;
@@ -87,11 +84,6 @@ void KeyboardSystem::update_state(size_t delta)
                     camera->processMouseScroll(e.wheel.y / fr);
                     program->setMat4(U_VIEW_MATRIX, camera->getView());
                 }
-                break;
-            case SDL_WINDOWEVENT:
-//                if (e.window.event == SDL_WINDOWEVENT_RESIZED) {
-//                    glViewport(0.f, 0.f, screen_width, screen_height);
-//                }
                 break;
             default:
                 break;
