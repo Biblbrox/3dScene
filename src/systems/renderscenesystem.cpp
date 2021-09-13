@@ -197,7 +197,7 @@ void RenderSceneSystem::update_state(size_t delta)
         program->useFramebufferProgram();
         vec2 size = Config::getVal<vec2>("ViewportSize"); // TODO: change viewport size here
         glViewport(0, 0, size.x, size.y);
-        glScissor(0, 0, size.x, size.y);
+//        glScissor(0, 0, size.x, size.y);
         auto scene_comp = getEntitiesByTag<SceneComponent>().begin()->second
                 ->getComponent<SceneComponent>();
 
@@ -225,8 +225,8 @@ void RenderSceneSystem::update_state(size_t delta)
         }
 
         drawToFramebuffer();
-        glViewport(0, 0, window_size.x, window_size.y);
-        glScissor(0, 0, window_size.x, window_size.y);
+//        glViewport(0, 0, window_size.x, window_size.y);
+//        glScissor(0, 0, window_size.x, window_size.y);
     }
 }
 
