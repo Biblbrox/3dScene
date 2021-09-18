@@ -1,6 +1,5 @@
 #include <GL/glew.h>
 #include <filesystem>
-#include <glm/gtc/type_ptr.hpp>
 
 #include "boost/format.hpp"
 #include "sceneprogram.hpp"
@@ -59,24 +58,27 @@ void SceneProgram::free_buffers()
 
 void SceneProgram::useScreenProgram()
 {
-    if (m_programID != m_programs["screen"]) {
-        glUseProgram(m_programs["screen"]);
-        m_programID = m_programs["screen"];
-    }
+    useProgram("screen");
+//    if (m_programID != m_programs["screen"]) {
+//        glUseProgram(m_programs["screen"]);
+//        m_programID = m_programs["screen"];
+//    }
 }
 
 void SceneProgram::useFramebufferProgram()
 {
-    if (m_programID != m_programs["framebuffer"]) {
-        glUseProgram(m_programs["framebuffer"]);
-        m_programID = m_programs["framebuffer"];
-    }
+    useProgram("framebuffer");
+//    if (m_programID != m_programs["framebuffer"]) {
+//        glUseProgram(m_programs["framebuffer"]);
+//        m_programID = m_programs["framebuffer"];
+//    }
 }
 
 void SceneProgram::useSkyboxProgram()
 {
-    if (m_programID != m_programs["skybox"]) {
-        glUseProgram(m_programs["skybox"]);
-        m_programID = m_programs["skybox"];
-    }
+    useProgram("skybox");
+//    if (m_programID != m_programs["skybox"]) {
+//        glUseProgram(m_programs["skybox"]);
+//        m_programID = m_programs["skybox"];
+//    }
 }

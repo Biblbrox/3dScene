@@ -398,7 +398,7 @@ void World::init_sprites()
 
 void World::init_skybox()
 {
-    GLfloat skyboxVertices[] = {
+    const GLfloat skyboxVertices[] = {
         -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f,
         1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f,
 

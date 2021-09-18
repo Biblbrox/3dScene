@@ -191,11 +191,9 @@ rayTerrainIntersection(const Terrain &terrain, const Ray &ray, GLfloat start,
  * @return
  */
 FORCE_INLINE inline std::pair<bool, vec3>
-BVHCollision(BvhPtr tree, const Ray &ray,
-			 const std::vector<Triangle> &triangles, GLfloat& angle)
+BVHCollision(BvhPtr tree, const Ray &ray, const std::vector<Triangle> &triangles, GLfloat& angle)
 {
-    bvh::ClosestPrimitiveIntersector<Bvh, Triangle> primitive_intersector(
-        *tree, triangles.data());
+    bvh::ClosestPrimitiveIntersector<Bvh, Triangle> primitive_intersector(*tree, triangles.data());
     bvh::SingleRayTraverser<Bvh> traverser(*tree);
     auto hit = traverser.traverse(ray, primitive_intersector);
 

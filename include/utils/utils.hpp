@@ -80,13 +80,6 @@ namespace utils
     }
 
     /**
-     * Add padding to line
-     * @param line
-     * @param pad
-     */
-    void padLine(std::string& line, size_t pad);
-
-    /**
     * Load shader from file by specific path
     * shaderType param may of the supported shader types
     * If shader can't be loaded (file not found or bad read access)

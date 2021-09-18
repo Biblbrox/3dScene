@@ -438,7 +438,7 @@ void utils::fs::saveFrameToFilePcd(const Frame &frame, const std::string &file_n
             cloud[i].intensity = points[i].w;
         }
 
-        pcl::io::savePCDFileASCII (getResourcePath("000000.pcd"), cloud);
+        pcl::io::savePCDFileASCII (file_name, cloud);
     } else {
         pcl::PointCloud<pcl::PointXYZ> cloud;
         // Fill in the cloud data
@@ -453,7 +453,7 @@ void utils::fs::saveFrameToFilePcd(const Frame &frame, const std::string &file_n
             cloud[i].z = points[i].z;
         }
 
-        pcl::io::savePCDFileASCII(getResourcePath("000000.pcd"), cloud);
+        pcl::io::savePCDFileASCII(file_name, cloud);
     }
 }
 

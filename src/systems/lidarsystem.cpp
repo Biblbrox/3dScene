@@ -58,7 +58,7 @@ void LidarSystem::collision()
 
     if (m_posChanged)
         lidarComp->pattern_points = lidar.risleyPattern2(
-            lidarComp->freq, lidarComp->start_angle, lidarComp->density);
+                lidarComp->freq, lidarComp->start_angle, lidarComp->density);
 
     const auto& pattern = lidarComp->pattern_points;
     if (Config::getVal<bool>("DrawPattern")) {
@@ -133,6 +133,6 @@ void LidarSystem::collision()
         coll_dot = glm::vec4(glm::vec3(coll_dot) - pos->pos, coll_dot.w);
 
     Frame frame = {coll_dots};
-    saveFrameToFilePcd(frame, getResourcePath(Config::getVal<string>("DataFileTmp")), true);
+    saveFrameToFilePcd(frame, getResourcePath("000000.pcd"), true);
     Config::getVal<bool>("CheckCollision") = false;
 }

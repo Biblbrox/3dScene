@@ -7,11 +7,11 @@
 #include <glm/vec3.hpp>
 #include <glm/vec2.hpp>
 
-#include "base.hpp"
-#include "shaderprogram.hpp"
 
 using glm::vec3;
 using glm::vec2;
+
+class ShaderProgram;
 
 /**
  * Texture class.

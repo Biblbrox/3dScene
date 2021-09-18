@@ -7,8 +7,8 @@
 #include <iostream>
 #include <glm/glm.hpp>
 
-#include "utils/string.hpp"
-
+#include "strutils/strutils.hpp"
+// TODO: make error handling in Config class
 struct ConfigEqual : public std::equal_to<>
 {
     using is_transparent = void;
@@ -107,7 +107,7 @@ public:
 
     static void load(const std::string& file)
     {
-        using utils::string::split;
+        using strutils::split;
         std::ifstream in(file);
         std::string line;
         while ((std::getline(in, line))) {

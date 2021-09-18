@@ -27,27 +27,52 @@ namespace utils::fs
 
     /**
      * Save point cloud frame to txt file.
+     * @param frame
+     * @param file_name
+     * @param intensity
      */
-    void saveFrameToFileTxt(const Frame& frame, const std::string& file_name, bool intensity = false);
+    void
+    saveFrameToFileTxt(const Frame& frame, const std::string& file_name, bool intensity = false);
 
     /**
      * Save point cloud frame to velodyne format file.
+     * @param frame
+     * @param file_name
+     * @param intensity
      */
-    void saveFrameToFileBin(const Frame& frame, const std::string& file_name, bool intensity = false);
+    void
+    saveFrameToFileBin(const Frame& frame, const std::string& file_name, bool intensity = false);
 
     /**
      * Save point cloud frame to velodyne format file.
+     * @param frame
+     * @param file_name
+     * @param intensity
      */
-    void saveFrameToFilePcd(const Frame& frame, const std::string& file_name, bool intensity = false);
+    void
+    saveFrameToFilePcd(const Frame& frame, const std::string& file_name, bool intensity = false);
 
 
-    void saveSimJson(const std::string &file_name,
+    /**
+     * Save simulation objects to json format
+     * @param file_name
+     * @param entities
+     */
+    void
+    saveSimJson(const std::string &file_name,
                      std::unordered_map<size_t, std::shared_ptr<Entity>>& entities);
 
+    /**
+     * Load simulation objects from json format
+     * @param file_name
+     * @param ecsManager
+     * @return
+     */
     std::vector<ecs::Entity>
     loadSimJson(const std::string& file_name, ecs::EcsManager& ecsManager);
 
-    void saveLidarDataCart(const std::string &data_file, const std::string &res_file);
+    void
+    saveLidarDataCart(const std::string &data_file, const std::string &res_file);
 
     void
     saveLidarDataSphere(const std::string &data_file, const std::string &res_file,

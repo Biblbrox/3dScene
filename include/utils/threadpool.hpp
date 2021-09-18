@@ -7,6 +7,9 @@
 #include <functional>
 #include <queue>
 
+/**
+ * Thread pool class
+ */
 class ThreadPool
 {
 public:

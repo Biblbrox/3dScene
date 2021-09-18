@@ -1,14 +1,6 @@
 #ifndef SPRITE_HPP
 #define SPRITE_HPP
 
-#include <bvh/bvh.hpp>
-#include <bvh/vector.hpp>
-#include <bvh/triangle.hpp>
-#include <bvh/ray.hpp>
-#include <bvh/sweep_sah_builder.hpp>
-#include <bvh/single_ray_traverser.hpp>
-#include <bvh/primitive_intersectors.hpp>
-
 #include "texturebase.hpp"
 #include "utils/texture.hpp"
 #include "utils/utils.hpp"

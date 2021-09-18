@@ -276,7 +276,7 @@ void RenderGuiSystem::update_state(size_t delta)
         {
             TableNextRow();
             TableSetColumnIndex(0);
-            Text(_("Settings"));
+            TextUnformatted(_("Settings"));
             Separator();
 
             Checkbox(_("Draw Vertices"),
@@ -298,11 +298,11 @@ void RenderGuiSystem::update_state(size_t delta)
             if (m_laserSettingsOpen)
                 laser_settings();
 
-            Text(_("Light position"));
+            TextUnformatted(_("Light position"));
             InputFloat3("##light_pos", glm::value_ptr(
                     Config::getVal<glm::vec3>("LightPos")));
 
-            Text(_("Tree level show"));
+            TextUnformatted(_("Tree level show"));
             SliderInt("##tree_level",
                       &Config::getVal<int>("TreeLevelShow"),
                       0, 100);
@@ -358,7 +358,7 @@ void RenderGuiSystem::update_state(size_t delta)
             if (m_colorSettingsOpen) {
                 Begin(_("Color settings"), &m_colorSettingsOpen);
                 Separator();
-                Text(_("Background color"));
+                TextUnformatted(_("Background color"));
                 ColorPicker4("##Background color", glm::value_ptr(
                         Config::getVal<vec4>("BackgroundColor")));
                 End();
@@ -369,7 +369,7 @@ void RenderGuiSystem::update_state(size_t delta)
             video_settings();
 
             TableSetColumnIndex(1);
-            Text(_("Render"));
+            TextUnformatted(_("Render"));
             auto size = ImGui::GetContentRegionAvail();
             GLfloat image_height = size.x / m_aspectRatio;
             size.y = image_height;
@@ -386,7 +386,7 @@ void RenderGuiSystem::update_state(size_t delta)
             Config::getVal<vec2>("ViewportSize") = {size.x, size.y};
 
             if (getGameState() != GameStates::STOP)
-                ImGui::Image((ImTextureID) sceneComp->texture, size, {0, 1}, {1, 0});
+                ImGui::Image((ImTextureID)sceneComp->texture, size, {0, 1}, {1, 0});
         }
 
         std::stringstream status_str;
@@ -440,11 +440,11 @@ void RenderGuiSystem::export_settings()
         return;
 
     Begin(_("Настройки экспорта"), &m_exportSettingsOpen);
-    Text(_("Export file name"));
+    TextUnformatted(_("Export file name"));
     auto& buffer = Config::getVal<string>("ExportFileName");
     InputText("##Export file name", &buffer);
 
-    Text(_("Export data type"));
+    TextUnformatted(_("Export data type"));
     const char* items[] = {"Cartesian", "Polar"};
     ListBox("##Export type", &Config::getVal<int>("ExportType"), items, 2);
 
@@ -473,7 +473,7 @@ void RenderGuiSystem::export_settings()
     if (m_openExportDialog) {
         OpenPopup("Warning");
         if (BeginPopupModal(_("Warning"), nullptr)) {
-            Text(_("File exists. Do you want to rewrite it?"));
+            TextUnformatted(_("File exists. Do you want to rewrite it?"));
             if (Button(_("Yes"))) {
                 write_data(tmp_file, out_file, type);
                 m_openExportDialog = false;
@@ -501,67 +501,57 @@ void RenderGuiSystem::laser_settings()
     auto pos = lidarEn->getComponent<PositionComponent>();
 
     Begin(_("Laser settings"), &m_laserSettingsOpen);
-    Text(_("Laser position"));
+    TextUnformatted(_("Laser position"));
     if (InputFloat3("##laser_pos", glm::value_ptr(pos->pos))) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                    lidarComp->yaw, lidarComp->pitch);
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
 
         lidarComp->pattern_points = lidar.risleyPattern2(
-                lidarComp->freq, lidarComp->start_angle,
-                lidarComp->density);
+                lidarComp->freq, lidarComp->start_angle, lidarComp->density);
     }
 
-    Text(_("Laser yaw"));
+    TextUnformatted(_("Laser yaw"));
     if (InputFloat("##laser_yaw", &lidarComp->yaw)) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                    lidarComp->yaw, lidarComp->pitch);
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
 
-        lidarComp->pattern_points = lidar.risleyPattern2(
-                lidarComp->freq, lidarComp->start_angle,
-                lidarComp->density);
+        lidarComp->pattern_points = lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle,
+                                                         lidarComp->density);
     }
 
-    Text(_("Laser pitch"));
+    TextUnformatted(_("Laser pitch"));
     if (InputFloat("##laser_pitch", &lidarComp->pitch)) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                    lidarComp->yaw, lidarComp->pitch);
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
 
         lidarComp->pattern_points = lidar.risleyPattern2(
-                lidarComp->freq, lidarComp->start_angle,
-                lidarComp->density);
+                lidarComp->freq, lidarComp->start_angle, lidarComp->density);
     }
 
-    Text(_("Prism frequencies"));
+    TextUnformatted(_("Prism frequencies"));
     if (InputFloat2("##prism_freq", value_ptr(lidarComp->freq))) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                    lidarComp->yaw, lidarComp->pitch);
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
 
-        lidarComp->pattern_points = lidar.risleyPattern2(
-                lidarComp->freq, lidarComp->start_angle,
-                lidarComp->density);
+        lidarComp->pattern_points = lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle,
+                                                         lidarComp->density);
     }
 
-    Text(_("Prism start angle"));
+    TextUnformatted(_("Prism start angle"));
     if (InputFloat2("##prism_start_angle", glm::value_ptr(lidarComp->start_angle))) {
         Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                     lidarComp->yaw, lidarComp->pitch);
 
-        lidarComp->pattern_points = lidar.risleyPattern2(
-                lidarComp->freq, lidarComp->start_angle,
-                lidarComp->density);
+        lidarComp->pattern_points = lidar.risleyPattern2( lidarComp->freq, lidarComp->start_angle,
+                                                          lidarComp->density);
     }
 
-    Text(_("Object distance"));
+    TextUnformatted(_("Object distance"));
     if (InputFloat("##obj_distance", &lidarComp->obj_distance)) {
         Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                     lidarComp->yaw, lidarComp->pitch);
 
-        lidarComp->pattern_points = lidar.risleyPattern2(
-                lidarComp->freq, lidarComp->start_angle,
-                lidarComp->density);
+        lidarComp->pattern_points = lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle,
+                                                         lidarComp->density);
     }
 
-    Text(_("Length of rays"));
+    TextUnformatted(_("Length of rays"));
     if (InputFloat("##ray_length", &lidarComp->length)) {
         Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                     lidarComp->yaw, lidarComp->pitch);
@@ -570,17 +560,16 @@ void RenderGuiSystem::laser_settings()
                                                          lidarComp->density);
     }
 
-    Text(_("Dots density"));
+    TextUnformatted(_("Dots density"));
     if (InputFloat("##dot_dens", &lidarComp->density)) {
         Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
                     lidarComp->yaw, lidarComp->pitch);
 
-        lidarComp->pattern_points = lidar.risleyPattern2(
-                lidarComp->freq, lidarComp->start_angle,
-                lidarComp->density);
+        lidarComp->pattern_points = lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle,
+                                                         lidarComp->density);
     }
 
-    Text(_("Draw pattern"));
+    TextUnformatted(_("Draw pattern"));
     Checkbox("##draw_pattern", &Config::getVal<bool>("DrawPattern"));
 
     End();
@@ -599,15 +588,14 @@ void RenderGuiSystem::video_settings()
         bool msaaEnabled = Config::getVal<bool>("MSAA");
         if (Checkbox(_("Enable antialiasing(Need game restart)"),
                      &Config::getVal<bool>("MSAA")) || msaaEnabled) {
-            Text(_("MSAA Samples"));
+            TextUnformatted(_("MSAA Samples"));
             SameLine();
-            InputInt("##msaa_samples",
-                     &Config::getVal<int>("MSAASamples"));
+            InputInt("##msaa_samples", &Config::getVal<int>("MSAASamples"));
         }
-        Text(_("Application theme:"));
+        TextUnformatted(_("Application theme:"));
         SameLine();
         ListBox("", &Config::getVal<int>("Theme"), items, 3);
-        Text(_("Drag sensitivity:"));
+        TextUnformatted(_("Drag sensitivity:"));
         SliderFloat("##mouse_sens", &Config::getVal<GLfloat>("MouseSens"), 1, 100);
         End();
     }
@@ -620,8 +608,7 @@ void RenderGuiSystem::add_model()
     if (Button(_("Add model"))) {
         const char *filters = "Model files (*.fbx *.obj *.blend){.fbx,.obj,.blend}";
         ImGuiFileDialog::Instance()->OpenDialog("ChooseModelDlgKey",
-                                                _("Choose model file"),
-                                                filters, ".");
+                                                _("Choose model file"), filters, ".");
     }
 
     // Load model from file dialog
@@ -649,11 +636,11 @@ void RenderGuiSystem::selection_settings()
     auto posComp = selEn->getComponent<PositionComponent>();
     auto sprite = spriteComp->sprite;
 
-    Text(_("Sprite scale"));
+    TextUnformatted(_("Sprite scale"));
     if (InputFloat3("##sprite_scale", glm::value_ptr(sprite->getSize())))
         coll::updateBVH(selEn);
 
-    Text(_("Sprite angle"));
+    TextUnformatted(_("Sprite angle"));
     if (InputFloat("##sprite_angle", &posComp->angle)) {
         posComp->rot_axis = {0.f, 1.f, 0.f};
         coll::updateBVH(selEn);
@@ -661,7 +648,7 @@ void RenderGuiSystem::selection_settings()
 
     bool flip_uv = sprite->isUvFlipped();
     bool old_flip = flip_uv;
-    Text(_("Flip UV"));
+    TextUnformatted(_("Flip UV"));
     Checkbox("##flip_uv", &flip_uv);
 
     bool movable = false;
@@ -709,7 +696,7 @@ void RenderGuiSystem::selection_settings()
         }
     }
 
-    Text(_("Movable"));
+    TextUnformatted(_("Movable"));
     if (Checkbox("##movable", &movable)) {
         if (movable && !hasMovComp) {
             selEn->addComponent<MovableComponent>();
@@ -724,11 +711,10 @@ void RenderGuiSystem::selection_settings()
     }
 
     if (hasMovComp) {
-        if (Button(_("Take control"))) {
+        if (Button(_("Take control")))
             movComp->controlled = true;
-        }
 
-        Text(_("Speed"));
+        TextUnformatted(_("Speed"));
         InputFloat("##speed", &movComp->speed);
     }
 

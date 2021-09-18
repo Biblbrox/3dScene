@@ -23,15 +23,26 @@ using std::vector;
 namespace utils::texture
 {
     /**
- * Load opengl texture from pixels to GPU with specific format.
- * Result texture has RGBA format.
- * If function can't load texture exception will be thrown.
- * @param pixels
- * @param width
- * @param height
- * @param texture_format
- * @return textureID
- */
+     * Load SDL2 surface from pixels
+     * @param pixels
+     * @param width
+     * @param height
+     * @param rgba
+     * @return
+     */
+    SDL_Surface*
+    loadSurfaceFromPixels(GLubyte* pixels, GLuint width, GLuint height, bool rgba = false);
+
+    /**
+     * Load opengl texture from pixels to GPU with specific format.
+     * Result texture has RGBA format.
+     * If function can't load texture exception will be thrown.
+     * @param pixels
+     * @param width
+     * @param height
+     * @param texture_format
+     * @return textureID
+     */
     GLuint
     loadTextureFromPixels32(const void *pixels, GLuint width, GLuint height,
                             GLenum textureType = GL_RGBA, GLenum type = GL_UNSIGNED_BYTE);
@@ -82,6 +93,12 @@ namespace utils::texture
      */
     GLuint loadCubemap(const std::vector<std::string>& faces);
 
+    /**
+     *
+     * @param file
+     * @param flip
+     * @return
+     */
     SDL_Surface* loadSurface(const std::string& file, bool flip = true);
 
     /**
@@ -176,5 +193,13 @@ namespace utils::texture
      * @return
      */
     GLuint genRbo(GLuint width, GLuint height, bool msaa = false, size_t samples = 4);
+
+    /**
+     * Save screen pixels to file file_name with rgb format.
+     * @param width
+     * @param height
+     */
+    void saveScreen(const std::string& file_name, GLuint width, GLuint height);
+
 }
 #endif //UTILS_TEXTURE_HPP
