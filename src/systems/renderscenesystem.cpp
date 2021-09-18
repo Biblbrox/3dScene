@@ -92,8 +92,8 @@ void RenderSceneSystem::drawSprites()
             glStencilFunc(GL_ALWAYS, 1, 0xFF); // all fragments should pass the stencil test
             glStencilMask(0xFF); // enable writing to the stencil buffer
 
-            render::drawTexture(*program, *sprite, posComp->pos,
-                                posComp->angle, posComp->rot_axis, lighting);
+            render::drawTexture(*program, *sprite, posComp->pos, posComp->angle,
+                                posComp->rot_axis, lighting);
 
             glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
             glStencilMask(0x00); // disable writing to the stencil buffer
@@ -112,12 +112,8 @@ void RenderSceneSystem::drawSprites()
         } else {
             program->setInt(U_IS_PRIMITIVE, false);
 
-            render::drawTexture(*program,
-                                *en->getComponent<SpriteComponent>()->sprite,
-                                posComp->pos,
-                                posComp->angle,
-                                posComp->rot_axis,
-                                lighting);
+            render::drawTexture(*program, *en->getComponent<SpriteComponent>()->sprite,
+                                posComp->pos, posComp->angle, posComp->rot_axis, lighting);
         }
     }
 
@@ -192,7 +188,7 @@ void RenderSceneSystem::update_state(size_t delta)
 {
     auto game_state = getGameState();
     if (game_state == GameStates::PLAY || game_state == GameStates::EDIT) {
-        auto window_size = utils::getWindowSize<GLfloat>(*Game::getWindow());
+//        auto window_size = utils::getWindowSize<GLfloat>(*Game::getWindow());
         auto program = SceneProgram::getInstance();
         program->useFramebufferProgram();
         vec2 size = Config::getVal<vec2>("ViewportSize"); // TODO: change viewport size here

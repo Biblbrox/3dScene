@@ -17,7 +17,7 @@ public:
     void addProgram(const std::string& programName, const std::string& vertex,
                     const std::string& fragment,
                     const std::string& geometry = "");
-    void useProgram(const std::string& programName);
+    virtual void useProgram(const std::string& programName);
     virtual void freeProgram() final;
 
     /**
@@ -32,6 +32,11 @@ public:
     virtual void setMat3(const std::string &name, const glm::mat3& value);
     virtual void setMat4(const std::string &name, const glm::mat4& value);
 
+    /**
+     * Get data
+     * @param name
+     * @return
+     */
     virtual GLfloat getFloat(const std::string &name);
     virtual int getInt(const std::string &name);
     virtual glm::vec3 getVec3(const std::string &name);

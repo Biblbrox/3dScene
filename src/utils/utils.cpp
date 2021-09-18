@@ -1,7 +1,6 @@
 #include <ctime>
 #include <boost/format.hpp>
 #include <iostream>
-#include <fstream>
 
 #include "utils/logger.hpp"
 #include "utils/utils.hpp"
@@ -15,12 +14,6 @@ using utils::log::shader_log_file_name;
 using boost::format;
 using glm::vec2;
 using std::find_if;
-
-void utils::padLine(std::string& line, size_t pad)
-{
-    line.insert(line.begin(), ' ', pad);
-    line.insert(line.end(), ' ', pad);
-}
 
 GLuint utils::loadShaderFromFile(const std::string &path, GLenum shaderType)
 {

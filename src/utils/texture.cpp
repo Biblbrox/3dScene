@@ -2,26 +2,20 @@
 #include <cassert>
 #include <vector>
 #include <string>
-#include <filesystem>
 #include <boost/format.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec2.hpp>
-#include <boost/algorithm/string/trim.hpp>
 #include <SDL_image.h>
-#include <fstream>
 
 #include "utils/texture.hpp"
 #include "utils/logger.hpp"
-#include "utils/string.hpp"
-#include "constants.hpp"
-#include "sceneprogram.hpp"
-#include "exceptions/fsexception.hpp"
+#include "strutils/strutils.hpp"
 #include "exceptions/sdlexception.hpp"
 #include "exceptions/glexception.hpp"
 
 
 using boost::format;
-using utils::string::split;
+using strutils::split;
 using std::vector;
 using glm::vec3;
 using glm::vec2;
@@ -30,6 +24,7 @@ using glm::vec;
 SDL_Surface *utils::texture::loadSurface(const std::string &file, bool flip)
 {
     SDL_Surface *surface = IMG_Load(file.c_str());
+
     if (!surface)
         throw SdlException((format("Unable to load image: %s"
                                    ". SDL Error: %s\n")
@@ -88,12 +83,7 @@ utils::texture::loadTextureFromPixels32(const void *pixels, GLuint width, GLuint
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-//    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-//    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-//    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-//    glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, texture_format,
-                 type, pixels);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, texture_format, type, pixels);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -114,12 +104,10 @@ GLuint utils::texture::genTexture(GLuint width, GLuint height,
 
     if (msaa) {
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture);
-        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples,
-                                GL_RGB, width, height, GL_TRUE);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB, width, height, GL_TRUE);
     } else {
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-                     GL_UNSIGNED_BYTE, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
     }
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -138,8 +126,7 @@ GLuint utils::texture::genTexture(GLuint width, GLuint height,
     return texture;
 }
 
-GLuint utils::texture::genRbo(GLuint width, GLuint height,
-                              bool msaa, size_t samples)
+GLuint utils::texture::genRbo(GLuint width, GLuint height, bool msaa, size_t samples)
 {
     GLuint rbo;
     glGenRenderbuffers(1, &rbo);
@@ -239,4 +226,47 @@ void utils::texture::cleanFBO(GLuint* texture, GLuint* sceneBuffer, GLuint* rbo,
         if (textureMSAA != nullptr)
             glDeleteTextures(1, textureMSAA);
     }
+}
+
+SDL_Surface*
+utils::texture::loadSurfaceFromPixels(GLubyte* pixels, GLuint width, GLuint height, bool rgba)
+{
+    Uint32 rmask, gmask, bmask, amask;
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    int shift = !rgba ? 8 : 0;
+    rmask = 0xff000000 >> shift;
+    gmask = 0x00ff0000 >> shift;
+    bmask = 0x0000ff00 >> shift;
+    amask = 0x000000ff >> shift;
+#else // little endian, like x86
+    rmask = 0x000000ff;
+    gmask = 0x0000ff00;
+    bmask = 0x00ff0000;
+    amask = !rgba ? 0 : 0xff000000;
+#endif
+
+    int depth, pitch;
+    if (!rgba) {
+        depth = 24;
+        pitch = 3*width; // 3 bytes per pixel * pixels per row
+    } else { // STBI_rgb_alpha (RGBA)
+        depth = 32;
+        pitch = 4*width;
+    }
+
+    SDL_Surface* surf = SDL_CreateRGBSurfaceFrom((void*)pixels, width, height, depth, pitch,
+                                                 rmask, gmask, bmask, amask);
+
+    return surf;
+
+}
+
+void utils::texture::saveScreen(const std::string& file_name, GLuint width, GLuint height)
+{
+    GLubyte * pixels = new GLubyte[3 * width * height];
+    glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_INT, pixels);
+
+    SDL_Surface* surf = loadSurfaceFromPixels(pixels, width,  height);
+
+    SDL_SaveBMP(surf, file_name.c_str());
 }

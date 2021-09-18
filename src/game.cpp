@@ -112,8 +112,7 @@ void Game::initOnceSDL2()
 
     if (TTF_Init() == -1)
         throw SdlException((format("SDL_TTF initialization error: %1%\n")
-                            % TTF_GetError()).str(),
-                           program_log_file_name(),
+                            % TTF_GetError()).str(), program_log_file_name(),
                            Category::INITIALIZATION_ERROR);
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -128,8 +127,7 @@ void Game::initOnceSDL2()
 
     if (Config::getVal<bool>("MSAA")) {
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,
-                            Config::getVal<int>("MSAASamples"));
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, Config::getVal<int>("MSAASamples"));
     }
 
     //SDL_SetHint(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0");
@@ -165,8 +163,7 @@ void Game::initGL()
                                       WINDOW_FLAGS);
     if (!m_window)
         throw SdlException((format("Unable to create window. Error: %1%\n")
-                            % SDL_GetError()).str(),
-                           program_log_file_name(),
+                            % SDL_GetError()).str(), program_log_file_name(),
                            Category::INITIALIZATION_ERROR);
 
     Game::m_glcontext = SDL_GL_CreateContext(Game::m_window);
@@ -180,13 +177,11 @@ void Game::initGL()
     GLenum error = glewInit();
     if (error != GLEW_OK)
         throw SdlException((format("Error when initializing GLEW: %s\n")
-                            % glewGetErrorString(error)).str(),
-                           program_log_file_name(),
+                            % glewGetErrorString(error)).str(), program_log_file_name(),
                            Category::INITIALIZATION_ERROR);
 
     if (!GLEW_VERSION_2_1)
-        throw SdlException("Your opengl version too old\n",
-                           program_log_file_name(),
+        throw SdlException("Your opengl version too old\n", program_log_file_name(),
                            Category::INITIALIZATION_ERROR);
 
     //Initialize clear color
@@ -217,8 +212,7 @@ void Game::initGL()
         Logger::write(program_log_file_name(),
                       Category::INITIALIZATION_ERROR,
                       (format("Warning: Unable to enable VSync. "
-                              "VSync will not be used! SDL Error: %s\n")
-                       % SDL_GetError()).str());
+                              "VSync will not be used! SDL Error: %s\n") % SDL_GetError()).str());
         // If can't use vsync try set fixed fps
         SDL_GL_SetSwapInterval(0);
         vsync_supported = false;
@@ -230,8 +224,7 @@ void Game::initGL()
     error = glGetError();
     if(error != GL_NO_ERROR)
         throw GLException((format("Error initializing OpenGL! %s\n")
-                           % gluErrorString(error)).str(),
-                          program_log_file_name(),
+                           % gluErrorString(error)).str(), program_log_file_name(),
                           Category::INITIALIZATION_ERROR);
 }
 

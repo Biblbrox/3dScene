@@ -200,8 +200,7 @@ KeyboardSystem::findUnderPointer(const vec2 &pos)
     vec2 viewport_size = Config::getVal<vec2>("ViewportSize");
     vec2 pointer_pos = pos - viewport_pos;
 
-    glm::vec3 ray_world = viewportToWorld(pointer_pos, viewport_size,
-                                          projection, view);
+    glm::vec3 ray_world = viewportToWorld(pointer_pos, viewport_size, projection, view);
 
     for (const auto&[key, en]: entities) {
         const auto& bvh_comp = en->getComponent<BVHComponent>();
@@ -254,8 +253,7 @@ void KeyboardSystem::updateDraggedPos()
     ray.tmax = 100000;
     auto terrain_en = getEntitiesByTag<TerrainComponent>().begin()->second;
     auto terrain = terrain_en->getComponent<TerrainComponent>()->terrain;
-    auto[col, pos_on_ter] = coll::rayTerrainIntersection(
-            *terrain, ray, 0, 10000.f, 1000);
+    auto[col, pos_on_ter] = coll::rayTerrainIntersection(*terrain, ray, 0, 10000.f, 1000);
 
     pos->pos = pos_on_ter;
 }

@@ -35,6 +35,14 @@ namespace utils::data {
         std::shared_ptr<Node> m_right;
     };
 
+    /**
+     * Walk through map and apply function func to each node
+     * @tparam K
+     * @tparam V
+     * @tparam Functor
+     * @param node
+     * @param func
+     */
 	template<typename K, typename V, typename Functor>
 	void mapBinaryTree(std::shared_ptr<Node<K, V>> node, Functor func) {
 		if (node->m_left)
@@ -132,6 +140,12 @@ namespace utils
 		vec3 k;
 	};
 
+	/**
+	 * Transformm rectangle by transformation matrix
+	 * @param in
+	 * @param transform
+	 * @return
+	 */
     inline RectPoints3D rectTransform(const RectPoints3D& in, const mat4& transform)
     {
         RectPoints3D rect = in;
