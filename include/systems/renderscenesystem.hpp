@@ -18,10 +18,12 @@ public:
     ~RenderSceneSystem();
 
 private:
+    void renderScene();
     void drawSprites();
     void drawBoundingBoxes();
     void drawToFramebuffer();
     void drawTerrain();
+    void makeScreenshot();
     void update_state(size_t delta) override;
 };
 

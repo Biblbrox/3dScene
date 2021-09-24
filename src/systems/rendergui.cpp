@@ -8,7 +8,6 @@
 #include <imgui_impl_sdl.h>
 #include <ImGuiFileDialog.h>
 #include <imgui.h>
-#include <ImGuiFileDialogConfig.h>
 #include <filesystem>
 
 #include "systems/renderguisystem.hpp"
@@ -170,8 +169,8 @@ RenderGuiSystem::RenderGuiSystem() : m_videoSettingsOpen(false),
         m_font = io.Fonts->Fonts[0];
     }
 
-    int window_width = utils::getWindowWidth<GLuint>(*Game::getWindow());
-    int window_height = utils::getWindowHeight<GLuint>(*Game::getWindow());
+    GLuint window_width = utils::getWindowWidth<GLuint>(*Game::getWindow());
+    GLuint window_height = utils::getWindowHeight<GLuint>(*Game::getWindow());
 
     m_aspectRatio = static_cast<GLfloat>(window_width) / window_height;
 }
@@ -195,9 +194,6 @@ void RenderGuiSystem::update_state(size_t delta)
         glBindFramebuffer(GL_READ_FRAMEBUFFER, sceneComp->sceneBufferMSAA);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, sceneComp->sceneBuffer);
         vec2 size = Config::getVal<vec2>("ViewportSize"); // TODO: change viewport size here
-//        glBlitFramebuffer(0, 0, screen_width, screen_height, 0, 0,
-//                          screen_width, screen_height,
-//                          GL_COLOR_BUFFER_BIT, GL_NEAREST);
         glBlitFramebuffer(0, 0, size.x, size.y, 0, 0, size.x, size.y,
                           GL_COLOR_BUFFER_BIT, GL_NEAREST);
     }
@@ -253,15 +249,12 @@ void RenderGuiSystem::update_state(size_t delta)
         {
             if (BeginMenu(_("View")))
             {
-                if (MenuItem(_("Show camera pos"), _("Ctrl+O"))) {
-                    Config::addVal("ShowCameraPos",
-                                   !Config::getVal<bool>("ShowCameraPos"), "bool");
-                }
+                if (MenuItem(_("Show camera pos"), _("Ctrl+O")))
+                    Config::addVal("ShowCameraPos", !Config::getVal<bool>("ShowCameraPos"), "bool");
 
-                if (MenuItem(_("Show move speed"), _("Ctrl+E"))) {
-                    Config::addVal("ShowMoveSpeed",
-                                   !Config::getVal<bool>("ShowMoveSpeed"), "bool");
-                }
+                if (MenuItem(_("Show move speed"), _("Ctrl+E")))
+                    Config::addVal("ShowMoveSpeed", !Config::getVal<bool>("ShowMoveSpeed"), "bool");
+
                 EndMenu();
             }
             EndMenuBar();
@@ -279,18 +272,15 @@ void RenderGuiSystem::update_state(size_t delta)
             TextUnformatted(_("Settings"));
             Separator();
 
-            Checkbox(_("Draw Vertices"),
-                     &Config::getVal<bool>("DrawVertices"));
-            Checkbox(_("Draw Leafs"),
-                     &Config::getVal<bool>("DrawLeafs"));
-            Checkbox(_("Draw Rays"),
-                     &Config::getVal<bool>("DrawRays"));
-            Checkbox(_("Draw bounding boxes"),
-                     &Config::getVal<bool>("DrawBoundingBoxes"));
+            Checkbox(_("Draw Vertices"), &Config::getVal<bool>("DrawVertices"));
+            Checkbox(_("Draw Leafs"), &Config::getVal<bool>("DrawLeafs"));
+            Checkbox(_("Draw Rays"), &Config::getVal<bool>("DrawRays"));
+            Checkbox(_("Draw bounding boxes"), &Config::getVal<bool>("DrawBoundingBoxes"));
+
             if (Button(_("Check collision")))
                 Config::getVal<bool>("CheckCollision") = true;
-            Checkbox(_("Enable lighting"),
-                     &Config::getVal<bool>("EnableLight"));
+
+            Checkbox(_("Enable lighting"), &Config::getVal<bool>("EnableLight"));
 
             if (ImGui::Button(_("Laser Settings")))
                 m_laserSettingsOpen = true;
@@ -299,16 +289,12 @@ void RenderGuiSystem::update_state(size_t delta)
                 laser_settings();
 
             TextUnformatted(_("Light position"));
-            InputFloat3("##light_pos", glm::value_ptr(
-                    Config::getVal<glm::vec3>("LightPos")));
+            InputFloat3("##light_pos", glm::value_ptr(Config::getVal<glm::vec3>("LightPos")));
 
             TextUnformatted(_("Tree level show"));
-            SliderInt("##tree_level",
-                      &Config::getVal<int>("TreeLevelShow"),
-                      0, 100);
+            SliderInt("##tree_level", &Config::getVal<int>("TreeLevelShow"), 0, 100);
 
-            Checkbox(_("Inverse rotation"),
-                     &Config::getVal<bool>("InverseRotation"));
+            Checkbox(_("Inverse rotation"), &Config::getVal<bool>("InverseRotation"));
 
             if (Checkbox(_("Edit mode"), &Config::getVal<bool>("EditMode")))
                 setGameState(GameStates::EDIT);
@@ -388,6 +374,9 @@ void RenderGuiSystem::update_state(size_t delta)
             if (getGameState() != GameStates::STOP)
                 ImGui::Image((ImTextureID)sceneComp->texture, size, {0, 1}, {1, 0});
         }
+
+        if (Button(_("Make screenshot")))
+            Config::getVal<bool>("MakeScreenshot") = true;
 
         std::stringstream status_str;
         bool draw_status = false;
@@ -553,8 +542,7 @@ void RenderGuiSystem::laser_settings()
 
     TextUnformatted(_("Length of rays"));
     if (InputFloat("##ray_length", &lidarComp->length)) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                    lidarComp->yaw, lidarComp->pitch);
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
 
         lidarComp->pattern_points = lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle,
                                                          lidarComp->density);

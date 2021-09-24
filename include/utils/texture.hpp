@@ -199,7 +199,6 @@ namespace utils::texture
      * @param width
      * @param height
      */
-    void saveScreen(const std::string& file_name, GLuint width, GLuint height);
-
+    void saveScreen(const std::string& file_name, GLsizei width, GLsizei height);
 }
 #endif //UTILS_TEXTURE_HPP

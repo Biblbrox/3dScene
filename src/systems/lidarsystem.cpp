@@ -80,7 +80,7 @@ void LidarSystem::collision()
         }
     }
 
-    if (!Config::getVal<bool>("CheckCollision"))
+   if (!Config::getVal<bool>("CheckCollision"))
         return;
 
     const auto &entities = m_ecsManager->getEntities();
@@ -114,6 +114,9 @@ void LidarSystem::collision()
                 coll = rayTerrainIntersection(*terrain, ray, 0, 10000.f, 100);
                 intensity = 0.09f;
             } else { // Model
+                if (en->getComponent<LidarComponent>())
+                    continue;
+
                 auto pos_comp = en->getComponent<PositionComponent>();
 
                 auto triangles = bvh_comp->triangles;
@@ -129,8 +132,8 @@ void LidarSystem::collision()
         }
     }
 
-    for (auto & coll_dot : coll_dots)
-        coll_dot = glm::vec4(glm::vec3(coll_dot) - pos->pos, coll_dot.w);
+    lidarComp->coll_points.insert(lidarComp->coll_points.end(), coll_dots.cbegin(),
+                                  coll_dots.cend());
 
     Frame frame = {coll_dots};
     saveFrameToFilePcd(frame, getResourcePath("000000.pcd"), true);

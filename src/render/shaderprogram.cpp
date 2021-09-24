@@ -203,9 +203,8 @@ void ShaderProgram::setMat4(const std::string &name, const glm::mat4 &value)
     assert(!name.empty());
     GLint loc = glGetUniformLocation(m_programID, name.c_str());
     if (loc == -1)
-        throw GLException((format("Unable to set uniform variable %1%\n") %
-                           name).str(), shader_log_file_name(),
-                          Category::INTERNAL_ERROR);
+        throw GLException((format("Unable to set uniform variable %1%\n") % name).str(),
+                          shader_log_file_name(), Category::INTERNAL_ERROR);
 
     glUniformMatrix4fv(loc, 1, false, glm::value_ptr(value));
     if (GLenum error = glGetError(); error != GL_NO_ERROR)

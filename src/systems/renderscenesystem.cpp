@@ -32,6 +32,8 @@ using glm::scale;
 using math::operator/;
 using utils::texture::genRbo;
 using utils::texture::genTexture;
+using utils::texture::cleanFBO;
+using utils::texture::generateFBO;
 
 GLuint skybox_angle = 0;
 GLuint light_dir_angle = 0;
@@ -184,45 +186,48 @@ void RenderSceneSystem::drawBoundingBoxes()
 //                program_log_file_name(), Category::INTERNAL_ERROR);
 }
 
+void RenderSceneSystem::renderScene()
+{
+    //        auto window_size = utils::getWindowSize<GLfloat>(*Game::getWindow());
+    auto program = SceneProgram::getInstance();
+    program->useFramebufferProgram();
+    vec2 size = Config::getVal<vec2>("ViewportSize"); // TODO: change viewport size here
+    glViewport(0, 0, size.x, size.y);
+    //        glScissor(0, 0, size.x, size.y);
+    auto scene_comp = getEntitiesByTag<SceneComponent>().begin()->second
+            ->getComponent<SceneComponent>();
+
+    if (scene_comp->dirty) {
+        bool isMSAA = Config::getVal<bool>("MSAA");
+
+        if (isMSAA) {
+            cleanFBO(&scene_comp->texture, &scene_comp->sceneBuffer, &scene_comp->rbo, isMSAA,
+                     &scene_comp->sceneBufferMSAA, &scene_comp->textureMSAA);
+            generateFBO(true, size.x, size.y, &scene_comp->textureMSAA, &scene_comp->rbo,
+                        &scene_comp->texture, &scene_comp->sceneBuffer,
+                        &scene_comp->sceneBufferMSAA);
+        } else {
+            cleanFBO(&scene_comp->texture, &scene_comp->sceneBuffer, &scene_comp->rbo);
+            generateFBO(false, size.x, size.y, &scene_comp->textureMSAA, &scene_comp->rbo,
+                        &scene_comp->texture, &scene_comp->sceneBuffer);
+        }
+
+        scene_comp->dirty = false;
+    }
+
+    drawToFramebuffer();
+    //        glViewport(0, 0, window_size.x, window_size.y);
+    //        glScissor(0, 0, window_size.x, window_size.y);
+}
+
 void RenderSceneSystem::update_state(size_t delta)
 {
     auto game_state = getGameState();
     if (game_state == GameStates::PLAY || game_state == GameStates::EDIT) {
-//        auto window_size = utils::getWindowSize<GLfloat>(*Game::getWindow());
-        auto program = SceneProgram::getInstance();
-        program->useFramebufferProgram();
-        vec2 size = Config::getVal<vec2>("ViewportSize"); // TODO: change viewport size here
-        glViewport(0, 0, size.x, size.y);
-//        glScissor(0, 0, size.x, size.y);
-        auto scene_comp = getEntitiesByTag<SceneComponent>().begin()->second
-                ->getComponent<SceneComponent>();
+        if (Config::getVal<bool>("MakeScreenshot"))
+            makeScreenshot();
 
-        if (scene_comp->dirty) {
-            bool isMSAA = Config::getVal<bool>("MSAA");
-
-            if (isMSAA) {
-                utils::texture::cleanFBO(&scene_comp->texture, &scene_comp->sceneBuffer,
-                                         &scene_comp->rbo, isMSAA, &scene_comp->sceneBufferMSAA,
-                                         &scene_comp->textureMSAA);
-
-                utils::texture::generateFBO(true, size.x, size.y, &scene_comp->textureMSAA,
-                                            &scene_comp->rbo, &scene_comp->texture,
-                                            &scene_comp->sceneBuffer, &scene_comp->sceneBufferMSAA);
-            } else {
-                utils::texture::cleanFBO(&scene_comp->texture, &scene_comp->sceneBuffer,
-                                         &scene_comp->rbo);
-
-                utils::texture::generateFBO(false, size.x, size.y, &scene_comp->textureMSAA,
-                                            &scene_comp->rbo, &scene_comp->texture,
-                                            &scene_comp->sceneBuffer);
-            }
-
-            scene_comp->dirty = false;
-        }
-
-        drawToFramebuffer();
-//        glViewport(0, 0, window_size.x, window_size.y);
-//        glScissor(0, 0, window_size.x, window_size.y);
+        renderScene();
     }
 }
 
@@ -267,6 +272,94 @@ void RenderSceneSystem::drawTerrain()
     glCullFace(GL_FRONT); // TODO: fix invert face culling for terrain
     render::renderTerrain(*program, *terrain);
     glCullFace(GL_BACK);
+}
+
+vec2 world_to_screen(const vec3 world, const mat4& MVP, const int viewport_width, const int viewport_height)
+{
+    const vec4 world4(world.x, world.y, world.z, 1);
+    vec4 screen4(MVP * world4);
+
+    // Take care of possible division by zero
+    if (screen4.w == 0) // TODO: fp compare ?
+        screen4.w = 1;
+
+    vec2 screen2;
+    screen2.x = ((screen4.x / screen4.w + 1.0) / 2.0) * viewport_width;
+    screen2.y = ((screen4.y / screen4.w + 1.0) / 2.0) * viewport_width;
+
+//    screen2.x = round(screen4.x / screen4.w * viewport_width / 2 + viewport_width / 2);
+//    screen2.y = round(screen4.y / screen4.w * viewport_height / 2 + viewport_height / 2);
+
+    Logger::info("%f, %f\n", screen4.x / screen4.w, screen4.y / screen4.w);
+    return screen2;
+}
+
+
+vec2 get2dPoint(vec3 point3D, mat4 viewMatrix, mat4 projectionMatrix, int width, int height) {
+
+    mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
+    //transform world to clipping coordinates
+    point3D = viewProjectionMatrix * vec4(point3D, 1.f);
+    int winX = (int) round((( point3D.x + 1 ) / 2.0) * width);
+    //we calculate -point3D.getY() because the screen Y axis is
+    //oriented top->down
+    int winY = (int) round((( 1 - point3D.y) / 2.0) * height);
+    return vec2(winX, winY);
+}
+
+void RenderSceneSystem::makeScreenshot()
+{
+    vec3 pos = getEntitiesByTag<LidarComponent>().begin()->second
+            ->getComponent<PositionComponent>()->pos;
+    auto lidar = getEntitiesByTag<LidarComponent>().begin()->second
+            ->getComponent<LidarComponent>();
+    auto camera = FpsCamera::getInstance();
+
+    auto program = SceneProgram::getInstance();
+    program->useFramebufferProgram();
+
+    vec3 old_pos = camera->getPos();
+    GLfloat old_pitch = camera->getPitch();
+    GLfloat old_yaw = camera->getYaw();
+
+    auto size = Config::getVal<vec2>("ViewportSize");
+
+    // Set camera position to lidar position
+    camera->setPos(pos);
+    camera->setPitch(lidar->pitch);
+    camera->setYaw(lidar->yaw);
+    mat4 view = camera->getView();
+    program->setMat4(U_VIEW_MATRIX, view);
+    glViewport(0, 0, size.x, size.y);
+    renderScene();
+    glFlush();
+    SDL_GL_SwapWindow(Game::getWindow());
+    utils::texture::saveScreen(getResourcePath("screenshot.bmp"), size.x, size.y);
+
+    // Save projected coordinates
+    program->useFramebufferProgram();
+    std::ofstream f(getResourcePath("projected.txt"), std::ios::out | std::ios::trunc);
+    glm::vec4 viewport = {0, 0, size};
+    glm::mat4 perspective = glm::perspective(45.f, (float)size.x / (float)size.y, 1.f, 10000.f);
+    for (vec3 p: lidar->coll_points) {
+        vec3 projected = glm::project(p, view, perspective, viewport);
+//        vec2 projected = get2dPoint(p, view, perspective, size.x, size.y);
+//        vec2 projected = world_to_screen(p + pos, perspective * view, size.x, size.y);
+        f << projected.x << " " << projected.y << "\n";
+//        vec3 unprojected = glm::unProject(projected, view, perspective, viewport);
+//
+//        vec3 diff = glm::abs(glm::abs(unprojected) - glm::abs(p));
+//        Logger::info("Difference: %.5f, %.5f, %.5f\n", diff.x, diff.y, diff.z);
+    }
+
+    f.close();
+
+    // Restore camera parameters
+    camera->setPos(old_pos);
+    camera->setPitch(old_pitch);
+    camera->setYaw(old_yaw);
+    program->setMat4(U_VIEW_MATRIX, camera->getView());
+    Config::getVal<bool>("MakeScreenshot") = false;
 }
 
 

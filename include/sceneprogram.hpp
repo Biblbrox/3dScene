@@ -27,6 +27,10 @@ public:
     void useFramebufferProgram();
     void useSkyboxProgram();
 
+    glm::mat4 getMVP();
+    glm::mat4 getPVM();
+
+
     /**
      * Init programs
      */

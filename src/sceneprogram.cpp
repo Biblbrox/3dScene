@@ -5,6 +5,7 @@
 #include "sceneprogram.hpp"
 #include "utils/logger.hpp"
 #include "utils/utils.hpp"
+#include "base.hpp"
 
 using boost::format;
 using glm::mat4;
@@ -81,4 +82,16 @@ void SceneProgram::useSkyboxProgram()
 //        glUseProgram(m_programs["skybox"]);
 //        m_programID = m_programs["skybox"];
 //    }
+}
+
+glm::mat4 SceneProgram::getMVP()
+{
+    return m_mat4Uniforms[m_programID][U_PROJECTION_MATRIX] *  m_mat4Uniforms[m_programID][U_VIEW_MATRIX]
+           * m_mat4Uniforms[m_programID][U_MODEL_MATRIX];
+}
+
+glm::mat4 SceneProgram::getPVM()
+{
+    return m_mat4Uniforms[m_programID][U_MODEL_MATRIX] * m_mat4Uniforms[m_programID][U_VIEW_MATRIX]
+           * m_mat4Uniforms[m_programID][U_PROJECTION_MATRIX];
 }
