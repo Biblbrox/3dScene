@@ -104,3 +104,5 @@ target_include_directories(${GAME_NAME} PRIVATE include
         ${SDL2_TTF_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS}
         ${GLM_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} ${PCL_INCLUDE_DIRS}
         ${EXT_PATH}/ImGuiFileDialog/ ${EXT_PATH})
+
+target_compile_definitions(${GAME_NAME} PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE=1)

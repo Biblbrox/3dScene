@@ -261,12 +261,17 @@ utils::texture::loadSurfaceFromPixels(GLubyte* pixels, GLuint width, GLuint heig
 
 }
 
-void utils::texture::saveScreen(const std::string& file_name, GLuint width, GLuint height)
+void utils::texture::saveScreen(const std::string& file_name, GLsizei width, GLsizei height)
 {
-    GLubyte * pixels = new GLubyte[3 * width * height];
-    glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_INT, pixels);
+    GLubyte* pixels = new GLubyte[3 * width * height];
+    glReadPixels(0, 0, width - 1, height - 1, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 
     SDL_Surface* surf = loadSurfaceFromPixels(pixels, width,  height);
+    SDL_Surface* flipped = flipVertically(surf);
+    SDL_SaveBMP(flipped, file_name.c_str());
 
-    SDL_SaveBMP(surf, file_name.c_str());
+    delete[] pixels;
+
+    SDL_FreeSurface(surf);
+    SDL_FreeSurface(flipped);
 }

@@ -118,6 +118,8 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("ObjDistance", 10.f, "float");
     if (!Config::hasKey("DataFileTmp"))
         Config::addVal("DataFileTmp", std::string("000000.txt"), "string");
+    if (!Config::hasKey("MakeScreenshot"))
+        Config::addVal<bool>("MakeScreenshot", false, "bool");
 }
 
 World::~World()

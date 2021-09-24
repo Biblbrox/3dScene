@@ -117,3 +117,31 @@ glm::vec3 FpsCamera::getUp() const
 {
     return m_up;
 }
+
+void FpsCamera::setYaw(GLfloat yaw)
+{
+    m_yaw = yaw;
+    updateCameraVectors();
+}
+
+void FpsCamera::setPitch(GLfloat pitch)
+{
+    m_pitch = pitch;
+    updateCameraVectors();
+}
+
+void FpsCamera::setDirection(glm::vec3 dir)
+{
+    m_front = dir;
+    updateCameraVectors();
+}
+
+GLfloat FpsCamera::getYaw() const
+{
+    return m_yaw;
+}
+
+GLfloat FpsCamera::getPitch() const
+{
+    return m_pitch;
+}

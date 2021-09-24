@@ -28,6 +28,7 @@ struct LidarComponent: ecs::Component
     GLfloat density = 0.f;
 
     vector<vec3> pattern_points;
+    vector<vec3> coll_points;
 
     // Distance to the object
     GLfloat obj_distance = 0.f;

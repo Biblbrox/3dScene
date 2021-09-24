@@ -92,11 +92,19 @@ public:
      */
     glm::vec3 getDirection() const;
 
+    void setDirection(glm::vec3 dir);
+
     /**
      *
      * @return
      */
     glm::vec3 getUp() const;
+
+    void setYaw(GLfloat yaw);
+    void setPitch(GLfloat pitch);
+
+    GLfloat getYaw() const;
+    GLfloat getPitch() const;
 
 
 private:
