@@ -17,27 +17,47 @@ using glm::vec3;
 using glm::vec4;
 using glm::mat4;
 
-namespace math {
-
-    constexpr GLfloat
-    barry_centric(const vec3& p1, const vec3& p2, const vec3& p3, const vec2& pos)
-    {
-        GLfloat det = (p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
-        GLfloat l1 = ((p2.z - p3.z) * (pos.x - p3.x) + (p3.x - p2.x) * (pos.y - p3.z)) / det;
-        GLfloat l2 = ((p3.z - p1.z) * (pos.x - p3.x) + (p1.x - p3.x) * (pos.y - p3.z)) / det;
-        GLfloat l3 = 1.f - l1 - l2;
-
-        return l1 * p1.y + l2 * p2.y + l3 * p3.y;
-    }
+namespace math
+{
 
     /**
- * Rotate world around point v
- * @param m
- * @param v
- * @param angle
- * @return
- */
-    FORCE_INLINE inline glm::mat4
+     * Find bounds of points
+     * @param points
+     * @return
+     */
+    std::array<GLfloat, 6> findBounds(const std::vector<vec3> &points);
+
+    /**
+     * Build covariance matrix from set of points
+     * @param points
+     * @return
+     */
+    Eigen::Matrix3f build_covarience_matrix(const std::vector<vec3>& points);
+
+    /**
+     * Rotate(move elements) around element with idx position
+     * @param points
+     * @param idx
+     * @return
+     */
+    std::vector<vec2> rotate_points(const std::vector<vec2>& points, size_t idx);
+
+    /**
+     * Transform viewport coordinates to world space
+     * @param pos
+     * @return
+     */
+    glm::vec3 viewportToWorld(const glm::vec2& pos, const glm::vec2& clip,
+                              const glm::mat4& projection, const glm::mat4& view);
+
+    /**
+    * Rotate world around point v
+    * @param m
+    * @param v
+    * @param angle
+    * @return
+    */
+    /*FORCE_INLINE*/ inline glm::mat4
     rotate_around(const glm::mat4 &m, const glm::vec3 &v, GLfloat angle,
                   const glm::vec3& rot_axis = glm::vec3(1.f, 0.f, 0.f))
     {
@@ -48,38 +68,8 @@ namespace math {
         return tr2;
     }
 
-
-    inline
-    std::array<GLfloat, 6> findBounds(const std::vector<vec3> &points)
-    {
-        GLfloat min_x, max_x, min_y, max_y, min_z, max_z;
-        min_x = max_x = points[0].x;
-        min_y = max_y = points[0].y;
-        min_z = max_z = points[0].z;
-
-        for (auto vert: points) {
-            if (vert.x < min_x)
-                min_x = vert.x;
-            if (vert.x > max_x)
-                max_x = vert.x;
-
-            if (vert.y < min_y)
-                min_y = vert.y;
-            if (vert.y > max_y)
-                max_y = vert.y;
-
-            if (vert.z < min_z)
-                min_z = vert.z;
-            if (vert.z > max_z)
-                max_z = vert.z;
-        }
-
-        return {min_x, max_x, min_y, max_y, min_z, max_z};
-    }
-
     inline mat4
-    createTransform(const vec3& position, GLfloat angle,
-                    const vec3& rot_axis, const vec3& sizes)
+    createTransform(const vec3& position, GLfloat angle, const vec3& rot_axis, const vec3& sizes)
     {
         vec3 pos = position / sizes;
 
@@ -107,14 +97,9 @@ namespace math {
         std::vector<vec3> res;
         res.reserve(vertices.size());
         for (const vec3& v: vertices)
-            res.push_back(transform * vec4(v, 1.f));
+            res.emplace_back(transform * vec4(v, 1.f));
 
         return res;
-    }
-
-    constexpr glm::vec3 getTranslation(const glm::mat4& m)
-    {
-        return m[3];
     }
 
     inline std::vector<Triangle>
@@ -139,6 +124,22 @@ namespace math {
         return res;
     }
 
+    inline glm::vec3 computeCentroid(const std::vector<vec3>& points)
+    {
+        glm::vec3 means{0.f};
+        for (const auto& point : points)
+            means += point;
+
+        means /= points.size();
+
+        return means;
+    }
+
+    constexpr glm::vec3 getTranslation(const glm::mat4& m)
+    {
+        return m[3];
+    }
+
     constexpr vec3 viewportToNDC(const vec2& pos, const vec2& clip)
     {
         GLfloat width = clip.x;
@@ -154,64 +155,6 @@ namespace math {
         return {x, y, z};
     }
 
-    /**
-     * Transform viewport coordinates to world space
-     * @param pos
-     * @return
-     */
-    inline glm::vec3
-    viewportToWorld(const glm::vec2& pos, const glm::vec2& clip,
-                    const glm::mat4& projection, const glm::mat4& view)
-    {
-        // To NDC space
-        glm::vec3 p = viewportToNDC(pos, clip);
-
-        // To 4-d homogenus space
-        glm::vec4 ray = {p.x, p.y, -1.f, 1.f};
-
-        // To eye space
-        ray = glm::inverse(projection) * ray;
-        ray = glm::vec4(ray.x, ray.y, -1.f, 0.f);
-
-        // To world space
-        glm::vec3 ray_world = glm::inverse(view) * ray;
-        ray_world = glm::normalize(ray_world);
-
-        return ray_world;
-    }
-
-    inline glm::vec3 computeCentroid(const std::vector<vec3>& points)
-    {
-        glm::vec3 means{0.f};
-        for (const auto& point : points)
-            means += point;
-
-        means /= points.size();
-
-        return means;
-    }
-
-    /**
-     * Build covariance matrix from set of points
-     * @param points
-     * @return
-     */
-    inline Eigen::Matrix3f build_covarience_matrix(const std::vector<vec3>& points)
-    {
-        Eigen::Matrix3f cov;
-
-        glm::vec3 means = computeCentroid(points);
-
-        for (int i = 0; i < 3; ++i)
-            for (int j = 0; j < 3; ++j)
-                for (int k = 0; k < points.size(); ++k)
-                    cov(i,j) += (points[k + i][i] - means[i])
-                                 * (points[k + j][j] - means[j]);
-
-        cov /= points.size() - 1;
-
-        return cov;
-    }
 
     constexpr unsigned int power_two(unsigned int val) noexcept
     {
@@ -224,25 +167,15 @@ namespace math {
         return power * 2;
     }
 
-    /**
-     * Rotate(move elements) around element with idx position
-     * @param points
-     * @param idx
-     * @return
-     */
-    inline std::vector<vec2> rotate_points(const std::vector<vec2>& points, size_t idx)
+    constexpr GLfloat
+    barry_centric(const vec3& p1, const vec3& p2, const vec3& p3, const vec2& pos)
     {
-        assert(idx < points.size());
+        GLfloat det = (p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
+        GLfloat l1 = ((p2.z - p3.z) * (pos.x - p3.x) + (p3.x - p2.x) * (pos.y - p3.z)) / det;
+        GLfloat l2 = ((p3.z - p1.z) * (pos.x - p3.x) + (p1.x - p3.x) * (pos.y - p3.z)) / det;
+        GLfloat l3 = 1.f - l1 - l2;
 
-        std::vector<vec2> res;
-        res.reserve(points.size());
-        for (size_t i = 0; i < points.size(); ++i)
-            res.emplace_back(points[i] + 2.f * (points[idx] - points[i]));
-
-        std::reverse(res.begin(), res.end());
-        res.shrink_to_fit();
-
-        return res;
+        return l1 * p1.y + l2 * p2.y + l3 * p3.y;
     }
 
     template <typename T>

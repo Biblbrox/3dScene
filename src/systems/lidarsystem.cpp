@@ -135,7 +135,7 @@ void LidarSystem::collision()
     lidarComp->coll_points.insert(lidarComp->coll_points.end(), coll_dots.cbegin(),
                                   coll_dots.cend());
 
-    Frame frame = {coll_dots};
+    Frame frame{pos->pos, coll_dots};
     saveFrameToFilePcd(frame, getResourcePath("000000.pcd"), true);
     Config::getVal<bool>("CheckCollision") = false;
 }

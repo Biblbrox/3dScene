@@ -7,6 +7,7 @@
 #include <boost/serialization/string.hpp>
 #include <boost/serialization/variant.hpp>
 #include <variant>
+#include <filesystem>
 
 #include "ecs/entity.hpp"
 #include "config.hpp"
@@ -58,9 +59,29 @@ namespace utils::fs
      * @param file_name
      * @param entities
      */
-    void
-    saveSimJson(const std::string &file_name,
-                     std::unordered_map<size_t, std::shared_ptr<Entity>>& entities);
+    void saveSimJson(const std::string &file_name,
+                     const std::unordered_map<size_t, std::shared_ptr<Entity>>& entities);
+
+    template <int N, int K, typename T>
+    void saveMatTxt(const std::string& fileName, const glm::mat<N, K, T>& m, bool transpose = false)
+    {
+        if (!std::filesystem::exists(fileName)) {
+            return;
+            //TODO: throw error
+        }
+
+        glm::mat<N, K, T> mat_out = transpose ? glm::transpose(m) : m;
+        std::ofstream out(fileName);
+        for (int i = 0; i < N; ++i) {
+            for (int j = 0; j < K; ++j)
+                out << mat_out[i][j] << " ";
+
+            out << "\n";
+        }
+
+
+        out.close();
+    }
 
     /**
      * Load simulation objects from json format

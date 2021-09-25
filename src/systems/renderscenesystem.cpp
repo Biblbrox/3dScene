@@ -20,6 +20,7 @@
 #include "utils/math.hpp"
 #include "view/fpscamera.hpp"
 #include "utils/texture.hpp"
+#include "utils/fs.hpp"
 
 using utils::log::Logger;
 using boost::format;
@@ -341,18 +342,16 @@ void RenderSceneSystem::makeScreenshot()
     std::ofstream f(getResourcePath("projected.txt"), std::ios::out | std::ios::trunc);
     glm::vec4 viewport = {0, 0, size};
     glm::mat4 perspective = glm::perspective(45.f, (float)size.x / (float)size.y, 1.f, 10000.f);
-    for (vec3 p: lidar->coll_points) {
+    for (const vec3& p: lidar->coll_points) {
         vec3 projected = glm::project(p, view, perspective, viewport);
-//        vec2 projected = get2dPoint(p, view, perspective, size.x, size.y);
-//        vec2 projected = world_to_screen(p + pos, perspective * view, size.x, size.y);
         f << projected.x << " " << projected.y << "\n";
-//        vec3 unprojected = glm::unProject(projected, view, perspective, viewport);
-//
-//        vec3 diff = glm::abs(glm::abs(unprojected) - glm::abs(p));
-//        Logger::info("Difference: %.5f, %.5f, %.5f\n", diff.x, diff.y, diff.z);
     }
 
     f.close();
+
+    // Save calibration matrix
+    glm::mat4 calMat = perspective * view;
+    utils::fs::saveMatTxt(getResourcePath("cal_matrix.txt"), calMat, true);
 
     // Restore camera parameters
     camera->setPos(old_pos);
