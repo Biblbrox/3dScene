@@ -27,6 +27,9 @@ FORCE_INLINE inline vec3 ray_point(const Ray& ray, GLfloat distance)
 
 struct Frame
 {
+    // Position of lidar or other source
+    glm::vec3 sourcePos;
+    // XYZ or XYZI points
     std::variant<std::vector<glm::vec3>, std::vector<glm::vec4>> points;
 };
 

@@ -6,6 +6,7 @@
 #include <glm/exponential.hpp>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
+#include <Eigen/Dense>
 
 #include "components/positioncomponent.hpp"
 #include "components/positioncomponentinst.hpp"
@@ -111,17 +112,17 @@ void from_json(const json& j, Position& v)
 }
 
 void utils::fs::saveSimJson(const std::string &file_name,
-                            std::unordered_map<size_t, std::shared_ptr<Entity>> &entities)
+                            const std::unordered_map<size_t, std::shared_ptr<Entity>> &entities)
 {
     using ecs::types::type_id;
     json j;
     j["Entities"] = json::array();
-    for (auto& [_, en]: entities) {
+    for (const auto& [_, en]: entities) {
         std::string key =  std::to_string(_);
         json en_obj = json::object();
         // Component list
         en_obj["Components"] = json::array();
-        for (auto&[type, comp_gen]: en->getComponents()) {
+        for (const auto&[type, comp_gen]: en->getComponents()) {
             if (type == type_id<PositionComponent>) {
                 auto comp = en->getComponent<PositionComponent>();
                 json comp_obj = json::object();
@@ -438,6 +439,8 @@ void utils::fs::saveFrameToFilePcd(const Frame &frame, const std::string &file_n
             cloud[i].intensity = points[i].w;
         }
 
+        cloud.sensor_origin_ = Eigen::Vector4f(frame.sourcePos.x, frame.sourcePos.y,
+                                               frame.sourcePos.z, 1.f);
         pcl::io::savePCDFileASCII (file_name, cloud);
     } else {
         pcl::PointCloud<pcl::PointXYZ> cloud;
