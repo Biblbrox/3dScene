@@ -93,6 +93,8 @@ inline int get_thread_count()
 
 
 typedef vec<3, GLuint> vec3u;
+typedef vec<2, GLuint> vec2u;
+typedef vec<2, int> vec2i;
 
 typedef float Scalar;
 typedef bvh::Vector3<Scalar> Vector3;
