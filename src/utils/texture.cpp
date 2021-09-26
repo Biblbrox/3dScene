@@ -229,7 +229,7 @@ void utils::texture::cleanFBO(GLuint* texture, GLuint* sceneBuffer, GLuint* rbo,
 }
 
 SDL_Surface*
-utils::texture::loadSurfaceFromPixels(GLubyte* pixels, GLuint width, GLuint height, bool rgba)
+utils::texture::loadSurfaceFromPixels(GLubyte* pixels, int width, int height, bool rgba)
 {
     Uint32 rmask, gmask, bmask, amask;
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -248,10 +248,10 @@ utils::texture::loadSurfaceFromPixels(GLubyte* pixels, GLuint width, GLuint heig
     int depth, pitch;
     if (!rgba) {
         depth = 24;
-        pitch = 3*width; // 3 bytes per pixel * pixels per row
+        pitch = 3 * width; // 3 bytes per pixel * pixels per row
     } else { // STBI_rgb_alpha (RGBA)
         depth = 32;
-        pitch = 4*width;
+        pitch = 4 * width;
     }
 
     SDL_Surface* surf = SDL_CreateRGBSurfaceFrom((void*)pixels, width, height, depth, pitch,
@@ -263,15 +263,15 @@ utils::texture::loadSurfaceFromPixels(GLubyte* pixels, GLuint width, GLuint heig
 
 void utils::texture::saveScreen(const std::string& file_name, GLsizei width, GLsizei height)
 {
-    GLubyte* pixels = new GLubyte[3 * width * height];
-    glReadPixels(0, 0, width - 1, height - 1, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+    GLubyte* pixels = new GLubyte[4 * width * height];
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-    SDL_Surface* surf = loadSurfaceFromPixels(pixels, width,  height);
+    SDL_Surface* surf = loadSurfaceFromPixels(pixels, width,  height, true);
     SDL_Surface* flipped = flipVertically(surf);
     SDL_SaveBMP(flipped, file_name.c_str());
 
-    delete[] pixels;
-
     SDL_FreeSurface(surf);
     SDL_FreeSurface(flipped);
+
+    delete[] pixels;
 }

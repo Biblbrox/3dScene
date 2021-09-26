@@ -8,6 +8,8 @@
 #include <glm/glm.hpp>
 
 #include "strutils/strutils.hpp"
+#include "base.hpp"
+
 // TODO: make error handling in Config class
 struct ConfigEqual : public std::equal_to<>
 {
@@ -65,6 +67,9 @@ static std::string as_string(const std::any& val, std::string_view type)
                + "," + std::to_string(value.z);
     } else if (type == "vec2") {
         auto value = std::any_cast<glm::vec2>(val);
+        return std::to_string(value.x) + "," + std::to_string(value.y);
+    } else if (type == "vec2i") {
+        auto value = std::any_cast<vec2i>(val);
         return std::to_string(value.x) + "," + std::to_string(value.y);
     }
 
@@ -157,6 +162,10 @@ public:
                 auto vec = split(parts[2], ",");
                 glm::vec2 val{std::stof(vec[0]), std::stof(vec[1])};
                 addVal(key, val, "vec2");
+            } else if (type == "vec2i") {
+                auto vec = split(parts[2], ",");
+                vec2i val{std::stof(vec[0]), std::stof(vec[1])};
+                addVal(key, val, "vec2i");
             }
         }
 

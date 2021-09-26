@@ -16,7 +16,7 @@ public:
 private:
     Image m_img;
     pcl::PointCloud<pcl::PointXYZRGB> m_complexCloud;
-    std::vector<cv::Point2d> m_projectedPoints;
+    std::vector<cv::Point> m_projectedPoints;
 };
 
 

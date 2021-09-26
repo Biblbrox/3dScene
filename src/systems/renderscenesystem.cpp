@@ -192,8 +192,9 @@ void RenderSceneSystem::renderScene()
     //        auto window_size = utils::getWindowSize<GLfloat>(*Game::getWindow());
     auto program = SceneProgram::getInstance();
     program->useFramebufferProgram();
-    vec2 size = Config::getVal<vec2>("ViewportSize"); // TODO: change viewport size here
-    glViewport(0, 0, size.x, size.y);
+    vec2i size = Config::getVal<vec2i>("ViewportSize"); // TODO: change viewport size here
+    vec2i sizei = {round(size.x), round(size.y)};
+    glViewport(0, 0, sizei.x, sizei.y);
     //        glScissor(0, 0, size.x, size.y);
     auto scene_comp = getEntitiesByTag<SceneComponent>().begin()->second
             ->getComponent<SceneComponent>();
@@ -204,12 +205,12 @@ void RenderSceneSystem::renderScene()
         if (isMSAA) {
             cleanFBO(&scene_comp->texture, &scene_comp->sceneBuffer, &scene_comp->rbo, isMSAA,
                      &scene_comp->sceneBufferMSAA, &scene_comp->textureMSAA);
-            generateFBO(true, size.x, size.y, &scene_comp->textureMSAA, &scene_comp->rbo,
+            generateFBO(true, sizei.x, sizei.y, &scene_comp->textureMSAA, &scene_comp->rbo,
                         &scene_comp->texture, &scene_comp->sceneBuffer,
                         &scene_comp->sceneBufferMSAA);
         } else {
             cleanFBO(&scene_comp->texture, &scene_comp->sceneBuffer, &scene_comp->rbo);
-            generateFBO(false, size.x, size.y, &scene_comp->textureMSAA, &scene_comp->rbo,
+            generateFBO(false, sizei.x, sizei.y, &scene_comp->textureMSAA, &scene_comp->rbo,
                         &scene_comp->texture, &scene_comp->sceneBuffer);
         }
 
@@ -275,39 +276,6 @@ void RenderSceneSystem::drawTerrain()
     glCullFace(GL_BACK);
 }
 
-vec2 world_to_screen(const vec3 world, const mat4& MVP, const int viewport_width, const int viewport_height)
-{
-    const vec4 world4(world.x, world.y, world.z, 1);
-    vec4 screen4(MVP * world4);
-
-    // Take care of possible division by zero
-    if (screen4.w == 0) // TODO: fp compare ?
-        screen4.w = 1;
-
-    vec2 screen2;
-    screen2.x = ((screen4.x / screen4.w + 1.0) / 2.0) * viewport_width;
-    screen2.y = ((screen4.y / screen4.w + 1.0) / 2.0) * viewport_width;
-
-//    screen2.x = round(screen4.x / screen4.w * viewport_width / 2 + viewport_width / 2);
-//    screen2.y = round(screen4.y / screen4.w * viewport_height / 2 + viewport_height / 2);
-
-    Logger::info("%f, %f\n", screen4.x / screen4.w, screen4.y / screen4.w);
-    return screen2;
-}
-
-
-vec2 get2dPoint(vec3 point3D, mat4 viewMatrix, mat4 projectionMatrix, int width, int height) {
-
-    mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
-    //transform world to clipping coordinates
-    point3D = viewProjectionMatrix * vec4(point3D, 1.f);
-    int winX = (int) round((( point3D.x + 1 ) / 2.0) * width);
-    //we calculate -point3D.getY() because the screen Y axis is
-    //oriented top->down
-    int winY = (int) round((( 1 - point3D.y) / 2.0) * height);
-    return vec2(winX, winY);
-}
-
 void RenderSceneSystem::makeScreenshot()
 {
     vec3 pos = getEntitiesByTag<LidarComponent>().begin()->second
@@ -323,7 +291,7 @@ void RenderSceneSystem::makeScreenshot()
     GLfloat old_pitch = camera->getPitch();
     GLfloat old_yaw = camera->getYaw();
 
-    auto size = Config::getVal<vec2>("ViewportSize");
+    vec2i size = Config::getVal<vec2i>("ViewportSize");
 
     // Set camera position to lidar position
     camera->setPos(pos);
@@ -341,7 +309,7 @@ void RenderSceneSystem::makeScreenshot()
     program->useFramebufferProgram();
     std::ofstream f(getResourcePath("projected.txt"), std::ios::out | std::ios::trunc);
     glm::vec4 viewport = {0, 0, size};
-    glm::mat4 perspective = glm::perspective(45.f, (float)size.x / (float)size.y, 1.f, 10000.f);
+    glm::mat4 perspective = program->getMat4(U_PROJECTION_MATRIX);
     for (const vec3& p: lidar->coll_points) {
         vec3 projected = glm::project(p, view, perspective, viewport);
         f << projected.x << " " << projected.y << "\n";

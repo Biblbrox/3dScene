@@ -31,7 +31,7 @@ namespace utils::texture
      * @return
      */
     SDL_Surface*
-    loadSurfaceFromPixels(GLubyte* pixels, GLuint width, GLuint height, bool rgba = false);
+    loadSurfaceFromPixels(GLubyte* pixels, int width, int height, bool rgba = false);
 
     /**
      * Load opengl texture from pixels to GPU with specific format.

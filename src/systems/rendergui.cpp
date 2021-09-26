@@ -41,6 +41,7 @@ using glm::mat4;
 using glm::vec3;
 using glm::vec4;
 using glm::scale;
+using glm::epsilon;
 
 // From https://github.com/ocornut/imgui/issues/707#issuecomment-468798935
 inline void Style()
@@ -169,10 +170,10 @@ RenderGuiSystem::RenderGuiSystem() : m_videoSettingsOpen(false),
         m_font = io.Fonts->Fonts[0];
     }
 
-    GLuint window_width = utils::getWindowWidth<GLuint>(*Game::getWindow());
-    GLuint window_height = utils::getWindowHeight<GLuint>(*Game::getWindow());
+    auto window_width = utils::getWindowWidth<GLuint>(*Game::getWindow());
+    auto window_height = utils::getWindowHeight<GLuint>(*Game::getWindow());
 
-    m_aspectRatio = static_cast<GLfloat>(window_width) / window_height;
+    m_aspectRatio = static_cast<GLfloat>(window_width) / static_cast<GLfloat>(window_height);
 }
 
 RenderGuiSystem::~RenderGuiSystem()
@@ -193,7 +194,7 @@ void RenderGuiSystem::update_state(size_t delta)
         // Render texture to window
         glBindFramebuffer(GL_READ_FRAMEBUFFER, sceneComp->sceneBufferMSAA);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, sceneComp->sceneBuffer);
-        vec2 size = Config::getVal<vec2>("ViewportSize"); // TODO: change viewport size here
+        vec2i size = Config::getVal<vec2i>("ViewportSize"); // TODO: change viewport size here
         glBlitFramebuffer(0, 0, size.x, size.y, 0, 0, size.x, size.y,
                           GL_COLOR_BUFFER_BIT, GL_NEAREST);
     }
@@ -356,23 +357,24 @@ void RenderGuiSystem::update_state(size_t delta)
 
             TableSetColumnIndex(1);
             TextUnformatted(_("Render"));
-            auto size = ImGui::GetContentRegionAvail();
+            vec2i size{round(ImGui::GetContentRegionAvail().x),
+                        round(ImGui::GetContentRegionAvail().y)};
+
             GLfloat image_height = size.x / m_aspectRatio;
-            size.y = image_height;
+            size.y = round(image_height);
 
             auto pos = ImGui::GetCursorPos();
-            if (glm::all(glm::epsilonEqual( // If render window resized
-                    Config::getVal<vec2>("ViewportSize"), glm::vec2(size.x, size.y),
-                    glm::epsilon<GLfloat>()))) {
+            // If render window resized
+            vec2i viewport_size = Config::getVal<vec2i>("ViewportSize");
+            if (viewport_size == size)
                 getEntitiesByTag<SceneComponent>().begin()->second
                         ->getComponent<SceneComponent>()->dirty = true;
-            }
 
             Config::getVal<vec2>("ViewportPos") = {pos.x, pos.y};
-            Config::getVal<vec2>("ViewportSize") = {size.x, size.y};
+            Config::getVal<vec2i>("ViewportSize") = {size.x, size.y};
 
             if (getGameState() != GameStates::STOP)
-                ImGui::Image((ImTextureID)sceneComp->texture, size, {0, 1}, {1, 0});
+                Image((ImTextureID)sceneComp->texture, ImVec2(size.x, size.y), {0, 1}, {1, 0});
         }
 
         if (Button(_("Make screenshot")))
@@ -524,17 +526,15 @@ void RenderGuiSystem::laser_settings()
 
     TextUnformatted(_("Prism start angle"));
     if (InputFloat2("##prism_start_angle", glm::value_ptr(lidarComp->start_angle))) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                    lidarComp->yaw, lidarComp->pitch);
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
 
-        lidarComp->pattern_points = lidar.risleyPattern2( lidarComp->freq, lidarComp->start_angle,
-                                                          lidarComp->density);
+        lidarComp->pattern_points = lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle,
+                                                         lidarComp->density);
     }
 
     TextUnformatted(_("Object distance"));
     if (InputFloat("##obj_distance", &lidarComp->obj_distance)) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                    lidarComp->yaw, lidarComp->pitch);
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
 
         lidarComp->pattern_points = lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle,
                                                          lidarComp->density);
@@ -550,8 +550,7 @@ void RenderGuiSystem::laser_settings()
 
     TextUnformatted(_("Dots density"));
     if (InputFloat("##dot_dens", &lidarComp->density)) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f},
-                    lidarComp->yaw, lidarComp->pitch);
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
 
         lidarComp->pattern_points = lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle,
                                                          lidarComp->density);

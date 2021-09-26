@@ -116,6 +116,8 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("ExportType", 0, "int");
     if (!Config::hasKey("ObjDistance"))
         Config::addVal("ObjDistance", 10.f, "float");
+    if (!Config::hasKey("ViewportSize"))
+        Config::addVal("ViewportSize", vec2i(0, 0), "vec2i");
     if (!Config::hasKey("DataFileTmp"))
         Config::addVal("DataFileTmp", std::string("000000.txt"), "string");
     if (!Config::hasKey("MakeScreenshot"))
