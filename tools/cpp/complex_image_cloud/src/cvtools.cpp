@@ -41,3 +41,11 @@ void cvtools::fromGLM2CV(const glm::mat4 &glmmat, cv::Mat *cvmat)
 
     memcpy(cvmat->data, glm::value_ptr(glmmat), 16 * sizeof(float));
 }
+
+cv::Vec3b cvtools::getImgColor(const cv::Mat &img, const cv::Point &p)
+{
+    if (p.x > img.cols || p.y > img.rows || p.x < 0 || p.y < 0)
+        return {0, 0, 0};
+
+    return img.at<cv::Vec3b>(p);
+}

@@ -60,28 +60,16 @@ void SceneProgram::free_buffers()
 void SceneProgram::useScreenProgram()
 {
     useProgram("screen");
-//    if (m_programID != m_programs["screen"]) {
-//        glUseProgram(m_programs["screen"]);
-//        m_programID = m_programs["screen"];
-//    }
 }
 
 void SceneProgram::useFramebufferProgram()
 {
     useProgram("framebuffer");
-//    if (m_programID != m_programs["framebuffer"]) {
-//        glUseProgram(m_programs["framebuffer"]);
-//        m_programID = m_programs["framebuffer"];
-//    }
 }
 
 void SceneProgram::useSkyboxProgram()
 {
     useProgram("skybox");
-//    if (m_programID != m_programs["skybox"]) {
-//        glUseProgram(m_programs["skybox"]);
-//        m_programID = m_programs["skybox"];
-//    }
 }
 
 glm::mat4 SceneProgram::getMVP()

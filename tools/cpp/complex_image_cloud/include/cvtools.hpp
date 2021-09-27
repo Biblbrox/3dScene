@@ -18,6 +18,13 @@ namespace cvtools
 
     void fromGLM2CV(const glm::mat4& glmmat, cv::Mat* cvmat);
 
+    /**
+     * Get image color at pixel p.
+     * If p.x > img.width or p.y > img.height zero will be returned
+     * @param p
+     * @return
+     */
+    cv::Vec3b getImgColor(const cv::Mat& img, const cv::Point& p);
 
 }
 

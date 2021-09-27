@@ -16,7 +16,9 @@ int main()
 
     ComplexCloud complexCloud(img, *cloud);
 
-    complexCloud.drawProjected();
+//    complexCloud.drawProjected();
+
+    complexCloud.drawComplexCloud();
 
 
     return 0;
