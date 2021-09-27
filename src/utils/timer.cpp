@@ -65,20 +65,3 @@ bool utils::time::Timer::isPaused() const noexcept
 {
     return m_paused && m_started;
 }
-
-
-std::string utils::time::get_current_date()
-{
-    const int date_length = 80;
-
-    time_t raw_time;
-    struct tm* time_info;
-    char time_buffer[date_length];
-
-    std::time(&raw_time);
-    time_info = std::localtime(&raw_time);
-
-    std::strftime(time_buffer, date_length, "%c", time_info);
-
-    return std::string(time_buffer);
-}

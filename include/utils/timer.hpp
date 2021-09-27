@@ -34,13 +34,6 @@ namespace utils
             bool m_paused;
             bool m_started;
         };
-
-
-        /**
-         * Return format representation of current date
-         * @return
-         */
-        std::string get_current_date();
     }
 }
 

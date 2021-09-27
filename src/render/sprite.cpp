@@ -7,9 +7,9 @@
 #include "render/sprite.hpp"
 #include "utils/collision.hpp"
 
-using utils::log::Category;
-using utils::log::program_log_file_name;
-using utils::log::shader_log_file_name;
+using logger::Category;
+using logger::program_log_file_name;
+using logger::shader_log_file_name;
 using boost::format;
 using std::vector;
 

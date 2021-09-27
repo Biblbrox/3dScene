@@ -3,14 +3,14 @@
 #include <bvh/hierarchy_refitter.hpp>
 
 #include "utils/collision.hpp"
-#include "utils/logger.hpp"
+#include "logger/logger.hpp"
 #include "components/bvhcomponent.hpp"
 #include "components/positioncomponent.hpp"
 #include "components/spritecomponent.hpp"
 #include "base.hpp"
 
 using utils::RectPoints3D;
-using utils::log::Logger;
+using logger::Logger;
 using math::rotate_around;
 using math::computeCentroid;
 using math::build_covarience_matrix;

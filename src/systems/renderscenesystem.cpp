@@ -12,7 +12,7 @@
 #include "components/lidarcomponent.hpp"
 #include "components/skyboxcomponent.hpp"
 #include "render/render.hpp"
-#include "utils/logger.hpp"
+#include "logger/logger.hpp"
 #include "exceptions/glexception.hpp"
 #include "sceneprogram.hpp"
 #include "game.hpp"
@@ -22,10 +22,10 @@
 #include "utils/texture.hpp"
 #include "utils/fs.hpp"
 
-using utils::log::Logger;
+using logger::Logger;
 using boost::format;
-using utils::log::program_log_file_name;
-using utils::log::Category;
+using logger::program_log_file_name;
+using logger::Category;
 using glm::mat3;
 using glm::mat4;
 using glm::vec3;

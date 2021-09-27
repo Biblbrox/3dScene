@@ -12,7 +12,7 @@
 #include "components/terraincomponent.hpp"
 #include "components/movablecomponent.hpp"
 #include "utils/collision.hpp"
-#include "utils/logger.hpp"
+#include "logger/logger.hpp"
 #include "utils/bvh/aabb.hpp"
 #include "utils/bvh/obb.hpp"
 #include "render/render.hpp"
@@ -22,7 +22,7 @@ using glm::mat4;
 using glm::mat3;
 using glm::vec4;
 using glm::vec3;
-using utils::log::Logger;
+using logger::Logger;
 using math::viewportToWorld;
 using utils::data::mapBinaryTree;
 
@@ -197,7 +197,7 @@ KeyboardSystem::findUnderPointer(const vec2 &pos)
     vec3 origin = camera->getPos();
 
     vec2 viewport_pos = Config::getVal<vec2>("ViewportPos");
-    vec2 viewport_size = Config::getVal<vec2>("ViewportSize");
+    vec2i viewport_size = Config::getVal<vec2i>("ViewportSize");
     vec2 pointer_pos = pos - viewport_pos;
 
     glm::vec3 ray_world = viewportToWorld(pointer_pos, viewport_size, projection, view);

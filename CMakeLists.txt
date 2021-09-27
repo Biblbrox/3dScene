@@ -65,6 +65,8 @@ add_compile_definitions(GLM_FORCE_INLINE)
 add_library(strutils ${EXT_PATH}/strutils/strutils.cpp
         ${EXT_PATH}/strutils/strutils.hpp)
 
+add_library(logger ${EXT_PATH}/logger/logger.cpp
+        ${EXT_PATH}/logger/logger.hpp)
 
 add_library(imgui
         # Main Imgui files
@@ -98,7 +100,7 @@ add_executable(${GAME_NAME} ${SOURCES})
 target_link_libraries(${GAME_NAME} ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES}
         ${SDL2_TTF_LIBRARIES} ${SDL2_MIXER_LIBRARIES} ${Boost_LIBRARIES} GLEW
         libGLEW.so libGLU.so libGL.so imgui pthread Eigen3::Eigen ${ASSIMP_LIBRARIES}
-        ${PCL_LIBRARIES} bvh strutils)
+        ${PCL_LIBRARIES} bvh strutils logger)
 
 
 target_include_directories(${GAME_NAME} PRIVATE include

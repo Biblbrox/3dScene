@@ -8,7 +8,7 @@
 #include <SDL_image.h>
 
 #include "utils/texture.hpp"
-#include "utils/logger.hpp"
+#include "logger/logger.hpp"
 #include "strutils/strutils.hpp"
 #include "exceptions/sdlexception.hpp"
 #include "exceptions/glexception.hpp"

@@ -2,19 +2,18 @@
 #define LOGGER_HPP
 
 #include <string>
-#include <GL/glew.h>
 #include <unordered_map>
 #include <memory>
-#include <boost/format.hpp>
 #include <fstream>
 #include <iostream>
 #include <utility>
 #include <ctime>
 #include <chrono>
+#include <GL/glew.h>
+#include <boost/format.hpp>
 
-#include "timer.hpp"
-
-namespace utils::log {
+namespace logger
+{
     enum class Category {
         INFO,
         FS_ERROR,
@@ -45,6 +44,12 @@ namespace utils::log {
      * @param program
      */
     void printProgramLog(GLuint program);
+
+    /**
+     * Return format representation of current date
+     * @return
+     */
+    std::string get_current_date();
 
     class Logger
     {
@@ -85,7 +90,7 @@ namespace utils::log {
                     break;
             }
 
-            std::string date_str = utils::time::get_current_date();
+            std::string date_str = get_current_date();
 
             boost::format msg(format);
             std::initializer_list<char> {(static_cast<void>(msg % args), char{}) ...};
@@ -94,10 +99,10 @@ namespace utils::log {
             message = (boost::format("%s[%s]: %s\n") % category_str % date_str % message).str();
 
             if (writeFile) {
-                std::shared_ptr<std::ofstream> file(new std::ofstream,
-                                                    [](auto f) {
-                                                        f->close();
-                                                    });
+                std::shared_ptr<std::ofstream> file(new std::ofstream, [](auto f) {
+                    f->close();
+                });
+
                 if (m_logFiles.find(file_name) != m_logFiles.cend()) {
                     file = m_logFiles[file_name];
                 } else {
@@ -124,6 +129,6 @@ namespace utils::log {
     private:
         static std::unordered_map<std::string, std::shared_ptr<std::ofstream>> m_logFiles;
     };
-}
+};
 
 #endif //LOGGER_HPP

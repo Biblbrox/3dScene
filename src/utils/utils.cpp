@@ -2,15 +2,15 @@
 #include <boost/format.hpp>
 #include <iostream>
 
-#include "utils/logger.hpp"
+#include "logger/logger.hpp"
 #include "utils/utils.hpp"
 #include "exceptions/glexception.hpp"
 #include "exceptions/fsexception.hpp"
 
-using utils::log::Logger;
-using utils::log::Category;
-using utils::log::program_log_file_name;
-using utils::log::shader_log_file_name;
+using logger::Logger;
+using logger::Category;
+using logger::program_log_file_name;
+using logger::shader_log_file_name;
 using boost::format;
 using glm::vec2;
 using std::find_if;
@@ -24,7 +24,7 @@ GLuint utils::loadShaderFromFile(const std::string &path, GLenum shaderType)
     if (!sourceFile.is_open())
         throw FSException((format("Can't open shader source file %1%\n")
                            % path).str(), program_log_file_name(),
-                          utils::log::Category::FS_ERROR);
+                          logger::Category::FS_ERROR);
 
     shaderString.assign(std::istreambuf_iterator<char>(sourceFile),
                         std::istreambuf_iterator<char>());
@@ -38,12 +38,12 @@ GLuint utils::loadShaderFromFile(const std::string &path, GLenum shaderType)
     glGetShaderiv(shaderID, GL_COMPILE_STATUS, &shaderCompiled);
     if (shaderCompiled != GL_TRUE) {
         sourceFile.close();
-        utils::log::printShaderLog(shaderID);
+        logger::printShaderLog(shaderID);
         glDeleteShader(shaderID);
         throw GLException(
                 "Error while compiling shader(see shader log)!",
                 program_log_file_name(),
-                utils::log::Category::SHADER_COMPILE_ERROR);
+                logger::Category::SHADER_COMPILE_ERROR);
     }
 
     sourceFile.close();
