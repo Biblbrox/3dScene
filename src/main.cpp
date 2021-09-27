@@ -4,7 +4,7 @@
 
 #include "base.hpp"
 #include "game.hpp"
-#include "utils/logger.hpp"
+#include "logger/logger.hpp"
 #include "exceptions/basegameexception.hpp"
 #include "sceneprogram.hpp"
 #include "config.hpp"
@@ -14,8 +14,8 @@
 #include <valgrind/callgrind.h>
 #endif
 
-using utils::log::program_log_file_name;
-using utils::log::Category;
+using logger::program_log_file_name;
+using logger::Category;
 using boost::locale::generator;
 using boost::locale::translate;
 using boost::locale::gettext;
@@ -76,19 +76,18 @@ int main(int argc, char *args[])
 
             if (firstRun) {
                 if (SDL_CaptureMouse(SDL_TRUE) != 0)
-                    utils::log::Logger::write(program_log_file_name(),
-                                              Category::INITIALIZATION_ERROR,
-                                              "Warning: Unable to capture mouse. "
-                                              "SDL Error: %s\n", SDL_GetError());
+                    logger::Logger::write(program_log_file_name(),
+                                       Category::INITIALIZATION_ERROR,
+                                       "Warning: Unable to capture mouse. "
+                                       "SDL Error: %s\n", SDL_GetError());
                 firstRun = false;
             }
         }
     } catch (const BaseGameException& e) {
-        utils::log::Logger::write(e.fileLog(), e.categoryError(), e.what());
+        logger::Logger::write(e.fileLog(), e.categoryError(), e.what());
         ret_code = EXIT_FAILURE;
     } catch (const std::exception& e) {
-        utils::log::Logger::write(program_log_file_name(),
-                                  Category::UNEXPECTED_ERROR, e.what());
+        logger::Logger::write(program_log_file_name(), Category::UNEXPECTED_ERROR, e.what());
         ret_code = EXIT_FAILURE;
     }
     quit();

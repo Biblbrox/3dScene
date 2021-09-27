@@ -13,7 +13,7 @@
 #include "sceneprogram.hpp"
 #include "systems/lidarsystem.hpp"
 #include "utils/collision.hpp"
-#include "utils/logger.hpp"
+#include "logger/logger.hpp"
 #include "utils/fs.hpp"
 
 using glm::acos;
@@ -22,7 +22,7 @@ using std::string;
 using glm::cos;
 using glm::sin;
 using glm::sqrt;
-using utils::log::Logger;
+using logger::Logger;
 using utils::fs::saveFrameToFileTxt;
 using utils::fs::saveFrameToFilePcd;
 using coll::rayTerrainIntersection;

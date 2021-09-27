@@ -4,10 +4,10 @@
 #include <exception>
 #include <string>
 
-#include "utils/logger.hpp"
+#include "logger/logger.hpp"
 
-using utils::log::Category;
-using utils::log::program_log_file_name;
+using logger::Category;
+using logger::program_log_file_name;
 
 class BaseGameException : public std::exception
 {

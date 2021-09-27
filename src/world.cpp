@@ -43,12 +43,14 @@ using std::vector;
 using utils::RectPoints3D;
 
 using ecs::Entity;
+using boost::format;
+using logger::Category;
 
 using utils::fix_coords;
 using utils::RectPoints3D;
 using utils::data::mapBinaryTree;
-using utils::log::Logger;
-using utils::log::program_log_file_name;
+using logger::Logger;
+using logger::program_log_file_name;
 using utils::texture::genRbo;
 using utils::texture::genTexture;
 
@@ -121,7 +123,7 @@ World::World() : m_wasInit(false), m_initFromFile(false)
     if (!Config::hasKey("DataFileTmp"))
         Config::addVal("DataFileTmp", std::string("000000.txt"), "string");
     if (!Config::hasKey("MakeScreenshot"))
-        Config::addVal<bool>("MakeScreenshot", false, "bool");
+        Config::addVal("MakeScreenshot", false, "bool");
 }
 
 World::~World()
@@ -447,11 +449,8 @@ void World::init_skybox()
     skybox->skybox_id = utils::texture::loadCubemap(faces);
 
     if (GLenum error = glGetError(); error != GL_NO_ERROR) {
-        Logger::write(utils::log::program_log_file_name(),
-                      utils::log::Category::INITIALIZATION_ERROR,
-                      (boost::format("Unable to load skybox: %s") %
-                       glewGetErrorString(error))
-                          .str());
+        Logger::write(logger::program_log_file_name(), Category::INITIALIZATION_ERROR,
+                      (format("Unable to load skybox: %s") % glewGetErrorString(error)).str());
     }
 }
 

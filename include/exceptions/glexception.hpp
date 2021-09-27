@@ -4,9 +4,9 @@
 #include <string>
 
 #include "basegameexception.hpp"
-#include "utils/logger.hpp"
+#include "logger/logger.hpp"
 
-using utils::log::Category;
+using logger::Category;
 
 /**
  * Exception class that can be throw when happened some error

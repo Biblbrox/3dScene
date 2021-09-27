@@ -1,6 +1,6 @@
 #include "render/render.hpp"
 #include "utils/math.hpp"
-#include "utils/logger.hpp"
+#include "logger/logger.hpp"
 #include "render/terrain.hpp"
 #include "config.hpp"
 
@@ -11,8 +11,8 @@ using glm::mat3;
 using glm::mat4;
 using math::rotate_around;
 using math::operator/;
-using utils::log::program_log_file_name;
-using utils::log::Category;
+using logger::program_log_file_name;
+using logger::Category;
 using boost::format;
 
 void render::drawLinen(const std::vector<vec3>& points, bool adjacency)

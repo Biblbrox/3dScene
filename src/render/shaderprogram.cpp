@@ -4,16 +4,15 @@
 
 #include "render/shaderprogram.hpp"
 #include "utils/utils.hpp"
-#include "utils/logger.hpp"
+#include "logger/logger.hpp"
 #include "exceptions/glexception.hpp"
 
 using boost::format;
-using utils::log::Logger;
-using utils::log::Category;
-using utils::log::program_log_file_name;
-using utils::log::shader_log_file_name;
+using logger::Logger;
+using logger::Category;
+using logger::program_log_file_name;
+using logger::shader_log_file_name;
 using utils::loadShaderFromFile;
-
 
 GLuint create_program(const std::string& vertex, const std::string& fragment,
                       const std::string& geometry = "")
@@ -39,7 +38,7 @@ GLuint create_program(const std::string& vertex, const std::string& fragment,
     if (!geometry.empty())
         glAttachShader(program, geometryShader);
     if (GLenum error = glGetError(); error != GL_NO_ERROR) {
-        utils::log::printProgramLog(program);
+        logger::printProgramLog(program);
         throw GLException("Unable to attach shaders.\n",
                           program_log_file_name(),
                           Category::INITIALIZATION_ERROR);
@@ -49,7 +48,7 @@ GLuint create_program(const std::string& vertex, const std::string& fragment,
     GLint linkSuccess = GL_TRUE;
     glGetProgramiv(program, GL_LINK_STATUS, &linkSuccess);
     if (linkSuccess != GL_TRUE) {
-        utils::log::printProgramLog(program);
+        logger::printProgramLog(program);
         throw GLException((format("Unable to link program: %d, %s\n")
                            % program % glGetError()).str(),
                           program_log_file_name(),
@@ -85,7 +84,7 @@ void ShaderProgram::bind() const
 {
     glUseProgram(m_programID);
     if (GLenum error = glGetError(); error != GL_NO_ERROR) {
-        utils::log::printProgramLog(m_programID);
+        logger::printProgramLog(m_programID);
         throw GLException((format("Unable to bind shader program! %s%\n") %
                            gluErrorString(error)).str(),
                           program_log_file_name(),

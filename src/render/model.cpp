@@ -6,7 +6,7 @@
 
 #include "constants.hpp"
 #include "render/model.hpp"
-#include "utils/logger.hpp"
+#include "logger/logger.hpp"
 #include "utils/texture.hpp"
 
 using boost::format;
@@ -15,8 +15,8 @@ using glm::vec3;
 using std::vector;
 using std::filesystem::absolute;
 using std::filesystem::canonical;
-using utils::log::Category;
-using utils::log::Logger;
+using logger::Category;
+using logger::Logger;
 
 bool hasTexture(aiMaterial *mat)
 {

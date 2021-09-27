@@ -262,7 +262,7 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
 {
     if (!std::filesystem::exists(file_name))
         throw FSException((boost::format("Unable to load file %1") % file_name).str(),
-                          log::program_log_file_name(), Category::FS_ERROR);
+                          logger::program_log_file_name(), Category::FS_ERROR);
 
     std::vector<ecs::Entity> res;
 

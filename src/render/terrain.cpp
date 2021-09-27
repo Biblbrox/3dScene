@@ -8,7 +8,7 @@
 using utils::texture::loadSurface;
 using std::vector;
 using std::pair;
-using utils::log::Logger;
+using logger::Logger;
 using math::barry_centric;
 
 Terrain::Terrain(const std::string& height_image,

@@ -31,9 +31,9 @@ static GameStates prevState = GameStates::STOP;
 SDL_Window* Game::m_window = nullptr;
 SDL_GLContext Game::m_glcontext = nullptr;
 
-using utils::log::Logger;
-using utils::log::Category;
-using utils::log::program_log_file_name;
+using logger::Logger;
+using logger::Category;
+using logger::program_log_file_name;
 using boost::format;
 
 void quit()

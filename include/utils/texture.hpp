@@ -12,8 +12,8 @@ if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) \
 throw GLException((boost::format( \
         "Warning: Unable to generate framebuffer. " \
         "GL Error: %s\n") % gluErrorString(glGetError())).str(), \
-        utils::log::program_log_file_name(), \
-        utils::log::Category::INITIALIZATION_ERROR); \
+        logger::program_log_file_name(), \
+        logger::Category::INITIALIZATION_ERROR); \
 
 using glm::vec3;
 using glm::vec2;

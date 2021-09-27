@@ -3,7 +3,7 @@
 
 #include "boost/format.hpp"
 #include "sceneprogram.hpp"
-#include "utils/logger.hpp"
+#include "logger/logger.hpp"
 #include "utils/utils.hpp"
 #include "base.hpp"
 
@@ -12,10 +12,10 @@ using glm::mat4;
 using glm::vec3;
 using glm::vec4;
 using utils::loadShaderFromFile;
-using utils::log::Category;
-using utils::log::Logger;
-using utils::log::program_log_file_name;
-using utils::log::shader_log_file_name;
+using logger::Category;
+using logger::Logger;
+using logger::program_log_file_name;
+using logger::shader_log_file_name;
 using std::filesystem::absolute;
 using std::filesystem::canonical;
 

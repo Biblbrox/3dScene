@@ -15,7 +15,7 @@
 #include "components/bvhcomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "components/movablecomponent.hpp"
-#include "utils/logger.hpp"
+#include "logger/logger.hpp"
 #include "utils/fs.hpp"
 #include "utils/collision.hpp"
 #include "sceneprogram.hpp"
@@ -28,9 +28,9 @@
 
 using std::string;
 
-using utils::log::Logger;
-using utils::log::program_log_file_name;
-using utils::log::Category;
+using logger::Logger;
+using logger::program_log_file_name;
+using logger::Category;
 using math::operator/;
 using utils::texture::genRbo;
 using utils::texture::genTexture;
@@ -366,7 +366,7 @@ void RenderGuiSystem::update_state(size_t delta)
             auto pos = ImGui::GetCursorPos();
             // If render window resized
             vec2i viewport_size = Config::getVal<vec2i>("ViewportSize");
-            if (viewport_size == size)
+            if (viewport_size != size)
                 getEntitiesByTag<SceneComponent>().begin()->second
                         ->getComponent<SceneComponent>()->dirty = true;
 
