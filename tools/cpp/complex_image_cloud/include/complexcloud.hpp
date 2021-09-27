@@ -13,9 +13,10 @@ public:
 
     void getXYZC() const;
     void drawProjected() const;
+    void drawComplexCloud() const;
 private:
     Image m_img;
-    pcl::PointCloud<pcl::PointXYZRGB> m_complexCloud;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_complexCloud;
     std::vector<cv::Point> m_projectedPoints;
 };
 

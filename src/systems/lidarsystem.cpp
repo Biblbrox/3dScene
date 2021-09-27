@@ -83,52 +83,61 @@ void LidarSystem::collision()
    if (!Config::getVal<bool>("CheckCollision"))
         return;
 
-    const auto &entities = m_ecsManager->getEntities();
+    auto bvhEntities = getEntitiesByTag<BVHComponent>();
+    auto terrain = getEntitiesByTag<TerrainComponent>().begin()->second;
 //#pragma omp declare reduction (merge : std::vector<vec3> \
 //							   : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
     vector<vec4> coll_dots;
 //#pragma omp parallel for collapse(1) reduction(merge                           \
 //                                               : coll_dots) shared(entities), default(shared)
     for (const auto &dot : pattern) {
-        for (const auto &[key, en] : entities) {
-            vec3 dir = normalize(dot - pos->pos);
-            if (glm::any(glm::isnan(dir)))
-                continue;
+        vec3 dir = normalize(dot - pos->pos);
+        if (glm::any(glm::isnan(dir)))
+            continue;
+
+        Ray ray;
+        ray.direction = Vector3(dir.x, dir.y, dir.z);
+        ray.origin = Vector3(pos->pos.x, pos->pos.y, pos->pos.z);
+        ray.tmin = 0;
+        ray.tmax = 10000;
+
+        // Need to make geometric shadow of objects
+        bool was_collision = false;
+        for (const auto &[key, en] : bvhEntities) {
+            if (was_collision)
+                break;
 
             auto bvh_comp = en->getComponent<BVHComponent>();
 
-            Ray ray;
-            ray.direction = Vector3(dir.x, dir.y, dir.z);
-            ray.origin = Vector3(pos->pos.x, pos->pos.y, pos->pos.z);
-            ray.tmin = 0;
-            ray.tmax = 10000;
-
             std::pair<bool, vec3> coll = {false, vec3(0.f)};
             GLfloat intensity;
-            if (!bvh_comp) { // Terrain
-                auto terrainComp = en->getComponent<TerrainComponent>();
-                if (!terrainComp)
-                    continue;
 
-                auto terrain = terrainComp->terrain;
-                coll = rayTerrainIntersection(*terrain, ray, 0, 10000.f, 100);
-                intensity = 0.09f;
-            } else { // Model
-                if (en->getComponent<LidarComponent>())
-                    continue;
+            if (en->getComponent<LidarComponent>())
+                continue;
 
-                auto pos_comp = en->getComponent<PositionComponent>();
+            auto pos_comp = en->getComponent<PositionComponent>();
 
-                auto triangles = bvh_comp->triangles;
-                auto bvh = bvh_comp->bvh_tree;
-                GLfloat similiarity;
-                coll = coll::BVHCollision(bvh, ray, *triangles, similiarity);
-                similiarity = (-similiarity + 1.f) / 2.f;
-                intensity = similiarity;
-            }
+            auto triangles = bvh_comp->triangles;
+            auto bvh = bvh_comp->bvh_tree;
+            GLfloat similiarity;
+            coll = coll::BVHCollision(bvh, ray, *triangles, similiarity);
+            similiarity = (-similiarity + 1.f) / 2.f;
+            intensity = similiarity;
 
-            if (coll.first)
+            if (coll.first) {
                 coll_dots.emplace_back(glm::vec4(coll.second, intensity));
+                was_collision = true;
+            }
+        }
+
+        if (was_collision)
+            continue;
+
+        auto terrainComp = terrain->getComponent<TerrainComponent>();
+        auto coll = rayTerrainIntersection(*terrainComp->terrain, ray, 0, 10000.f, 100);
+        if (coll.first) {
+            GLfloat intensity = 0.09f;
+            coll_dots.emplace_back(glm::vec4(coll.second, intensity));
         }
     }
 
