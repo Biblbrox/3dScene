@@ -5,6 +5,7 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/console/parse.h>
+#include <filesystem>
 
 #include "complexcloud.hpp"
 #include "cvtools.hpp"
@@ -80,17 +81,70 @@ void ComplexCloud::drawProjected() const
 
 void ComplexCloud::drawComplexCloud() const
 {
-    // --------------------------------------------
-    // -----Open 3D viewer and add point cloud-----
-    // --------------------------------------------
-    pcl::visualization::PCLVisualizer::Ptr viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
+    pcl::visualization::PCLVisualizer::Ptr viewer (
+            new pcl::visualization::PCLVisualizer ("XYZRGB cloud"));
     viewer->setBackgroundColor (0, 0, 0);
     pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(m_complexCloud);
-    viewer->addPointCloud<pcl::PointXYZRGB> (m_complexCloud, rgb, "sample cloud");
-    viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "sample cloud");
+    viewer->addPointCloud<pcl::PointXYZRGB> (m_complexCloud, rgb, "XYZRGB cloud");
+    viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3,
+                                              "XYZRGB cloud");
     viewer->addCoordinateSystem (1.0);
     viewer->initCameraParameters ();
 
     viewer->spin();
     viewer->close();
+}
+
+void ComplexCloud::drawIntensityCloud() const
+{
+    pcl::PointCloud<pcl::PointXYZI>::Ptr intensityCloud = makeIntensityCloudFromRGB(m_complexCloud);
+
+    pcl::visualization::PCLVisualizer::Ptr viewer (
+            new pcl::visualization::PCLVisualizer ("XYZI cloud"));
+    viewer->setBackgroundColor (0, 0, 0);
+    pcl::visualization::PointCloudColorHandlerGenericField<pcl::PointXYZI>
+            intensity(intensityCloud, "intensity");
+    viewer->addPointCloud<pcl::PointXYZI> (intensityCloud, intensity, "XYZI cloud");
+    viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3,
+                                              "XYZI cloud");
+    viewer->addCoordinateSystem (1.0);
+    viewer->initCameraParameters ();
+
+
+    viewer->spin();
+    viewer->close();
+}
+
+void ComplexCloud::saveIntensityCloud(const std::string &file_name) const
+{
+    if (!std::filesystem::exists(file_name)) {
+        // TODO: throw error
+        return;
+    }
+
+    pcl::PointCloud<pcl::PointXYZI>::Ptr intensityCloud = makeIntensityCloudFromRGB(m_complexCloud);
+
+    pcl::io::savePCDFileASCII(file_name, *intensityCloud);
+}
+
+pcl::PointCloud<pcl::PointXYZI>::Ptr
+ComplexCloud::makeIntensityCloudFromRGB(pcl::PointCloud<pcl::PointXYZRGB>::Ptr rgb_cloud) const
+{
+    assert(rgb_cloud != nullptr);
+
+    pcl::PointCloud<pcl::PointXYZI>::Ptr intensityCloud(
+            new pcl::PointCloud<pcl::PointXYZI>(rgb_cloud->width, rgb_cloud->height));
+
+    for (size_t i = 0; i < rgb_cloud->size(); ++i) {
+        intensityCloud->points[i].x = rgb_cloud->points[i].x;
+        intensityCloud->points[i].y = rgb_cloud->points[i].y;
+        intensityCloud->points[i].z = rgb_cloud->points[i].z;
+        intensityCloud->points[i].intensity = cvtools::getIntensity(cv::Vec3b(
+                rgb_cloud->points[i].r,
+                rgb_cloud->points[i].g,
+                rgb_cloud->points[i].b
+        ));
+    }
+
+    return intensityCloud;
 }
