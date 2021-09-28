@@ -49,3 +49,8 @@ cv::Vec3b cvtools::getImgColor(const cv::Mat &img, const cv::Point &p)
 
     return img.at<cv::Vec3b>(p);
 }
+
+double cvtools::getIntensity(const cv::Vec3b rgb)
+{
+    return rgb[0] / 3.0 + rgb[1] / 3.0 + rgb[0] / 3.0;
+}

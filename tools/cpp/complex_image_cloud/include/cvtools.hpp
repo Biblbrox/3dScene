@@ -26,6 +26,13 @@ namespace cvtools
      */
     cv::Vec3b getImgColor(const cv::Mat& img, const cv::Point& p);
 
+    /**
+     * Get average intensity of rgb data
+     * @param rgb
+     * @return
+     */
+    double getIntensity(const cv::Vec3b rgb);
+
 }
 
 #endif //CVTOOLS_HPP

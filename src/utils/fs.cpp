@@ -285,7 +285,8 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
                 pos_comp->angle = angle;
             } else if (comp.contains("PositionComponentInst")) {
                 json json_pos = comp["PositionComponentInst"];
-                std::vector<Position> position = json_pos[0]["position"].get<std::vector<Position>>();
+                std::vector<Position> position =
+                        json_pos[0]["position"].get<std::vector<Position>>();
 
                 entity.addComponent<PositionComponentInst>();
                 auto pos_comp = entity.getComponent<PositionComponentInst>();
@@ -353,8 +354,7 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
 
                 entity.addComponent<TerrainComponent>();
                 auto terrain = entity.getComponent<TerrainComponent>();
-                terrain->terrain = std::make_shared<Terrain>
-                        (height_image, texture_image, scale);
+                terrain->terrain = std::make_shared<Terrain>(height_image, texture_image, scale);
             } else if (comp.contains("SkyboxComponent")) {
                 continue;
             }
@@ -365,15 +365,16 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
 //#pragma omp parallel for shared(res)
     for (auto& en: res) {
         auto bvh = en.getComponent<BVHComponent>();
-        if (bvh) {
-            auto sprite = en.getComponent<SpriteComponent>()->sprite;
-            auto pos = en.getComponent<PositionComponent>();
-            auto triangles = sprite->getTriangles();
-            mat4 transform = createTransform(pos->pos, pos->angle, pos->rot_axis, sprite->getSize());
-            triangles = transformTriangles(triangles, transform);
-            bvh->bvh_tree = coll::buildBVH(triangles);
-            bvh->triangles = std::make_shared<std::vector<Triangle>>(triangles);
-        }
+        if (!bvh)
+            continue;
+
+        auto sprite = en.getComponent<SpriteComponent>()->sprite;
+        auto pos = en.getComponent<PositionComponent>();
+        auto triangles = sprite->getTriangles();
+        mat4 transform = createTransform(pos->pos, pos->angle, pos->rot_axis, sprite->getSize());
+        triangles = transformTriangles(triangles, transform);
+        bvh->bvh_tree = coll::buildBVH(triangles);
+        bvh->triangles = std::make_shared<std::vector<Triangle>>(triangles);
     }
 
     ifs.close();
@@ -381,8 +382,7 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
     return res;
 }
 
-void
-utils::fs::saveFrameToFileTxt(const Frame &frame, const std::string &file_name, bool intensity)
+void utils::fs::saveFrameToFileTxt(const Frame &frame, const std::string &file_name, bool intensity)
 {
     std::ofstream out(file_name, std::ios::out | std::ios::app);
 
