@@ -3,6 +3,7 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <glm/glm.hpp>
 
 #include "image.hpp"
 
@@ -31,9 +32,16 @@ public:
     void saveComplexCloud() const;
 
     /**
+     * Filter ground points
+     */
+    void filterGround() const;
+
+    /**
      * Save xyzi point cloud to file file_name
      */
-    void saveIntensityCloud(const std::string& file_name) const;
+    void saveIntensityCloud(const std::string& file_name,
+                            const glm::vec3& scaling = glm::vec3(1.f, 1.f, 1.f),
+                            bool relative = false) const;
 
 private:
     /**
@@ -47,6 +55,7 @@ private:
     Image m_img;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_complexCloud;
     std::vector<cv::Point> m_projectedPoints;
+    Eigen::Vector4f m_sensorOrigin;
 };
 
 

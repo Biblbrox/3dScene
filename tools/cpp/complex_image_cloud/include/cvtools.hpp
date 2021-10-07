@@ -31,7 +31,14 @@ namespace cvtools
      * @param rgb
      * @return
      */
-    double getIntensity(const cv::Vec3b rgb);
+    double getIntensityAv(const cv::Vec3b& rgb);
+
+    /**
+     * Get average intensity of rgb data
+     * @param rgb
+     * @return
+     */
+    double getIntensitySqrt(const cv::Vec3b& rgb);
 
 }
 

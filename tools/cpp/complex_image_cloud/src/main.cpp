@@ -19,7 +19,9 @@ int main()
 //    complexCloud.drawProjected();
 
     complexCloud.drawComplexCloud();
+//    complexCloud.drawIntensityCloud();
     complexCloud.saveIntensityCloud(getResourcePath("xyzi.pcd"));
+    complexCloud.saveIntensityCloud(getResourcePath("xyzi_relative.pcd"), {}, true);
 
 
     return 0;

@@ -18,7 +18,8 @@ using glm::mat4;
 
 ComplexCloud::ComplexCloud(Image img, pcl::PointCloud<pcl::PointXYZ> xyzCloud)
         : m_img(std::move(img)),
-          m_complexCloud(new pcl::PointCloud<pcl::PointXYZRGB>(xyzCloud.width, xyzCloud.height))
+          m_complexCloud(new pcl::PointCloud<pcl::PointXYZRGB>(xyzCloud.width, xyzCloud.height)),
+          m_sensorOrigin(xyzCloud.sensor_origin_)
 {
     m_complexCloud->points.reserve(xyzCloud.size());
     for (size_t i = 0; i < xyzCloud.size(); ++i) {
@@ -115,7 +116,8 @@ void ComplexCloud::drawIntensityCloud() const
     viewer->close();
 }
 
-void ComplexCloud::saveIntensityCloud(const std::string &file_name) const
+void ComplexCloud::saveIntensityCloud(const std::string &file_name, const glm::vec3& scaling,
+                                      bool relative) const
 {
     if (!std::filesystem::exists(file_name)) {
         // TODO: throw error
@@ -123,6 +125,19 @@ void ComplexCloud::saveIntensityCloud(const std::string &file_name) const
     }
 
     pcl::PointCloud<pcl::PointXYZI>::Ptr intensityCloud = makeIntensityCloudFromRGB(m_complexCloud);
+    if (relative) {
+        for (auto& p: intensityCloud->points) {
+            p.x -= m_sensorOrigin.x();
+            p.y -= m_sensorOrigin.y();
+            p.z -= m_sensorOrigin.z();
+        }
+    }
+
+    for (auto& p: intensityCloud->points) {
+        p.x *= scaling.x;
+        p.y *= scaling.y;
+        p.z *= scaling.z;
+    }
 
     pcl::io::savePCDFileASCII(file_name, *intensityCloud);
 }
@@ -139,7 +154,7 @@ ComplexCloud::makeIntensityCloudFromRGB(pcl::PointCloud<pcl::PointXYZRGB>::Ptr r
         intensityCloud->points[i].x = rgb_cloud->points[i].x;
         intensityCloud->points[i].y = rgb_cloud->points[i].y;
         intensityCloud->points[i].z = rgb_cloud->points[i].z;
-        intensityCloud->points[i].intensity = cvtools::getIntensity(cv::Vec3b(
+        intensityCloud->points[i].intensity = cvtools::getIntensitySqrt(cv::Vec3b(
                 rgb_cloud->points[i].r,
                 rgb_cloud->points[i].g,
                 rgb_cloud->points[i].b
@@ -147,4 +162,9 @@ ComplexCloud::makeIntensityCloudFromRGB(pcl::PointCloud<pcl::PointXYZRGB>::Ptr r
     }
 
     return intensityCloud;
+}
+
+void ComplexCloud::filterGround() const
+{
+
 }
