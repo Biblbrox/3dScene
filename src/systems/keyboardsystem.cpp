@@ -234,7 +234,7 @@ void KeyboardSystem::updateDraggedPos()
 
     auto pos = m_draggedObj->getComponent<PositionComponent>();
     vec2 mouse_pos = utils::getMousePos<GLfloat>();
-    vec2 viewport_size = Config::getVal<vec2>("ViewportSize");
+    vec2i viewport_size = Config::getVal<vec2i>("ViewportSize");
     vec2 viewport_pos = Config::getVal<vec2>("ViewportPos");
     mouse_pos -= viewport_pos;
 
@@ -243,11 +243,9 @@ void KeyboardSystem::updateDraggedPos()
     mat4 view = program->getMat4(U_VIEW_MATRIX);
     GLfloat sens = Config::getVal<GLfloat>("MouseSens");
 
-    vec3 dir = viewportToWorld(mouse_pos * sens, viewport_size,
-                               projection, view);
+    vec3 dir = viewportToWorld(mouse_pos * sens, viewport_size, projection, view);
     Ray ray;
-    ray.origin = Vector3(camera->getPos().x, camera->getPos().y,
-                         camera->getPos().z);
+    ray.origin = Vector3(camera->getPos().x, camera->getPos().y, camera->getPos().z);
     ray.direction = Vector3(dir.x, dir.y, dir.z);
     ray.tmin = 0;
     ray.tmax = 100000;

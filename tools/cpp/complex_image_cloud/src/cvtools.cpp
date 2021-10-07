@@ -50,7 +50,14 @@ cv::Vec3b cvtools::getImgColor(const cv::Mat &img, const cv::Point &p)
     return img.at<cv::Vec3b>(p);
 }
 
-double cvtools::getIntensity(const cv::Vec3b rgb)
+double cvtools::getIntensityAv(const cv::Vec3b& rgb)
 {
-    return rgb[0] / 3.0 + rgb[1] / 3.0 + rgb[0] / 3.0;
+    return rgb[0] / 3.0 + rgb[1] / 3.0 + rgb[2] / 3.0;
+}
+
+double cvtools::getIntensitySqrt(const cv::Vec3b& rgb)
+{
+    double max_val = std::sqrt(std::pow(255, 2) + std::pow(255, 2) + std::pow(255, 2));
+    double val = std::sqrt(std::pow(rgb[0], 2) + std::pow(rgb[1], 2) + std::pow(rgb[2], 2));
+    return val / max_val * 255;
 }
