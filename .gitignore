@@ -2,6 +2,7 @@
 Debug
 Release
 res/data.txt
-res/models/*
 .clang-format
 *~
+*.pcd
+*.bin

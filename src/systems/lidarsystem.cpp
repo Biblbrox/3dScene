@@ -101,12 +101,10 @@ void LidarSystem::collision()
         ray.tmin = 0;
         ray.tmax = 10000;
 
-        // Need to make geometric shadow of objects
         bool was_collision = false;
+        std::vector<glm::vec3> col_per_ent;
+        // Need to make geometric shadow of objects
         for (const auto &[key, en] : bvhEntities) {
-            if (was_collision)
-                break;
-
             auto bvh_comp = en->getComponent<BVHComponent>();
 
             std::pair<bool, vec3> coll = {false, vec3(0.f)};
@@ -125,9 +123,25 @@ void LidarSystem::collision()
             intensity = similiarity;
 
             if (coll.first) {
-                coll_dots.emplace_back(glm::vec4(coll.second, intensity));
-                was_collision = true;
+                col_per_ent.emplace_back(coll.second);
+//                coll_dots.emplace_back(glm::vec4(coll.second, intensity));
+//                was_collision = true;
             }
+        }
+
+        if (!col_per_ent.empty()) {
+            glm::vec3 closest = col_per_ent[0];
+            GLfloat distance = glm::length(col_per_ent[0] - pos->pos);
+            for (const vec3& p: col_per_ent) {
+                GLfloat dst = glm::length(p - pos->pos);
+                if (dst < distance) {
+                    distance = dst;
+                    closest = p;
+                }
+            }
+
+            coll_dots.emplace_back(glm::vec4(closest, 1.f));
+            was_collision = true;
         }
 
         if (was_collision)
