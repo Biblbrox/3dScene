@@ -82,15 +82,40 @@ void ComplexCloud::drawProjected() const
 
 void ComplexCloud::drawComplexCloud() const
 {
+    std::string cloudName = "XYZRGB cloud";
+
     pcl::visualization::PCLVisualizer::Ptr viewer (
-            new pcl::visualization::PCLVisualizer ("XYZRGB cloud"));
+            new pcl::visualization::PCLVisualizer (cloudName));
     viewer->setBackgroundColor (0, 0, 0);
     pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(m_complexCloud);
-    viewer->addPointCloud<pcl::PointXYZRGB> (m_complexCloud, rgb, "XYZRGB cloud");
+    viewer->addPointCloud<pcl::PointXYZRGB> (m_complexCloud, rgb, cloudName);
     viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3,
-                                              "XYZRGB cloud");
+                                              cloudName);
     viewer->addCoordinateSystem (1.0);
     viewer->initCameraParameters ();
+    viewer->addText("Number of points: " + std::to_string(m_complexCloud->size()), 30, 30);
+
+    auto keyHandler = [&](const pcl::visualization::KeyboardEvent& ev) {
+        if (!ev.isShiftPressed())
+            return;
+
+        if (ev.getKeyCode() == '+' && ev.keyDown()) {
+            double curPointSize;
+            viewer->getPointCloudRenderingProperties(
+                    pcl::visualization::PCL_VISUALIZER_POINT_SIZE, curPointSize, cloudName);
+            viewer->setPointCloudRenderingProperties(
+                    pcl::visualization::PCL_VISUALIZER_POINT_SIZE, curPointSize + 1, cloudName);
+        } else if (ev.getKeyCode() == '_' && ev.keyDown()) {
+            double curPointSize;
+            viewer->getPointCloudRenderingProperties(
+                    pcl::visualization::PCL_VISUALIZER_POINT_SIZE, curPointSize, cloudName);
+            curPointSize = (curPointSize - 1 >= 1) ? curPointSize - 1 : curPointSize;
+            viewer->setPointCloudRenderingProperties(
+                    pcl::visualization::PCL_VISUALIZER_POINT_SIZE, curPointSize, cloudName);
+        };
+    };
+
+    viewer->registerKeyboardCallback(keyHandler);
 
     viewer->spin();
     viewer->close();
