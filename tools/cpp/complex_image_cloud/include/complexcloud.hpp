@@ -11,8 +11,7 @@ class ComplexCloud
 {
 public:
     ComplexCloud(Image img, pcl::PointCloud<pcl::PointXYZ> xyzCloud);
-
-    void getXYZC() const;
+    ComplexCloud(Image img, pcl::PointCloud<pcl::PointXYZRGB> xyzCloud);
 
     /**
      * Draw image with projected points from 3d point cloud
@@ -24,12 +23,22 @@ public:
      */
     void drawComplexCloud() const;
 
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr getComplexCloud() const;
+
     /**
      * Draw point cloud with rgb data converted to intensity
      */
     void drawIntensityCloud() const;
 
-    void saveComplexCloud() const;
+    /**
+     * Save xyzrgb point cloud to .pcd file
+     * @param file_name
+     * @param scaling
+     * @param relative
+     */
+    void saveComplexCloud(const std::string& file_name,
+                          const glm::vec3& scaling = glm::vec3(1.f, 1.f, 1.f),
+                          bool relative = false) const;
 
     /**
      * Filter ground points
@@ -37,12 +46,23 @@ public:
     void filterGround() const;
 
     /**
-     * Save xyzi point cloud to file file_name
+     * Save xyzi point cloud to .pcd file
+     * @param file_name
+     * @param scaling
+     * @param relative
      */
     void saveIntensityCloud(const std::string& file_name,
                             const glm::vec3& scaling = glm::vec3(1.f, 1.f, 1.f),
                             bool relative = false) const;
 
+    /// Filter params
+    void setWindowSize(int);
+
+    void setSlope(float);
+
+    void setInitialDistance(float);
+
+    void setMaxDistance(float);
 private:
     /**
      * Create xyzi point clout from xyzrgb cloud
@@ -56,6 +76,11 @@ private:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_complexCloud;
     std::vector<cv::Point> m_projectedPoints;
     Eigen::Vector4f m_sensorOrigin;
+
+    int m_windowSize;
+    float m_slope;
+    float m_initDistance;
+    float m_maxDistance;
 };
 
 

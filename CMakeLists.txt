@@ -56,8 +56,9 @@ if (OPENMP_FOUND)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
+
 add_subdirectory(${EXT_PATH}/bvh)
-add_subdirectory("${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud")
+#add_subdirectory("${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud")
 
 add_compile_definitions(GLM_FORCE_CUDA)
 add_compile_definitions(GLM_FORCE_INLINE)
@@ -90,18 +91,58 @@ target_include_directories(imgui PUBLIC ${EXT_PATH}/imgui/ ${EXT_PATH}/imgui/bac
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<SDL_opengl.h>
         IMGUI_DISABLE_DEMO_WINDOWS=1 GL_GLEXT_PROTOTYPES=1)
 
-FILE(GLOB_RECURSE CPP RELATIVE ${CMAKE_SOURCE_DIR} "src/*.cpp")
-FILE(GLOB_RECURSE HPP RELATIVE ${CMAKE_SOURCE_DIR} "include/*.hpp" "include/*.h")
-
-set(SOURCES ${HPP} ${CPP})
 set(SDL2_TTF_LIBRARIES SDL2_ttf)
 
+# Target ComplexPointCloud COMPLEX_IMAGE_CLOUD
+set(TOOL_NAME "ComplexPointCloud")
+
+find_package(VTK COMPONENTS
+        vtkGUISupportQt
+        vtkRenderingOpenGL2
+        REQUIRED)
+INCLUDE(${VTK_USE_FILE}) # include UseVTK.cmake
+find_package(OpenCV REQUIRED)
+
+set(CMAKE_AUTOMOC ON) # For meta object compiler
+set(CMAKE_AUTORCC ON) # Resource files
+set(CMAKE_AUTOUIC ON) # UI files
+if(CMAKE_VERSION VERSION_LESS "3.7.0")
+    set(CMAKE_INCLUDE_CURRENT_DIR ON)
+endif()
+find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
+set(COMPLEX_IMAGE_CLOUD ${CMAKE_SOURCE_DIR}/tools/cpp/complex_image_cloud)
+QT5_WRAP_UI(${COMPLEX_IMAGE_CLOUD}/src/ui_pclviewer.h  ${COMPLEX_IMAGE_CLOUD}/src/src/pclviewer.ui)
+
+FILE(GLOB_RECURSE COMPLEX_CLOUD_CPP "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/src/*.cpp")
+FILE(GLOB_RECURSE COMPLEX_CLOUD_HPP "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/include/*.hpp"
+        "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/include/*.h"
+        "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/src/*.hpp"
+        "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/src/*.h")
+add_executable(${TOOL_NAME}  ${COMPLEX_CLOUD_CPP} ${COMPLEX_CLOUD_HPP})
+target_link_libraries(${TOOL_NAME} Qt5::Core)
+target_link_libraries(${TOOL_NAME} Qt5::Gui)
+target_link_libraries(${TOOL_NAME} Qt5::Widgets)
+
+target_link_libraries(${TOOL_NAME} ${Boost_LIBRARIES} GLEW
+        libGLEW.so libGLU.so libGL.so pthread Eigen3::Eigen
+        ${PCL_LIBRARIES} vtkGUISupportQt  ${OpenCV_LIBS})
+
+target_include_directories(${TOOL_NAME} PRIVATE ${PROJECT_SOURCE_DIR})
+target_include_directories(${TOOL_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/include
+        ${OPENGL_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS}
+        ${GLM_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${EXT_PATH})
+
+
+# Target 3DScene
+FILE(GLOB_RECURSE CPP RELATIVE ${PROJECT_SOURCE_DIR} "src/*.cpp")
+FILE(GLOB_RECURSE HPP RELATIVE ${PROJECT_SOURCE_DIR} "include/*.hpp" "include/*.h" src/*.hpp src/*.h)
+set(SOURCES ${HPP} ${CPP})
 add_executable(${GAME_NAME} ${SOURCES})
+
 target_link_libraries(${GAME_NAME} ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES}
         ${SDL2_TTF_LIBRARIES} ${SDL2_MIXER_LIBRARIES} ${Boost_LIBRARIES} GLEW
         libGLEW.so libGLU.so libGL.so imgui pthread Eigen3::Eigen ${ASSIMP_LIBRARIES}
         ${PCL_LIBRARIES} bvh strutils logger)
-
 
 target_include_directories(${GAME_NAME} PRIVATE include
         ${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIR}

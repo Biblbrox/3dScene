@@ -51,20 +51,10 @@ RenderSceneSystem::~RenderSceneSystem()
 {
 }
 
-void RenderSceneSystem::drawSprites()
+void RenderSceneSystem::setupLighting()
 {
-    using utils::data::mapBinaryTreeLeafs;
-    using utils::data::mapBinaryTreeAtLevel;
-    using utils::data::mapBinaryTree;
-
     auto program = SceneProgram::getInstance();
     auto camera = FpsCamera::getInstance();
-
-    program->useFramebufferProgram();
-
-    program->setInt(U_IS_PRIMITIVE, false);
-    program->setFloat(U_ALPHA, 1.f);
-    program->setVec4(U_FOG_COLOR, fog_color);
 
     bool lighting = Config::getVal<bool>("EnableLight");
     bool hasLightComp = !getEntitiesByTag<GlobalLightComponent>().empty();
@@ -81,6 +71,44 @@ void RenderSceneSystem::drawSprites()
     } else {
         program->setInt(U_LIGHTING, false);
     }
+}
+
+void RenderSceneSystem::drawSkybox()
+{
+    auto program = SceneProgram::getInstance();
+
+    program->useFramebufferProgram();
+    auto proj = program->getMat4(U_PROJECTION_MATRIX);
+    mat4 old_view = program->getMat4(U_VIEW_MATRIX);
+    auto view = program->getMat4(U_VIEW_MATRIX);
+    GLfloat rot_angle = glm::radians((GLfloat) skybox_angle) / 100.f;
+    view = glm::rotate(view, rot_angle, glm::vec3(0.f, 1.f, 0.f));
+    skybox_angle += 1;
+
+    auto skyboxEn = getEntitiesByTag<SkyboxComponent>().begin()->second;
+    auto skybox = skyboxEn->getComponent<SkyboxComponent>();
+    program->useSkyboxProgram();
+    program->setMat4(U_PROJECTION_MATRIX, proj);
+    program->setMat4(U_VIEW_MATRIX, mat4(mat3(view)));
+    program->setVec4(U_FOG_COLOR, fog_color);
+    render::drawSkybox(skybox->vao, skybox->skybox_id);
+    program->setMat4(U_VIEW_MATRIX, old_view);
+}
+
+void RenderSceneSystem::drawSprites()
+{
+    auto program = SceneProgram::getInstance();
+    auto camera = FpsCamera::getInstance();
+
+    program->useFramebufferProgram();
+
+    program->setInt(U_IS_PRIMITIVE, false);
+    // Fog parameters
+    program->setFloat(U_ALPHA, 1.f);
+    program->setVec4(U_FOG_COLOR, fog_color);
+
+    bool lighting = Config::getVal<bool>("EnableLight");
+    setupLighting();
 
     if (!Config::getVal<bool>("DrawVertices"))
         return;
@@ -92,12 +120,13 @@ void RenderSceneSystem::drawSprites()
 
         auto selComp = en->getComponent<SelectableComponent>();
         if (getGameState() == GameStates::EDIT && selComp && selComp->dragged) {
+            // Draw object
             glStencilFunc(GL_ALWAYS, 1, 0xFF); // all fragments should pass the stencil test
             glStencilMask(0xFF); // enable writing to the stencil buffer
 
-            render::drawTexture(*program, *sprite, posComp->pos, posComp->angle,
-                                posComp->rot_axis, lighting);
+            render::drawTexture(*program, *sprite, posComp->pos, posComp->angle, posComp->rot_axis, lighting);
 
+            // Draw object border
             glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
             glStencilMask(0x00); // disable writing to the stencil buffer
             glDisable(GL_DEPTH_TEST);
@@ -120,22 +149,7 @@ void RenderSceneSystem::drawSprites()
         }
     }
 
-    program->useFramebufferProgram();
-    auto proj = program->getMat4(U_PROJECTION_MATRIX);
-    mat4 old_view = program->getMat4(U_VIEW_MATRIX);
-    auto view = program->getMat4(U_VIEW_MATRIX);
-    GLfloat rot_angle = glm::radians((GLfloat) skybox_angle) / 100.f;
-    view = glm::rotate(view, rot_angle, glm::vec3(0.f, 1.f, 0.f));
-    skybox_angle += 1;
-
-    auto skyboxEn = getEntitiesByTag<SkyboxComponent>().begin()->second;
-    auto skybox = skyboxEn->getComponent<SkyboxComponent>();
-    program->useSkyboxProgram();
-    program->setMat4(U_PROJECTION_MATRIX, proj);
-    program->setMat4(U_VIEW_MATRIX, mat4(mat3(view)));
-    program->setVec4(U_FOG_COLOR, fog_color);
-    render::drawSkybox(skybox->vao, skybox->skybox_id);
-    program->setMat4(U_VIEW_MATRIX, old_view);
+    drawSkybox();
 
     if (GLenum error = glGetError(); error != GL_NO_ERROR)
         throw GLException((format("\n\tRender while drawing sprites: %1%\n")
@@ -196,8 +210,7 @@ void RenderSceneSystem::renderScene()
     vec2i sizei = {round(size.x), round(size.y)};
     glViewport(0, 0, sizei.x, sizei.y);
     //        glScissor(0, 0, size.x, size.y);
-    auto scene_comp = getEntitiesByTag<SceneComponent>().begin()->second
-            ->getComponent<SceneComponent>();
+    auto scene_comp = getEntitiesByTag<SceneComponent>().begin()->second->getComponent<SceneComponent>();
 
     if (scene_comp->dirty) {
         bool isMSAA = Config::getVal<bool>("MSAA");

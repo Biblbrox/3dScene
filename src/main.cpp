@@ -10,10 +10,6 @@
 #include "config.hpp"
 #include "view/fpscamera.hpp"
 
-#ifndef NDEBUG // use callgrind profiler
-#include <valgrind/callgrind.h>
-#endif
-
 using logger::program_log_file_name;
 using logger::Category;
 using boost::locale::generator;
@@ -24,11 +20,6 @@ using namespace boost::locale;
 
 int main(int argc, char *args[])
 {
-#ifndef NDEBUG
-    CALLGRIND_START_INSTRUMENTATION;
-    CALLGRIND_TOGGLE_COLLECT;
-#endif
-
     int ret_code = 0;
     try {
         Config::load("config.txt");
@@ -91,11 +82,6 @@ int main(int argc, char *args[])
         ret_code = EXIT_FAILURE;
     }
     quit();
-
-#ifndef NDEBUG
-    CALLGRIND_TOGGLE_COLLECT;
-    CALLGRIND_STOP_INSTRUMENTATION;
-#endif
 
     return ret_code;
 }

@@ -66,7 +66,9 @@ void LidarSystem::collision()
         program->setInt(U_IS_PRIMITIVE, true);
 
         program->setVec3(U_PRIM_COLOR, {1.f, 1.f, 1.f});
+        // Draw pattern
         render::drawDots(pattern);
+        // Draw dot in camera position
         render::drawDots({pos->pos});
         if (Config::getVal<bool>("DrawRays")) {
             vector<vec3> rays;

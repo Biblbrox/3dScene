@@ -1,14 +1,23 @@
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <QApplication>
+#include <QMainWindow>
+
 #include "image.hpp"
 #include "complexcloud.hpp"
 #include "constants.hpp"
-
-#include <pcl/io/pcd_io.h>
-#include <pcl/point_types.h>
+#include "pclviewer.hpp"
 
 
-int main()
+int main(int argc, char *argv[])
 {
-    Image img("/home/biblbrox/autonet/3dscene/res/screenshot.bmp",
+    QApplication a (argc, argv);
+    PCLViewer w;
+    w.show ();
+
+    return a.exec();
+
+    /*Image img("/home/biblbrox/autonet/3dscene/res/screenshot.bmp",
               "/home/biblbrox/autonet/3dscene/res/cal_matrix.txt");
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
@@ -24,5 +33,5 @@ int main()
     complexCloud.saveIntensityCloud(getResourcePath("xyzi_relative.pcd"), {}, true);
 
 
-    return 0;
+    return 0;*/
 }

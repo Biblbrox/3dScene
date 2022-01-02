@@ -10,9 +10,9 @@ with open(bin_path, 'r') as f:
     lidar_data =  np.genfromtxt(bin_path, dtype=np.float32, skip_header=11,
     usecols=(0, 1, 2, 3), comments='%').reshape(-1, 4)
 
-# lidar_data[:, 2] = -lidar_data[:, 2]
-# lidar_data[:, [0, 2]] = lidar_data[:, [2, 0]]
-# lidar_data[:, [2, 1]] = lidar_data[:, [1, 2]]
+#lidar_data[:, 2] = -lidar_data[:, 2]
+#lidar_data[:, [0, 2]] = lidar_data[:, [2, 0]]
+#lidar_data[:, [2, 1]] = lidar_data[:, [1, 2]]
 
 print(bin_path)
 file_name, extension = bin_path.split('.')
