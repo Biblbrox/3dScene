@@ -22,6 +22,8 @@ struct LidarComponent: ecs::Component
     // Prism start angles
     vec2 start_angle = vec2(0.f);
 
+    GLfloat refractive_index = 1.5f;
+
     GLfloat length = 0.f;
 
     // Dots density

@@ -20,12 +20,14 @@ public:
 private:
     void renderScene();
     void drawSprites();
+    void drawSpritesInstancing();
     void drawBoundingBoxes();
     void drawToFramebuffer();
     void drawTerrain();
     void makeScreenshot();
     void setupLighting();
     void drawSkybox();
+    void fillInstanceAttributes();
 
     void update_state(size_t delta) override;
 };

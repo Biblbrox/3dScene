@@ -7,8 +7,8 @@
 
 #include "base.hpp"
 #include "components/bvhcomponent.hpp"
-#include "components/lidarcomponent.hpp"
 #include "components/globallightcomponent.hpp"
+#include "components/lidarcomponent.hpp"
 #include "components/positioncomponent.hpp"
 #include "components/scenecomponent.hpp"
 #include "components/selectablecomponent.hpp"
@@ -42,15 +42,15 @@ using std::vector;
 
 using utils::RectPoints3D;
 
-using ecs::Entity;
 using boost::format;
+using ecs::Entity;
 using logger::Category;
 
+using logger::Logger;
+using logger::program_log_file_name;
 using utils::fix_coords;
 using utils::RectPoints3D;
 using utils::data::mapBinaryTree;
-using logger::Logger;
-using logger::program_log_file_name;
 using utils::texture::genRbo;
 using utils::texture::genTexture;
 
@@ -87,7 +87,7 @@ World::World() : m_wasInit(false), m_initFromFile(false)
     if (!Config::hasKey("EditMode"))
         Config::addVal("EditMode", false, "bool");
     if (!Config::hasKey("BackgroundColor"))
-        Config::addVal("BackgroundColor", glm::vec4(0.2f, 0.f, 0.2f, 1.f),"vec4");
+        Config::addVal("BackgroundColor", glm::vec4(0.2f, 0.f, 0.2f, 1.f), "vec4");
     if (!Config::hasKey("InverseRotation"))
         Config::addVal("InverseRotation", false, "bool");
     if (!Config::hasKey("MSAA"))
@@ -124,6 +124,8 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("DataFileTmp", std::string("000000.txt"), "string");
     if (!Config::hasKey("MakeScreenshot"))
         Config::addVal("MakeScreenshot", false, "bool");
+    if (!Config::hasKey("RefractiveIndex"))
+        Config::addVal("RefractiveIndex", 1.5f, "float");
 }
 
 World::~World()
@@ -150,18 +152,15 @@ void World::update(size_t delta)
         m_initFromFile = false;
     }
 
-    if (getGameState() == GameStates::STOP &&
-        getPrevGameState() != GameStates::STOP) {
+    if (getGameState() == GameStates::STOP && getPrevGameState() != GameStates::STOP) {
         setGameState(GameStates::STOP);
     }
 
-    if (getGameState() == GameStates::PLAY &&
-        getPrevGameState() == GameStates::PAUSE) {
+    if (getGameState() == GameStates::PLAY && getPrevGameState() == GameStates::PAUSE) {
         setGameState(GameStates::PLAY);
     }
 
-    if (getGameState() == GameStates::PLAY &&
-        getPrevGameState() == GameStates::STOP) {
+    if (getGameState() == GameStates::PLAY && getPrevGameState() == GameStates::STOP) {
         setGameState(GameStates::PLAY);
         //        init();
     }
@@ -264,8 +263,7 @@ void World::init_terrain()
 
     terrainComp->terrain = std::make_shared<Terrain>(
         getResourcePath("terrain/terrain_height_map.jpg"),
-        getResourcePath("terrain/sand_grass_02.jpg"),
-        vec3(20000.f, 100.f, 20000.f));
+        getResourcePath("terrain/sand_grass_02.jpg"), vec3(20000.f, 100.f, 20000.f));
 }
 
 void World::init_scene()
@@ -288,21 +286,22 @@ void World::init_scene()
     bool msaa = Config::getVal<bool>("MSAA");
     if (msaa) {
         scene_comp->isMsaa = true;
-        utils::texture::generateFBO(msaa, screen_width, screen_height, textureMSAA, rbo,
-                                    texture, scene_fb, scene_fbmsaa);
-    } else {
-        utils::texture::generateFBO(msaa, screen_width, screen_height, textureMSAA, rbo,
-                                    texture, scene_fb);
+        utils::texture::generateFBO(msaa, screen_width, screen_height, textureMSAA, rbo, texture,
+                                    scene_fb, scene_fbmsaa);
+    }
+    else {
+        utils::texture::generateFBO(msaa, screen_width, screen_height, textureMSAA, rbo, texture,
+                                    scene_fb);
     }
 }
 
 void World::init_sprites()
 {
-    auto add_bvh = [](const PositionComponent &pos,
-                      const SpriteComponent &sprite, BVHComponent &bvh) {
+    auto add_bvh = [](const PositionComponent &pos, const SpriteComponent &sprite,
+                      BVHComponent &bvh) {
         auto &triangles = sprite.sprite->getTriangles();
-        mat4 man_transform = math::createTransform(
-                pos.pos, pos.angle, pos.rot_axis, sprite.sprite->getSize());
+        mat4 man_transform =
+            math::createTransform(pos.pos, pos.angle, pos.rot_axis, sprite.sprite->getSize());
         triangles = math::transformTriangles(triangles, man_transform);
         bvh.bvh_tree = coll::buildBVH(triangles);
         bvh.triangles = make_shared<vector<Triangle>>(triangles);
@@ -315,13 +314,13 @@ void World::init_sprites()
     auto lidarComp = lidarEn->getComponent<LidarComponent>();
 
     auto lidarSprite = lidarEn->getComponent<SpriteComponent>();
-    lidarSprite->sprite = std::make_shared<Sprite>(
-        getModelPath("cube/cube.obj"), vec3(100.f, 100.f, 100.f), false);
+    lidarSprite->sprite =
+        std::make_shared<Sprite>(getModelPath("cube/cube.obj"), vec3(100.f, 100.f, 100.f), false);
 
-    Lidar lidar(lidarComp->length, lidar_pos->pos, {0.f, 1.f, 0.f},
-                lidarComp->yaw, lidarComp->pitch);
-    lidarComp->pattern_points = lidar.risleyPattern2(
-        lidarComp->freq, lidarComp->start_angle, lidarComp->density);
+    Lidar lidar(lidarComp->length, lidar_pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw,
+                lidarComp->pitch);
+    lidarComp->pattern_points =
+        lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density);
 
     utils::Random rand;
 
@@ -337,40 +336,33 @@ void World::init_sprites()
     vec3 man_size = {10.f, 10.f, 10.f};
     vec3 chair_size = {10.f, 10.f, 10.f};
     vec3 house_size = {1.f, 1.f, 1.f};
-    std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite, man_sprite,
-        chair_sprite;
-    house_sprite = make_shared<Sprite>(
-        getModelPath("Soviet_Panel/spah9lvl.obj"), house_size, false);
-    man_sprite =
-        make_shared<Sprite>(getModelPath("police/police.obj"), man_size);
-    chair_sprite = make_shared<Sprite>(
-        getModelPath("Wooden_Chair/Wooden_Chair.obj"), chair_size);
+    std::shared_ptr<Sprite> car_sprite, palm_sprite, house_sprite, man_sprite, chair_sprite;
+    house_sprite =
+        make_shared<Sprite>(getModelPath("Soviet_Panel/spah9lvl.obj"), house_size, false);
+    man_sprite = make_shared<Sprite>(getModelPath("police/police.obj"), man_size);
+    chair_sprite = make_shared<Sprite>(getModelPath("Wooden_Chair/Wooden_Chair.obj"), chair_size);
 
     auto chair_en = createEntity(genUniqueId());
     chair_en->activate();
-    chair_en->addComponents<SpriteComponent, PositionComponent,
-                            SelectableComponent, BVHComponent>();
+    chair_en
+        ->addComponents<SpriteComponent, PositionComponent, SelectableComponent, BVHComponent>();
     auto chair_sprite_comp = chair_en->getComponent<SpriteComponent>();
     chair_sprite_comp->sprite = chair_sprite;
     auto pos_chair = chair_en->getComponent<PositionComponent>();
     pos_chair->pos.x = 40.f + start_x;
     pos_chair->pos.z = 400.f + start_z;
-    pos_chair->pos.y =
-        terrain->getAltitude({pos_chair->pos.x, pos_chair->pos.z}) + 40.f;
-    add_bvh(*pos_chair, *chair_sprite_comp,
-            *chair_en->getComponent<BVHComponent>());
+    pos_chair->pos.y = terrain->getAltitude({pos_chair->pos.x, pos_chair->pos.z}) + 40.f;
+    add_bvh(*pos_chair, *chair_sprite_comp, *chair_en->getComponent<BVHComponent>());
 
     auto man_en = createEntity(genUniqueId());
     man_en->activate();
-    man_en->addComponents<SpriteComponent, PositionComponent,
-                          SelectableComponent, BVHComponent>();
+    man_en->addComponents<SpriteComponent, PositionComponent, SelectableComponent, BVHComponent>();
     auto man_sprite_comp = man_en->getComponent<SpriteComponent>();
     man_sprite_comp->sprite = man_sprite;
     auto pos_man = man_en->getComponent<PositionComponent>();
     pos_man->pos.x = 40.f + start_x;
     pos_man->pos.z = 300 + start_z;
-    pos_man->pos.y =
-        terrain->getAltitude({pos_man->pos.x, pos_man->pos.z}) + 60.f;
+    pos_man->pos.y = terrain->getAltitude({pos_man->pos.x, pos_man->pos.z}) + 60.f;
     add_bvh(*pos_man, *man_sprite_comp, *man_en->getComponent<BVHComponent>());
 
     auto light_en = createEntity(genUniqueId());
@@ -387,8 +379,8 @@ void World::init_sprites()
     for (size_t i = 0; i < 5; ++i) {
         auto house = createEntity(genUniqueId());
         house->activate();
-        house->addComponents<SpriteComponent, PositionComponent,
-                             SelectableComponent, BVHComponent>();
+        house->addComponents<SpriteComponent, PositionComponent, SelectableComponent,
+                             BVHComponent>();
         auto house_sprite_comp = house->getComponent<SpriteComponent>();
         house_sprite_comp->sprite = house_sprite;
         auto house_pos = house->getComponent<PositionComponent>();
@@ -397,32 +389,29 @@ void World::init_sprites()
         house_pos->pos.y = terrain->getAltitude({house_pos->pos.x, house_pos->pos.z});
         house_pos->angle = -glm::half_pi<GLfloat>();
         house_pos->rot_axis = vec3(0.f, 1.f, 0.f);
-        add_bvh(*house_pos, *house_sprite_comp,
-                *house->getComponent<BVHComponent>());
+        add_bvh(*house_pos, *house_sprite_comp, *house->getComponent<BVHComponent>());
     }
 }
 
 void World::init_skybox()
 {
-    const GLfloat skyboxVertices[] = {
-        -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f,
-        1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f,
+    const GLfloat skyboxVertices[] = {-1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f,
+                                      1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f,
 
-        -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f,
-        -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,
+                                      -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f,
+                                      -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,
 
-        1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,
-        1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f,
+                                      1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,
+                                      1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f,
 
-        -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,  1.0f,
-        1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,
+                                      -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,  1.0f,
+                                      1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,
 
-        -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,
-        1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f,
+                                      -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,
+                                      1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f,
 
-        -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f,
-        1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f
-    };
+                                      -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f,
+                                      1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f};
 
     unsigned int skyboxVAO, skyboxVBO;
     glGenVertexArrays(1, &skyboxVAO);
@@ -438,12 +427,10 @@ void World::init_skybox()
     skyboxEn->addComponent<SkyboxComponent>();
     auto skybox = skyboxEn->getComponent<SkyboxComponent>();
 
-    vector<std::string> faces = {getResourcePath("skybox/cloudy/right.png"),
-                                 getResourcePath("skybox/cloudy/left.png"),
-                                 getResourcePath("skybox/cloudy/top.png"),
-                                 getResourcePath("skybox/cloudy/bottom.png"),
-                                 getResourcePath("skybox/cloudy/back.png"),
-                                 getResourcePath("skybox/cloudy/front.png")};
+    vector<std::string> faces = {
+        getResourcePath("skybox/cloudy/right.png"), getResourcePath("skybox/cloudy/left.png"),
+        getResourcePath("skybox/cloudy/top.png"),   getResourcePath("skybox/cloudy/bottom.png"),
+        getResourcePath("skybox/cloudy/back.png"),  getResourcePath("skybox/cloudy/front.png")};
 
     skybox->vao = skyboxVAO;
     skybox->skybox_id = utils::texture::loadCubemap(faces);
@@ -456,25 +443,22 @@ void World::init_skybox()
 
 void World::addEntityFromFile(const std::string &model_file)
 {
-    std::shared_ptr<Sprite> sprite =
-        std::make_shared<Sprite>(model_file, vec3(1.f, 1.f, 1.f));
+    std::shared_ptr<Sprite> sprite = std::make_shared<Sprite>(model_file, vec3(1.f, 1.f, 1.f));
     auto terrainEn = m_entities[m_terrainID];
     auto terrain = terrainEn->getComponent<TerrainComponent>()->terrain;
 
     auto en = createEntity(genUniqueId());
     en->activate();
-    en->addComponents<SpriteComponent, PositionComponent, SelectableComponent,
-                      BVHComponent>();
+    en->addComponents<SpriteComponent, PositionComponent, SelectableComponent, BVHComponent>();
     auto sprite_comp = en->getComponent<SpriteComponent>();
     sprite_comp->sprite = sprite;
     auto pos_chair = en->getComponent<PositionComponent>();
     pos_chair->pos.x = 200.f;
     pos_chair->pos.z = 400.f;
-    pos_chair->pos.y =
-        terrain->getAltitude({pos_chair->pos.x, pos_chair->pos.z}) + 40.f;
+    pos_chair->pos.y = terrain->getAltitude({pos_chair->pos.x, pos_chair->pos.z}) + 40.f;
     auto &triangles = sprite->getTriangles();
-    mat4 chair_transform = math::createTransform(
-        pos_chair->pos, 0, {0.f, 1.f, 1.f}, {1.f, 1.f, 1.f});
+    mat4 chair_transform =
+        math::createTransform(pos_chair->pos, 0, {0.f, 1.f, 1.f}, {1.f, 1.f, 1.f});
     triangles = math::transformTriangles(triangles, chair_transform);
     en->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(triangles);
     en->getComponent<BVHComponent>()->triangles =

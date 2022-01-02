@@ -532,6 +532,14 @@ void RenderGuiSystem::laser_settings()
                                                          lidarComp->density);
     }
 
+    TextUnformatted(_("Refractive index"));
+    if (InputFloat2("##prism_refractive_index", &lidarComp->refractive_index)) {
+        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
+
+        lidarComp->pattern_points = lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle,
+                                                         lidarComp->density, lidarComp->refractive_index);
+    }
+
     TextUnformatted(_("Object distance"));
     if (InputFloat("##obj_distance", &lidarComp->obj_distance)) {
         Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);

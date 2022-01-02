@@ -51,8 +51,7 @@ void LidarSystem::collision()
     if (!glm::all(pos_compare) || lidarComp->pattern_points.empty()) {
         m_posChanged = true;
         m_prevPos = pos->pos;
-    }
-    else {
+    } else {
         m_posChanged = false;
     }
 
@@ -106,7 +105,7 @@ void LidarSystem::collision()
         bool was_collision = false;
         std::vector<glm::vec3> col_per_ent;
         // Need to make geometric shadow of objects
-        for (const auto &[key, en] : bvhEntities) {
+        for (const auto& [key, en] : bvhEntities) {
             auto bvh_comp = en->getComponent<BVHComponent>();
 
             std::pair<bool, vec3> coll = {false, vec3(0.f)};

@@ -22,8 +22,7 @@ bool hasTexture(aiMaterial *mat)
 {
     bool res = false;
     for (int i = 0; i < 18; ++i)
-        if (mat->GetTextureCount(
-                static_cast<aiTextureType>(aiTextureType_DIFFUSE + i)) != 0)
+        if (mat->GetTextureCount(static_cast<aiTextureType>(aiTextureType_DIFFUSE + i)) != 0)
             res = true;
 
     return res;
