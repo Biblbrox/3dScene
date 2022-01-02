@@ -7,6 +7,11 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <Eigen/Dense>
+#include <chrono>
+
+#ifndef NDEBUG // use callgrind profiler
+#include <valgrind/callgrind.h>
+#endif
 
 #include "components/positioncomponent.hpp"
 #include "components/positioncomponentinst.hpp"
@@ -260,6 +265,11 @@ void utils::fs::saveSimJson(const std::string &file_name,
 std::vector<ecs::Entity>
 utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager)
 {
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+    
     if (!std::filesystem::exists(file_name))
         throw FSException((boost::format("Unable to load file %1") % file_name).str(),
                           logger::program_log_file_name(), Category::FS_ERROR);
@@ -267,6 +277,11 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
     std::vector<ecs::Entity> res;
 
     std::ifstream ifs(file_name);
+
+#ifndef NDEBUG
+    CALLGRIND_START_INSTRUMENTATION;
+    CALLGRIND_TOGGLE_COLLECT;
+#endif
 
     json j = json::parse(ifs);
     for (const auto& en: j["Entities"]) {
@@ -285,8 +300,7 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
                 pos_comp->angle = angle;
             } else if (comp.contains("PositionComponentInst")) {
                 json json_pos = comp["PositionComponentInst"];
-                std::vector<Position> position =
-                        json_pos[0]["position"].get<std::vector<Position>>();
+                std::vector<Position> position = json_pos[0]["position"].get<std::vector<Position>>();
 
                 entity.addComponent<PositionComponentInst>();
                 auto pos_comp = entity.getComponent<PositionComponentInst>();
@@ -361,23 +375,40 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
         }
         res.push_back(entity);
     }
-
-//#pragma omp parallel for shared(res)
-    for (auto& en: res) {
-        auto bvh = en.getComponent<BVHComponent>();
+    auto t1 = high_resolution_clock::now();
+#pragma omp parallel for
+    for (auto it = res.begin(); it != res.end(); ++it) {
+        auto bvh = it->getComponent<BVHComponent>();
+        
         if (!bvh)
             continue;
 
-        auto sprite = en.getComponent<SpriteComponent>()->sprite;
-        auto pos = en.getComponent<PositionComponent>();
+        auto sprite = it->getComponent<SpriteComponent>()->sprite;
+        auto pos = it->getComponent<PositionComponent>();
         auto triangles = sprite->getTriangles();
         mat4 transform = createTransform(pos->pos, pos->angle, pos->rot_axis, sprite->getSize());
+
         triangles = transformTriangles(triangles, transform);
         bvh->bvh_tree = coll::buildBVH(triangles);
+
         bvh->triangles = std::make_shared<std::vector<Triangle>>(triangles);
     }
+    auto t2 = high_resolution_clock::now();
+     /* Getting number of milliseconds as an integer. */
+    auto ms_int = duration_cast<milliseconds>(t2 - t1);
+
+    /* Getting number of milliseconds as a double. */
+    duration<double, std::milli> ms_double = t2 - t1;
+
+    std::cout << ms_int.count() << "ms\n";
+    std::cout << ms_double.count() << "ms\n";
 
     ifs.close();
+
+#ifndef NDEBUG
+    CALLGRIND_TOGGLE_COLLECT;
+    CALLGRIND_STOP_INSTRUMENTATION;
+#endif
 
     return res;
 }

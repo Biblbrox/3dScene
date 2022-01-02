@@ -24,6 +24,9 @@ private:
     void drawToFramebuffer();
     void drawTerrain();
     void makeScreenshot();
+    void setupLighting();
+    void drawSkybox();
+
     void update_state(size_t delta) override;
 };
 
