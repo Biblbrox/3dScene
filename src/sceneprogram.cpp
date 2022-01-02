@@ -36,6 +36,8 @@ void SceneProgram::initPrograms()
     // Create framebuffer program
     addProgram("framebuffer", "framebuffer/Scene.glvs", "framebuffer/Scene.glfs");
 
+    addProgram("framebuffer_instance", "framebuffer/SceneInstance.glvs", "framebuffer/Scene.glfs");
+
     // Create screen program
     addProgram("screen", "screen/Scene.glvs", "screen/Scene.glfs");
 

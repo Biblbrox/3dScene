@@ -71,8 +71,6 @@ void render::drawTriangles(const std::vector<vec3>& points)
 
 void render::drawDots(const std::vector<vec3>& dots)
 {
-    auto vertices = dots.data();
-
     GLuint VAO = 0;
     GLuint verticesID = 0;
 
@@ -80,7 +78,7 @@ void render::drawDots(const std::vector<vec3>& dots)
     glBindVertexArray(VAO);
     glGenBuffers(1, &verticesID);
     glBindBuffer(GL_ARRAY_BUFFER, verticesID);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * dots.size(), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * dots.size(), dots.data(), GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnableVertexAttribArray(0);
@@ -114,7 +112,7 @@ void render::renderTerrain(ShaderProgram& program, const Terrain& terrain)
     glBindTexture(GL_TEXTURE_2D, terrain.getTextureID());
     glBindVertexArray(terrain.getVAO());
     if (Config::getVal<bool>("EnableLight"))
-        program.setMat3(U_NORMAL_MATRIX, mat3(1.f));
+         program.setMat3(U_NORMAL_MATRIX, mat3(1.f));
     glEnable(GL_PRIMITIVE_RESTART);
     glPrimitiveRestartIndex(terrain.getWidth() * terrain.getHeight());
     glDrawElements(GL_TRIANGLE_STRIP, terrain.getIndices().size(), GL_UNSIGNED_INT, nullptr);

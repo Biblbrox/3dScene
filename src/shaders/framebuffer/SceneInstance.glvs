@@ -1,0 +1,23 @@
+#version 330 core
+
+uniform bool m_drawTerrain;
+
+layout (location = 0) in vec3 vPositionMultHeightMap;
+layout (location = 1) in vec2 vTexCoords;
+layout (location = 2) in vec3 vNormalMultMatrix;
+// Ocuppy 3, 4, 5, 6
+layout (location = 3) in mat4 vProjectionViewMatrix;
+// Ocuppy 7, 8, 9, 10
+layout (location = 7) in mat4 vModelMatrix;
+
+out vec2 TextureCoords;
+out vec3 Normal;
+out vec3 FragPos;
+
+void main()
+{
+    TextureCoords = vTexCoords;
+    FragPos = vec3(vModelMatrix * vec4(vPositionMultHeightMap, 1.0));
+    Normal = vNormalMultMatrix;
+    gl_Position = vProjectionViewMatrix * vModelMatrix * vec4(vPositionMultHeightMap, 1.0);
+}
