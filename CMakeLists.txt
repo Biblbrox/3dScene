@@ -12,7 +12,7 @@ ENDIF()
 set(CPU_TYPE "native")
 set(ARCH_PARAM "")
 if (NOT ${CPU_TYPE} STREQUAL "")
-    set(ARCH_PARAM "-march=${CPU_TYPE} -msse4.2")
+    set(ARCH_PARAM "-march=${CPU_TYPE}")
 endif()
 message("Using cpu type ${CPU_TYPE}")
 

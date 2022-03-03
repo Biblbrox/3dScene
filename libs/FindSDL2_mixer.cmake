@@ -211,7 +211,7 @@ if(SDL2_MIXER_FOUND)
 
     # SDL2::Mixer target
     if(SDL2_MIXER_LIBRARY AND NOT TARGET SDL2::Mixer)
-        add_library(SDL2::Mixer UNKNOWN IMPORTED)
+        add_library(SDL2::Mixer UNKNOWN IMPORTED logger/logger.cpp logger/logger.hpp)
         set_target_properties(SDL2::Mixer PROPERTIES
                 IMPORTED_LOCATION "${SDL2_MIXER_LIBRARY}"
                 INTERFACE_INCLUDE_DIRECTORIES "${SDL2_MIXER_INCLUDE_DIR}"

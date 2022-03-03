@@ -284,6 +284,7 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
 #endif
 
     json j = json::parse(ifs);
+    ifs.close();
     for (const auto& en: j["Entities"]) {
         ecs::Entity entity(ecsManager.genUniqueId());
         for (const auto& comp: en["Components"]) {
@@ -375,7 +376,7 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
         }
         res.push_back(entity);
     }
-    auto t1 = high_resolution_clock::now();
+
 #pragma omp parallel for
     for (auto it = res.begin(); it != res.end(); ++it) {
         auto bvh = it->getComponent<BVHComponent>();
@@ -393,17 +394,6 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
 
         bvh->triangles = std::make_shared<std::vector<Triangle>>(triangles);
     }
-    auto t2 = high_resolution_clock::now();
-     /* Getting number of milliseconds as an integer. */
-    auto ms_int = duration_cast<milliseconds>(t2 - t1);
-
-    /* Getting number of milliseconds as a double. */
-    duration<double, std::milli> ms_double = t2 - t1;
-
-    std::cout << ms_int.count() << "ms\n";
-    std::cout << ms_double.count() << "ms\n";
-
-    ifs.close();
 
 #ifndef NDEBUG
     CALLGRIND_TOGGLE_COLLECT;
