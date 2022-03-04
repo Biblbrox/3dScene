@@ -1,6 +1,10 @@
 #include <array>
+#include <fstream>
+#include <filesystem>
 
 #include "utils/math.hpp"
+#include "logger/logger.hpp"
+#include "exceptions/fsexception.hpp"
 
 std::array<GLfloat, 6> math::findBounds(const std::vector<vec3> &points)
 {
@@ -79,4 +83,34 @@ math::viewportToWorld(const vec2 &pos, const vec2 &clip, const mat4 &projection,
     ray_world = glm::normalize(ray_world);
 
     return ray_world;
+}
+
+
+glm::mat4 math::loadCameraIntrinsic(const std::string &path, GLfloat near, GLfloat far)
+{
+    std::ifstream f(path);
+    if (!std::filesystem::exists(path) || !f.good())
+        throw FSException((boost::format("Unable to load file %1") % path).str(),
+                          logger::program_log_file_name(), logger::Category::FS_ERROR);
+
+    glm::mat3 intrinsic;
+    for (short i = 0; i < 3; ++i)
+        for (short j = 0; j < 3; ++j)
+            f >> intrinsic[i][j];
+
+    auto projection = glm::zero<glm::mat4>();
+
+    GLfloat alpha = intrinsic[0][0];
+    GLfloat beta = intrinsic[1][1];
+    GLfloat cx = intrinsic[0][2];
+    GLfloat cy = intrinsic[1][2];
+
+    projection[0][0] = alpha / cx;
+    projection[1][1] = beta / cy;
+    projection[2][2] = -(far + near) / (far - near);
+    projection[2][3] = -2 * far * near / (far - near);
+    projection[3][2] = -1;
+    projection[3][3] = 0;
+
+    return projection;
 }

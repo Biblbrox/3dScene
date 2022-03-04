@@ -3,18 +3,19 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "base.hpp"
+#include "config.hpp"
+#include "exceptions/basegameexception.hpp"
 #include "game.hpp"
 #include "logger/logger.hpp"
-#include "exceptions/basegameexception.hpp"
 #include "sceneprogram.hpp"
-#include "config.hpp"
+#include "utils/math.hpp"
 #include "view/fpscamera.hpp"
 
-using logger::program_log_file_name;
-using logger::Category;
 using boost::locale::generator;
-using boost::locale::translate;
 using boost::locale::gettext;
+using boost::locale::translate;
+using logger::Category;
+using logger::program_log_file_name;
 
 using namespace boost::locale;
 
@@ -44,13 +45,15 @@ int main(int argc, char *args[])
         int screen_width = utils::getWindowWidth<int>(*Game::getWindow());
         int screen_height = utils::getWindowHeight<int>(*Game::getWindow());
         program->useFramebufferProgram();
-        glm::mat4 perspective = glm::perspective(45.f,
-                                                 (float)screen_width / (float)screen_height, 1.f,
-                                                 10000.f);
+        glm::mat4 perspective =
+            glm::perspective(45.f, (float)screen_width / (float)screen_height, 1.f, 10000.f);
         program->setMat4(U_PROJECTION_MATRIX, perspective);
         program->setMat4(U_MODEL_MATRIX, glm::mat4(1.f));
         program->setMat4(U_VIEW_MATRIX, glm::mat4(1.f));
         program->setInt(U_TEXTURE_NUM, 0);
+
+        if (!Config::hasKey("ProjectiveMat"))
+            Config::addVal("ProjectiveMat", perspective, "mat4");
 
         GLfloat delta_time = 0.f;
         GLfloat last_frame = 0.f;
@@ -67,17 +70,19 @@ int main(int argc, char *args[])
 
             if (firstRun) {
                 if (SDL_CaptureMouse(SDL_TRUE) != 0)
-                    logger::Logger::write(program_log_file_name(),
-                                       Category::INITIALIZATION_ERROR,
-                                       "Warning: Unable to capture mouse. "
-                                       "SDL Error: %s\n", SDL_GetError());
+                    logger::Logger::write(program_log_file_name(), Category::INITIALIZATION_ERROR,
+                                          "Warning: Unable to capture mouse. "
+                                          "SDL Error: %s\n",
+                                          SDL_GetError());
                 firstRun = false;
             }
         }
-    } catch (const BaseGameException& e) {
+    }
+    catch (const BaseGameException &e) {
         logger::Logger::write(e.fileLog(), e.categoryError(), e.what());
         ret_code = EXIT_FAILURE;
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception &e) {
         logger::Logger::write(program_log_file_name(), Category::UNEXPECTED_ERROR, e.what());
         ret_code = EXIT_FAILURE;
     }

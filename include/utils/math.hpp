@@ -51,6 +51,13 @@ namespace math
                               const glm::mat4& projection, const glm::mat4& view);
 
     /**
+     * Build opengl projective matrix from camera intrinsic params
+     * @param path
+     * @return
+     */
+    glm::mat4 loadCameraIntrinsic(const std::string& path, GLfloat near, GLfloat far);
+
+    /**
     * Rotate world around point v
     * @param m
     * @param v

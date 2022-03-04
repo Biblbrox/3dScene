@@ -126,6 +126,12 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("MakeScreenshot", false, "bool");
     if (!Config::hasKey("RefractiveIndex"))
         Config::addVal("RefractiveIndex", 1.5f, "float");
+    if (!Config::hasKey("RealCameraIntrinsic"))
+        Config::addVal("RealCameraIntrinsic", false, "bool");
+    if (!Config::hasKey("RealCameraIntrinsicMat"))
+        Config::addVal("RealCameraIntrinsicMat",
+                       math::loadCameraIntrinsic(getResourcePath("intrinsic.txt"), 1.f, 1000.f),
+                       "mat4");
 }
 
 World::~World()

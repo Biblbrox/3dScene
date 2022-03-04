@@ -277,6 +277,7 @@ void RenderGuiSystem::update_state(size_t delta)
             Checkbox(_("Draw Leafs"), &Config::getVal<bool>("DrawLeafs"));
             Checkbox(_("Draw Rays"), &Config::getVal<bool>("DrawRays"));
             Checkbox(_("Draw bounding boxes"), &Config::getVal<bool>("DrawBoundingBoxes"));
+            Checkbox(_("Use real camera intrinsic"), &Config::getVal<bool>("RealCameraIntrinsic"));
 
             if (Button(_("Check collision")))
                 Config::getVal<bool>("CheckCollision") = true;
