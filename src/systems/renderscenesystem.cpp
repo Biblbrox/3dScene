@@ -189,6 +189,10 @@ void RenderSceneSystem::drawSprites()
     // Fog parameters
     program->setFloat(U_ALPHA, 1.f);
     program->setVec4(U_FOG_COLOR, fog_color);
+    bool use_real_camera = Config::getVal<bool>("RealCameraIntrinsic");
+    mat4 intrinsic_camera = Config::getVal<mat4>("RealCameraIntrinsicMat");
+    mat4 projective = Config::getVal<mat4>("ProjectiveMat");
+    program->setMat4(U_PROJECTION_MATRIX, use_real_camera ? intrinsic_camera : projective);
 
     bool lighting = Config::getVal<bool>("EnableLight");
     setupLighting();
@@ -389,6 +393,7 @@ void RenderSceneSystem::makeScreenshot()
     vec3 old_pos = camera->getPos();
     GLfloat old_pitch = camera->getPitch();
     GLfloat old_yaw = camera->getYaw();
+    mat4 old_perspective = program->getMat4(U_PROJECTION_MATRIX);
 
     vec2i size = Config::getVal<vec2i>("ViewportSize");
 
@@ -398,6 +403,7 @@ void RenderSceneSystem::makeScreenshot()
     camera->setYaw(lidar->yaw);
     mat4 view = camera->getView();
     program->setMat4(U_VIEW_MATRIX, view);
+    program->setMat4(U_PROJECTION_MATRIX, Config::getVal<mat4>("RealCameraIntrinsicMat"));
     glViewport(0, 0, size.x, size.y);
     renderScene();
     glFlush();
@@ -420,10 +426,13 @@ void RenderSceneSystem::makeScreenshot()
     glm::mat4 calMat = perspective * view;
     utils::fs::saveMatTxt(getResourcePath("cal_matrix.txt"), calMat, true);
 
+    // Save camera intrisitic params
+
     // Restore camera parameters
     camera->setPos(old_pos);
     camera->setPitch(old_pitch);
     camera->setYaw(old_yaw);
     program->setMat4(U_VIEW_MATRIX, camera->getView());
+    program->setMat4(U_PROJECTION_MATRIX, old_perspective);
     Config::getVal<bool>("MakeScreenshot") = false;
 }

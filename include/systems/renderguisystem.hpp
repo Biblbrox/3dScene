@@ -18,7 +18,8 @@ public:
     explicit RenderGuiSystem();
     ~RenderGuiSystem();
 private:
-    void update_state(size_t delta) override;
+    void
+  update_state(size_t delta) override;
 
     void export_settings();
     void laser_settings();
