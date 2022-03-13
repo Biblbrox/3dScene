@@ -3,6 +3,7 @@
 #include <utility>
 
 #include "base.hpp"
+#include "shadernames.hpp"
 #include "render/mesh.hpp"
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vector<Texture> textures)

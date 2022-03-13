@@ -23,6 +23,7 @@
 #include "utils/math.hpp"
 #include "utils/texture.hpp"
 #include "view/fpscamera.hpp"
+#include "shadernames.hpp"
 
 using boost::format;
 using glm::mat3;
@@ -408,11 +409,11 @@ void RenderSceneSystem::makeScreenshot()
     renderScene();
     glFlush();
     SDL_GL_SwapWindow(Game::getWindow());
-    utils::texture::saveScreen(getResourcePath("screenshot.bmp"), size.x, size.y);
+    utils::texture::saveScreen(getResourcePath("cloud/screenshot.png"), size.x, size.y);
 
     // Save projected coordinates
     program->useFramebufferProgram();
-    std::ofstream f(getResourcePath("projected.txt"), std::ios::out | std::ios::trunc);
+    std::ofstream f(getResourcePath("cloud/projected.txt"), std::ios::out | std::ios::trunc);
     glm::vec4 viewport = {0, 0, size};
     glm::mat4 perspective = program->getMat4(U_PROJECTION_MATRIX);
     for (const vec3 &p : lidar->coll_points) {
@@ -424,9 +425,11 @@ void RenderSceneSystem::makeScreenshot()
 
     // Save calibration matrix
     glm::mat4 calMat = perspective * view;
-    utils::fs::saveMatTxt(getResourcePath("cal_matrix.txt"), calMat, true);
+    utils::fs::saveMatTxt(getResourcePath("cloud/cal_matrix.txt"), calMat, true);
 
-    // Save camera intrisitic params
+    // Save camera kitti calib file
+    math::saveKittiCalib(getResourcePath("cloud/calib.txt"), perspective, view);
+
 
     // Restore camera parameters
     camera->setPos(old_pos);

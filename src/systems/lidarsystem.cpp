@@ -6,26 +6,26 @@
 #include "components/bvhcomponent.hpp"
 #include "components/lidarcomponent.hpp"
 #include "components/positioncomponent.hpp"
-#include "components/spritecomponent.hpp"
 #include "components/terraincomponent.hpp"
 #include "config.hpp"
+#include "logger/logger.hpp"
 #include "render/render.hpp"
 #include "sceneprogram.hpp"
+#include "shadernames.hpp"
 #include "systems/lidarsystem.hpp"
 #include "utils/collision.hpp"
-#include "logger/logger.hpp"
 #include "utils/fs.hpp"
 
+using coll::rayTerrainIntersection;
 using glm::acos;
 using glm::asin;
-using std::string;
 using glm::cos;
 using glm::sin;
 using glm::sqrt;
 using logger::Logger;
-using utils::fs::saveFrameToFileTxt;
+using std::string;
 using utils::fs::saveFrameToFilePcd;
-using coll::rayTerrainIntersection;
+using utils::fs::saveFrameToFileTxt;
 
 LidarSystem::LidarSystem() : m_posChanged(true), m_prevPos{0.f, 0.f, 0.f}
 {
@@ -51,15 +51,16 @@ void LidarSystem::collision()
     if (!glm::all(pos_compare) || lidarComp->pattern_points.empty()) {
         m_posChanged = true;
         m_prevPos = pos->pos;
-    } else {
+    }
+    else {
         m_posChanged = false;
     }
 
     if (m_posChanged)
-        lidarComp->pattern_points = lidar.risleyPattern2(
-                lidarComp->freq, lidarComp->start_angle, lidarComp->density);
+        lidarComp->pattern_points =
+            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density);
 
-    const auto& pattern = lidarComp->pattern_points;
+    const auto &pattern = lidarComp->pattern_points;
     if (Config::getVal<bool>("DrawPattern")) {
         program->useFramebufferProgram();
         program->setInt(U_IS_PRIMITIVE, true);
@@ -81,15 +82,15 @@ void LidarSystem::collision()
         }
     }
 
-   if (!Config::getVal<bool>("CheckCollision"))
+    if (!Config::getVal<bool>("CheckCollision"))
         return;
 
     auto bvhEntities = getEntitiesByTag<BVHComponent>();
     auto terrain = getEntitiesByTag<TerrainComponent>().begin()->second;
-//#pragma omp declare reduction (merge : std::vector<vec3> \
+    //#pragma omp declare reduction (merge : std::vector<vec3> \
 //							   : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
-    vector<vec4> coll_dots;
-//#pragma omp parallel for collapse(1) reduction(merge                           \
+    vector<vec4, Eigen::aligned_allocator<pcl::PointXYZI>> coll_dots;
+    //#pragma omp parallel for collapse(1) reduction(merge                           \
 //                                               : coll_dots) shared(entities), default(shared)
     for (const auto &dot : pattern) {
         vec3 dir = normalize(dot - pos->pos);
@@ -105,7 +106,7 @@ void LidarSystem::collision()
         bool was_collision = false;
         std::vector<glm::vec3> col_per_ent;
         // Need to make geometric shadow of objects
-        for (const auto& [key, en] : bvhEntities) {
+        for (const auto &[key, en] : bvhEntities) {
             auto bvh_comp = en->getComponent<BVHComponent>();
 
             std::pair<bool, vec3> coll = {false, vec3(0.f)};
@@ -125,15 +126,15 @@ void LidarSystem::collision()
 
             if (coll.first) {
                 col_per_ent.emplace_back(coll.second);
-//                coll_dots.emplace_back(glm::vec4(coll.second, intensity));
-//                was_collision = true;
+                //                coll_dots.emplace_back(glm::vec4(coll.second, intensity));
+                //                was_collision = true;
             }
         }
 
         if (!col_per_ent.empty()) {
             glm::vec3 closest = col_per_ent[0];
             GLfloat distance = glm::length(col_per_ent[0] - pos->pos);
-            for (const vec3& p: col_per_ent) {
+            for (const vec3 &p : col_per_ent) {
                 GLfloat dst = glm::length(p - pos->pos);
                 if (dst < distance) {
                     distance = dst;
@@ -159,7 +160,9 @@ void LidarSystem::collision()
     lidarComp->coll_points.insert(lidarComp->coll_points.end(), coll_dots.cbegin(),
                                   coll_dots.cend());
 
-    Frame frame{pos->pos, coll_dots};
-    saveFrameToFilePcd(frame, getResourcePath("000000.pcd"), true);
+    Frame<pcl::PointXYZI> frame(pos->pos, math::vecGlm2Pcl(coll_dots));
+    // Frame frame{pos->pos, math::vecGlm2Pcl(coll_dots)};
+    saveFrameToFilePcd(frame, getResourcePath("cloud/000001.pcd"));
+    utils::fs::saveFrame(frame, CloudType::binary, getResourcePath("cloud/000001.bin"), true);
     Config::getVal<bool>("CheckCollision") = false;
 }

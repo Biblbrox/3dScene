@@ -3,6 +3,7 @@
 #include "logger/logger.hpp"
 #include "render/terrain.hpp"
 #include "config.hpp"
+#include "shadernames.hpp"
 
 using glm::vec2;
 using glm::vec3;

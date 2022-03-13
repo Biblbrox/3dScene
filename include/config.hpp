@@ -10,6 +10,7 @@
 
 #include "base.hpp"
 #include "strutils/strutils.hpp"
+#include "utils/math.hpp"
 
 // TODO: make error handling in Config class
 struct ConfigEqual : public std::equal_to<> {
@@ -37,7 +38,7 @@ struct string_hash {
     }
 };
 
-static std::string as_string(const std::any &val, std::string_view type)
+static std::string as_string(std::any val, std::string_view type)
 {
     if (type == "int") {
         return std::to_string(std::any_cast<int>(val));
@@ -68,33 +69,23 @@ static std::string as_string(const std::any &val, std::string_view type)
     }
     else if (type == "vec4") {
         auto value = std::any_cast<glm::vec4>(val);
-        return std::to_string(value.x) + "," + std::to_string(value.y) + "," +
-               std::to_string(value.z) + "," + std::to_string(value.w);
+        return math::to_string(value);
     }
     else if (type == "vec3") {
         auto value = std::any_cast<glm::vec3>(val);
-        return std::to_string(value.x) + "," + std::to_string(value.y) + "," +
-               std::to_string(value.z);
+        return math::to_string(value);
     }
     else if (type == "vec2") {
         auto value = std::any_cast<glm::vec2>(val);
-        return std::to_string(value.x) + "," + std::to_string(value.y);
+        return math::to_string(value);
     }
     else if (type == "vec2i") {
         auto value = std::any_cast<vec2i>(val);
-        return std::to_string(value.x) + "," + std::to_string(value.y);
+        return math::to_string(value);
     }
     else if (type == "mat4") {
         auto value = std::any_cast<glm::mat4>(val);
-        //return glm::to_string(value);
-        return std::to_string(value[0][0]) + "," + std::to_string(value[0][1]) + "," +
-               std::to_string(value[0][2]) + "," + std::to_string(value[0][3]) + "," +
-               std::to_string(value[1][0]) + "," + std::to_string(value[1][1]) + "," +
-               std::to_string(value[1][2]) + "," + std::to_string(value[1][3]) + "," +
-               std::to_string(value[2][0]) + "," + std::to_string(value[2][1]) + "," +
-               std::to_string(value[2][2]) + "," + std::to_string(value[2][3]) + "," +
-               std::to_string(value[3][0]) + "," + std::to_string(value[3][1]) + "," +
-               std::to_string(value[3][2]) + "," + std::to_string(value[3][3]);
+        return math::to_string(value);
     }
 
     return "";
@@ -174,32 +165,32 @@ class Config {
                 addVal(key, parts[2], "const char*");
             }
             else if (type == "vec4") {
-                auto vec = split(parts[2], ",");
+                auto vec = split(parts[2], " ");
                 glm::vec4 val = {std::stof(vec[0]), std::stof(vec[1]), std::stof(vec[2]),
                                  std::stof(vec[3])};
                 addVal(key, val, "vec4");
             }
             else if (type == "vec3") {
-                auto vec = split(parts[2], ",");
+                auto vec = split(parts[2], " ");
                 glm::vec3 val = {std::stof(vec[0]), std::stof(vec[1]), std::stof(vec[2])};
                 addVal(key, val, "vec3");
             }
             else if (type == "vec2") {
-                auto vec = split(parts[2], ",");
+                auto vec = split(parts[2], " ");
                 glm::vec2 val{std::stof(vec[0]), std::stof(vec[1])};
                 addVal(key, val, "vec2");
             }
             else if (type == "vec2i") {
-                auto vec = split(parts[2], ",");
+                auto vec = split(parts[2], " ");
                 vec2i val{std::stof(vec[0]), std::stof(vec[1])};
                 addVal(key, val, "vec2i");
             }
             else if (type == "mat4") {
-                auto mat = split(parts[2], ",");
+                auto mat = split(parts[2], " ");
                 glm::mat4 val(
-                    std::stof(mat[0]),  std::stof(mat[1]),  std::stof(mat[2]),  std::stof(mat[3]),
-                    std::stof(mat[4]),  std::stof(mat[5]),  std::stof(mat[6]),  std::stof(mat[7]),
-                    std::stof(mat[8]),  std::stof(mat[9]),  std::stof(mat[10]), std::stof(mat[11]),
+                    std::stof(mat[0]), std::stof(mat[1]), std::stof(mat[2]), std::stof(mat[3]),
+                    std::stof(mat[4]), std::stof(mat[5]), std::stof(mat[6]), std::stof(mat[7]),
+                    std::stof(mat[8]), std::stof(mat[9]), std::stof(mat[10]), std::stof(mat[11]),
                     std::stof(mat[12]), std::stof(mat[13]), std::stof(mat[14]), std::stof(mat[15]));
                 addVal(key, val, "mat4");
             }

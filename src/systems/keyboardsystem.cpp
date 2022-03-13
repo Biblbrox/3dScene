@@ -17,6 +17,7 @@
 #include "utils/bvh/obb.hpp"
 #include "render/render.hpp"
 #include "config.hpp"
+#include "shadernames.hpp"
 
 using glm::mat4;
 using glm::mat3;

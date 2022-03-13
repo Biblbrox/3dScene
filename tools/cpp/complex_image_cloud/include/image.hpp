@@ -4,7 +4,7 @@
 #include <opencv4/opencv2/opencv.hpp>
 #include <opencv4/opencv2/core.hpp>
 
-#include "base.hpp"
+#include "types.hpp"
 
 class Image
 {
