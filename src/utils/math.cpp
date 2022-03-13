@@ -1,10 +1,14 @@
 #include <array>
 #include <fstream>
-#include <filesystem>
+#include <glm/glm.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <pcl/point_types.h>
 
-#include "utils/math.hpp"
-#include "logger/logger.hpp"
 #include "exceptions/fsexception.hpp"
+#include "logger/logger.hpp"
+#include "utils/math.hpp"
+
+using glm::mat3;
 
 std::array<GLfloat, 6> math::findBounds(const std::vector<vec3> &points)
 {
@@ -13,7 +17,7 @@ std::array<GLfloat, 6> math::findBounds(const std::vector<vec3> &points)
     min_y = max_y = points[0].y;
     min_z = max_z = points[0].z;
 
-    for (auto vert: points) {
+    for (auto vert : points) {
         if (vert.x < min_x)
             min_x = vert.x;
         if (vert.x > max_x)
@@ -57,16 +61,15 @@ Eigen::Matrix3f math::build_covarience_matrix(const std::vector<vec3> &points)
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 3; ++j)
             for (int k = 0; k < points.size(); ++k)
-                cov(i,j) += (points[k + i][i] - means[i])
-                        * (points[k + j][j] - means[j]);
+                cov(i, j) += (points[k + i][i] - means[i]) * (points[k + j][j] - means[j]);
 
-            cov /= points.size() - 1;
+    cov /= points.size() - 1;
 
-            return cov;
+    return cov;
 }
 
-glm::vec3
-math::viewportToWorld(const vec2 &pos, const vec2 &clip, const mat4 &projection, const mat4 &view)
+glm::vec3 math::viewportToWorld(const vec2 &pos, const vec2 &clip, const mat4 &projection,
+                                const mat4 &view)
 {
     // To NDC space
     glm::vec3 p = viewportToNDC(pos, clip);
@@ -85,18 +88,9 @@ math::viewportToWorld(const vec2 &pos, const vec2 &clip, const mat4 &projection,
     return ray_world;
 }
 
-
 glm::mat4 math::loadCameraIntrinsic(const std::string &path, GLfloat near, GLfloat far)
 {
-    std::ifstream f(path);
-    if (!std::filesystem::exists(path) || !f.good())
-        throw FSException((boost::format("Unable to load file %1") % path).str(),
-                          logger::program_log_file_name(), logger::Category::FS_ERROR);
-
-    glm::mat3 intrinsic;
-    for (short i = 0; i < 3; ++i)
-        for (short j = 0; j < 3; ++j)
-            f >> intrinsic[i][j];
+    glm::mat3 intrinsic = loadMat<3, 3, GLfloat>(path);
 
     auto projection = glm::zero<glm::mat4>();
 
@@ -113,4 +107,38 @@ glm::mat4 math::loadCameraIntrinsic(const std::string &path, GLfloat near, GLflo
     projection[3][3] = 0;
 
     return projection;
+}
+
+void math::saveKittiCalib(const std::string &path, const glm::mat3x4 &intr, const glm::mat3x4 &extr)
+{
+    glm::mat4x3 P0, P1, P2, P3;
+    glm::mat3x3 R0_rect;
+
+    P0 = P1 = P2 = P3 = intr;
+
+    GLfloat scale_factor =
+        std::sqrt(extr[0][0] * extr[0][0] + extr[0][1] * extr[0][1] + extr[0][2] * extr[0][2]);
+
+    mat3 rotation =
+        (1.f / scale_factor) * mat3(extr[0][0], extr[0][1], extr[0][2], extr[1][0], extr[1][1],
+                                    extr[1][2], extr[2][0], extr[2][1], extr[2][2]);
+    vec3 translation{extr[0][3], extr[1][3], extr[2][3]};
+
+    glm::mat4x3 tr_lid_to_cam = extr;
+    glm::mat4x3 tr_imu_to_lid = glm::mat4x3(1.f);
+
+    std::ofstream kitti_calib(path);
+    if (!kitti_calib.good()) {
+        // TODO: throw error
+    }
+
+    kitti_calib << "P0: " << math::to_string(P0) << "\n"
+                << "P1: " << math::to_string(P1) << "\n"
+                << "P2: " << math::to_string(P2) << "\n"
+                << "P3: " << math::to_string(P3) << "\n"
+                << "R0_rect: " << math::to_string(rotation) << "\n"
+                << "Tr_velo_to_cam: " << math::to_string(tr_lid_to_cam) << "\n"
+                << "Tr_imu_to_velo: " << math::to_string(tr_imu_to_lid) << "\n";
+
+    kitti_calib.close();
 }

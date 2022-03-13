@@ -2,35 +2,51 @@
 #define LIDAR_HPP
 
 #include <GL/glew.h>
-#include <bvh/bvh.hpp>
-#include <bvh/primitive_intersectors.hpp>
-#include <bvh/ray.hpp>
-#include <bvh/single_ray_traverser.hpp>
-#include <bvh/sweep_sah_builder.hpp>
-#include <bvh/triangle.hpp>
-#include <bvh/vector.hpp>
 #include <glm/vec3.hpp>
+#include <pcl/io/io.h>
 #include <variant>
 
-#include "base.hpp"
+//#include "base.hpp"
 #include "fpscamera.hpp"
 
 using glm::normalize;
 using glm::vec2;
 using glm::vec3;
 
-FORCE_INLINE inline vec3 ray_point(const Ray &ray, GLfloat distance)
+FORCE_INLINE vec3 ray_point(const Ray &ray, GLfloat distance)
 {
     Vector3 pos = ray.origin + normalize(ray.direction) * distance;
     return {pos[0], pos[1], pos[2]};
 }
 
-struct Frame {
+template <typename PointType> struct Frame {
+    using Ptr = std::shared_ptr<Frame<PointType>>;
+
+    Frame() : sourcePos(glm::vec3(0.f)), points() {}
+
+    Frame(glm::vec3 _sourcePos,
+          std::vector<PointType, Eigen::aligned_allocator<PointType>> _points)
+        : sourcePos(_sourcePos), points(_points)
+    {
+    }
+
     // Position of lidar or other source
     glm::vec3 sourcePos;
     // XYZ or XYZI points
-    std::variant<std::vector<glm::vec3>, std::vector<glm::vec4>> points;
+    std::vector<PointType, Eigen::aligned_allocator<PointType>> points;
 };
+
+enum class CloudType { binary, pcd, txt };
+
+template <typename PointType>
+FORCE_INLINE void scale_cloud(Frame<PointType> &cloud, const glm::vec3 &scale)
+{
+    for (auto &point : cloud.points) {
+        point.x *= scale.x;
+        point.y *= scale.y;
+        point.z *= scale.z;
+    }
+}
 
 class Lidar : public FpsCamera {
   public:

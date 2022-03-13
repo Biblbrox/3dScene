@@ -1,19 +1,20 @@
 cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_CXX_STANDARD 17)
-set(GAME_NAME "3DScene")
+set(GAME_NAME "LidarScene")
 set(EXT_PATH "libs")
 project(${GAME_NAME})
 
-IF(POLICY CMP0012)
+IF (POLICY CMP0012)
     CMAKE_POLICY(SET CMP0012 NEW)
-ENDIF()
+ENDIF ()
 
 set(CPU_TYPE "native")
 set(ARCH_PARAM "")
 if (NOT ${CPU_TYPE} STREQUAL "")
     set(ARCH_PARAM "-march=${CPU_TYPE}")
-endif()
+endif ()
+
 message("Using cpu type ${CPU_TYPE}")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/libs/")
@@ -30,12 +31,12 @@ set(CMAKE_CXX_FLAGS_RELEASE_INIT "-fasynchronous-unwind-tables" "-fexceptions"
         "-fpie" "-Wl,-pie" "-fpic" "-shared" "-fstack-clash-protection"
         "-fstack-protector" "-fstack-protector-strong" "-fcf-protection" "-pipe"
         "-Wall" "-Werror=format-security" "-Wl,-z,defs" "-Wl,-z,now" "-Wl,-z,relro"
-        "-O3" "-std=c++17" ${ARCH_PARAM} "-fopenmp=libomp")
+        "-O2" "-std=c++17" ${ARCH_PARAM} "-fopenmp=libomp")
 
 message("Build type: ${CMAKE_BUILD_TYPE}")
 if (CMAKE_BUILD_TYPE MATCHES Release)
     add_compile_definitions(BOOST_DISABLE_ASSERTS)
-endif()
+endif ()
 
 find_package(PCL REQUIRED)
 find_package(SDL2 REQUIRED)
@@ -51,10 +52,10 @@ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(OpenMP)
 if (OPENMP_FOUND)
     message("OpenMP found")
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-endif()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif ()
 
 
 add_subdirectory(${EXT_PATH}/bvh)
@@ -93,6 +94,30 @@ target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<SDL_ope
 
 set(SDL2_TTF_LIBRARIES SDL2_ttf)
 
+# Target 3DScene
+FILE(GLOB_RECURSE CPP RELATIVE ${PROJECT_SOURCE_DIR} "src/*.cpp")
+FILE(GLOB_RECURSE HPP RELATIVE ${PROJECT_SOURCE_DIR} "include/*.hpp" "include/*.h" src/*.hpp src/*.h)
+set(SOURCES ${HPP} ${CPP} include/shadernames.hpp)
+add_executable(${GAME_NAME} ${SOURCES})
+
+set(SCENE_LIBRARY_DEPENDENCIES ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES}
+        ${SDL2_TTF_LIBRARIES} ${SDL2_MIXER_LIBRARIES} ${Boost_LIBRARIES} GLEW
+        libGLEW.so libGLU.so libGL.so imgui pthread Eigen3::Eigen ${ASSIMP_LIBRARIES}
+        ${PCL_LIBRARIES} bvh strutils logger)
+target_link_libraries(${GAME_NAME} ${SCENE_LIBRARY_DEPENDENCIES} ${PCL_LIBRARIES})
+
+set(SCENE_INCLUDE_DEPENDENCIES include
+        ${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIR}
+        ${SDL2_TTF_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS}
+        ${GLM_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} ${PCL_INCLUDE_DIRS}
+        ${EXT_PATH}/ImGuiFileDialog/ ${EXT_PATH})
+target_include_directories(${GAME_NAME} PRIVATE ${SCENE_INCLUDE_DEPENDENCIES})
+
+# Add Eigen
+set(EIGEN_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/libs")
+message("********************${EIGEN_INCLUDE_DIRS}*************************")
+target_include_directories(${GAME_NAME} PRIVATE ${EIGEN_INCLUDE_DIRS})
+
 # Target ComplexPointCloud COMPLEX_IMAGE_CLOUD
 set(TOOL_NAME "ComplexPointCloud")
 
@@ -106,48 +131,27 @@ find_package(OpenCV REQUIRED)
 set(CMAKE_AUTOMOC ON) # For meta object compiler
 set(CMAKE_AUTORCC ON) # Resource files
 set(CMAKE_AUTOUIC ON) # UI files
-if(CMAKE_VERSION VERSION_LESS "3.7.0")
+if (CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
-endif()
+endif ()
 find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 set(COMPLEX_IMAGE_CLOUD ${CMAKE_SOURCE_DIR}/tools/cpp/complex_image_cloud)
-QT5_WRAP_UI(${COMPLEX_IMAGE_CLOUD}/src/ui_pclviewer.h  ${COMPLEX_IMAGE_CLOUD}/src/src/pclviewer.ui)
+QT5_WRAP_UI(${COMPLEX_IMAGE_CLOUD}/src/ui_pclviewer.h ${COMPLEX_IMAGE_CLOUD}/src/src/pclviewer.ui)
 
 FILE(GLOB_RECURSE COMPLEX_CLOUD_CPP "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/src/*.cpp")
 FILE(GLOB_RECURSE COMPLEX_CLOUD_HPP "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/include/*.hpp"
         "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/include/*.h"
         "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/src/*.hpp"
         "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/src/*.h")
-add_executable(${TOOL_NAME}  ${COMPLEX_CLOUD_CPP} ${COMPLEX_CLOUD_HPP})
-target_link_libraries(${TOOL_NAME} Qt5::Core)
-target_link_libraries(${TOOL_NAME} Qt5::Gui)
-target_link_libraries(${TOOL_NAME} Qt5::Widgets)
+add_executable(${TOOL_NAME} ${COMPLEX_CLOUD_CPP} ${COMPLEX_CLOUD_HPP})
+target_link_libraries(${TOOL_NAME} Qt5::Core Qt5::Gui Qt5::Widgets ${SCENE_LIBRARY_DEPENDENCIES})
 
 target_link_libraries(${TOOL_NAME} ${Boost_LIBRARIES} GLEW
         libGLEW.so libGLU.so libGL.so pthread Eigen3::Eigen
-        ${PCL_LIBRARIES} vtkGUISupportQt  ${OpenCV_LIBS})
+        ${PCL_LIBRARIES} vtkGUISupportQt ${OpenCV_LIBS})
 
-target_include_directories(${TOOL_NAME} PRIVATE ${PROJECT_SOURCE_DIR})
-target_include_directories(${TOOL_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/include
-        ${OPENGL_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS}
-        ${GLM_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${EXT_PATH})
+target_include_directories(${TOOL_NAME} PRIVATE ${PROJECT_SOURCE_DIR}
+        ${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/include ${SCENE_INCLUDE_DEPENDENCIES})
 
-
-# Target 3DScene
-FILE(GLOB_RECURSE CPP RELATIVE ${PROJECT_SOURCE_DIR} "src/*.cpp")
-FILE(GLOB_RECURSE HPP RELATIVE ${PROJECT_SOURCE_DIR} "include/*.hpp" "include/*.h" src/*.hpp src/*.h)
-set(SOURCES ${HPP} ${CPP})
-add_executable(${GAME_NAME} ${SOURCES})
-
-target_link_libraries(${GAME_NAME} ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES}
-        ${SDL2_TTF_LIBRARIES} ${SDL2_MIXER_LIBRARIES} ${Boost_LIBRARIES} GLEW
-        libGLEW.so libGLU.so libGL.so imgui pthread Eigen3::Eigen ${ASSIMP_LIBRARIES}
-        ${PCL_LIBRARIES} bvh strutils logger)
-
-target_include_directories(${GAME_NAME} PRIVATE include
-        ${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIR}
-        ${SDL2_TTF_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS}
-        ${GLM_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} ${PCL_INCLUDE_DIRS}
-        ${EXT_PATH}/ImGuiFileDialog/ ${EXT_PATH})
 
 target_compile_definitions(${GAME_NAME} PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE=1)

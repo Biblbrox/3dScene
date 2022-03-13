@@ -1,46 +1,40 @@
 #include <GL/glew.h>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <glm/exponential.hpp>
 #include <glm/glm.hpp>
 #include <json/json.hpp>
-#include <glm/exponential.hpp>
-#include <pcl/io/pcd_io.h>
-#include <pcl/point_types.h>
-#include <Eigen/Dense>
-#include <chrono>
 
 #ifndef NDEBUG // use callgrind profiler
-#include <valgrind/callgrind.h>
+#    include <valgrind/callgrind.h>
 #endif
 
+#include "components/bvhcomponent.hpp"
+#include "components/globallightcomponent.hpp"
+#include "components/lidarcomponent.hpp"
 #include "components/positioncomponent.hpp"
 #include "components/positioncomponentinst.hpp"
-#include "components/lidarcomponent.hpp"
-#include "components/spritecomponent.hpp"
-#include "components/skyboxcomponent.hpp"
-#include "components/globallightcomponent.hpp"
-#include "components/bvhcomponent.hpp"
 #include "components/selectablecomponent.hpp"
+#include "components/skyboxcomponent.hpp"
+#include "components/spritecomponent.hpp"
 #include "components/terraincomponent.hpp"
 #include "exceptions/fsexception.hpp"
+#include "utils/collision.hpp"
 #include "utils/fs.hpp"
 #include "utils/math.hpp"
-#include "utils/collision.hpp"
 
 using glm::vec3;
 using math::createTransform;
 using math::transformTriangles;
 
-void
-utils::fs::saveLidarDataCart(const std::string &data_file,
-                             const std::string &res_file)
+void utils::fs::saveLidarDataCart(const std::string &data_file, const std::string &res_file)
 {
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     std::filesystem::copy(data_file, res_file, copyOptions);
 }
 
-void utils::fs::saveLidarDataSphere(const std::string &data_file,
-                                    const std::string &res_file,
+void utils::fs::saveLidarDataSphere(const std::string &data_file, const std::string &res_file,
                                     const glm::vec3 &lidar_pos)
 {
     std::ifstream in(data_file);
@@ -69,47 +63,46 @@ void utils::fs::saveLidarDataSphere(const std::string &data_file,
 }
 
 using nlohmann::json;
-namespace glm
-{
-    void to_json(json &j, const vec3 &v);
-    void from_json(const json& j, vec3& v);
+namespace glm {
+void to_json(json &j, const vec3 &v);
+void from_json(const json &j, vec3 &v);
 
-    void to_json(json &j, const vec2 &v);
-    void from_json(const json& j, vec2& v);
-}
+void to_json(json &j, const vec2 &v);
+void from_json(const json &j, vec2 &v);
+} // namespace glm
 
 void to_json(json &j, const Position &v);
-void from_json(const json& j, Position& v);
+void from_json(const json &j, Position &v);
 
-void glm::to_json(json& j, const glm::vec3& v)
+void glm::to_json(json &j, const glm::vec3 &v)
 {
     j = json::array({v.x, v.y, v.z});
 }
 
-void glm::from_json(const json& j, glm::vec3& v)
+void glm::from_json(const json &j, glm::vec3 &v)
 {
     v.x = j[0];
     v.y = j[1];
     v.z = j[2];
 }
 
-void glm::to_json(json& j, const glm::vec2& v)
+void glm::to_json(json &j, const glm::vec2 &v)
 {
     j = json::array({v.x, v.y});
 }
 
-void glm::from_json(const json& j, glm::vec2& v)
+void glm::from_json(const json &j, glm::vec2 &v)
 {
     v.x = j[0];
     v.y = j[1];
 }
 
-void to_json(json& j, const Position& v)
+void to_json(json &j, const Position &v)
 {
     j = json::array({{"pos", v.pos}, {"angle", v.angle}, {"rot_axis", v.rot_axis}});
 }
 
-void from_json(const json& j, Position& v)
+void from_json(const json &j, Position &v)
 {
     v.pos = j[0]["pos"];
     v.angle = j[1]["angle"];
@@ -122,12 +115,12 @@ void utils::fs::saveSimJson(const std::string &file_name,
     using ecs::types::type_id;
     json j;
     j["Entities"] = json::array();
-    for (const auto& [_, en]: entities) {
-        std::string key =  std::to_string(_);
+    for (const auto &[_, en] : entities) {
+        std::string key = std::to_string(_);
         json en_obj = json::object();
         // Component list
         en_obj["Components"] = json::array();
-        for (const auto&[type, comp_gen]: en->getComponents()) {
+        for (const auto &[type, comp_gen] : en->getComponents()) {
             if (type == type_id<PositionComponent>) {
                 auto comp = en->getComponent<PositionComponent>();
                 json comp_obj = json::object();
@@ -142,29 +135,33 @@ void utils::fs::saveSimJson(const std::string &file_name,
                 comp_obj["PositionComponent"].push_back(ang_obj);
 
                 json rot_obj = json::object();
-                rot_obj["rot_axis"] = json::array({comp->rot_axis.x, comp->rot_axis.y, comp->rot_axis.z});
+                rot_obj["rot_axis"] =
+                    json::array({comp->rot_axis.x, comp->rot_axis.y, comp->rot_axis.z});
                 comp_obj["PositionComponent"].push_back(rot_obj);
 
                 en_obj["Components"].push_back(comp_obj);
-            } else if (type == type_id<PositionComponentInst>) {
-//                auto comp = en->getComponent<PositionComponentInst>();
-//                json comp_obj = json::object();
-//                comp_obj["PositionComponent"] = json::array();
-//
-//                json pos_obj = json::object();
-//                pos_obj["pos"] = json::array({comp->pos.x, comp->pos.y, comp->pos.z});
-//                comp_obj["PositionComponent"].push_back(pos_obj);
-//
-//                json ang_obj = json::object();
-//                ang_obj["angle"] = comp->angle;
-//                comp_obj["PositionComponent"].push_back(ang_obj);
-//
-//                json rot_obj = json::object();
-//                rot_obj["rot_axis"] = json::array({comp->rot_axis.x, comp->rot_axis.y, comp->rot_axis.z});
-//                comp_obj["PositionComponent"].push_back(rot_obj);
-//
-//                en_obj["Components"].push_back(comp_obj);
-            } else if (type == type_id<SpriteComponent>) {
+            }
+            else if (type == type_id<PositionComponentInst>) {
+                //                auto comp = en->getComponent<PositionComponentInst>();
+                //                json comp_obj = json::object();
+                //                comp_obj["PositionComponent"] = json::array();
+                //
+                //                json pos_obj = json::object();
+                //                pos_obj["pos"] = json::array({comp->pos.x, comp->pos.y,
+                //                comp->pos.z}); comp_obj["PositionComponent"].push_back(pos_obj);
+                //
+                //                json ang_obj = json::object();
+                //                ang_obj["angle"] = comp->angle;
+                //                comp_obj["PositionComponent"].push_back(ang_obj);
+                //
+                //                json rot_obj = json::object();
+                //                rot_obj["rot_axis"] = json::array({comp->rot_axis.x,
+                //                comp->rot_axis.y, comp->rot_axis.z});
+                //                comp_obj["PositionComponent"].push_back(rot_obj);
+                //
+                //                en_obj["Components"].push_back(comp_obj);
+            }
+            else if (type == type_id<SpriteComponent>) {
                 auto comp = en->getComponent<SpriteComponent>();
                 auto sprite = comp->sprite;
 
@@ -184,7 +181,8 @@ void utils::fs::saveSimJson(const std::string &file_name,
                 comp_obj["SpriteComponent"].push_back(uv_obj);
 
                 en_obj["Components"].push_back(comp_obj);
-            } else if (type == type_id<BVHComponent>) {
+            }
+            else if (type == type_id<BVHComponent>) {
                 auto comp = en->getComponent<BVHComponent>();
 
                 json comp_obj = json::object();
@@ -192,7 +190,8 @@ void utils::fs::saveSimJson(const std::string &file_name,
                 comp_obj["BVHComponent"].push_back({});
 
                 en_obj["Components"].push_back(comp_obj);
-            } else if (type == type_id<LidarComponent>) {
+            }
+            else if (type == type_id<LidarComponent>) {
                 auto comp = en->getComponent<LidarComponent>();
 
                 json comp_obj = json::object();
@@ -202,11 +201,14 @@ void utils::fs::saveSimJson(const std::string &file_name,
                 comp_obj["LidarComponent"].push_back(json::object({{"freq", comp->freq}}));
                 comp_obj["LidarComponent"].push_back(json::object({{"length", comp->length}}));
                 comp_obj["LidarComponent"].push_back(json::object({{"density", comp->density}}));
-                comp_obj["LidarComponent"].push_back(json::object({{"obj_distance", comp->obj_distance}}));
-                comp_obj["LidarComponent"].push_back(json::object({{"start_angle", comp->start_angle}}));
+                comp_obj["LidarComponent"].push_back(
+                    json::object({{"obj_distance", comp->obj_distance}}));
+                comp_obj["LidarComponent"].push_back(
+                    json::object({{"start_angle", comp->start_angle}}));
 
                 en_obj["Components"].push_back(comp_obj);
-            } else if (type == type_id<GlobalLightComponent>) {
+            }
+            else if (type == type_id<GlobalLightComponent>) {
                 auto comp = en->getComponent<GlobalLightComponent>();
 
                 vec3 direction = comp->direction;
@@ -216,13 +218,18 @@ void utils::fs::saveSimJson(const std::string &file_name,
 
                 json comp_obj = json::object();
                 comp_obj["GlobalLightComponent"] = json::array();
-                comp_obj["GlobalLightComponent"].push_back(json::object({{"direction", {direction.x, direction.y, direction.z}}}));
-                comp_obj["GlobalLightComponent"].push_back(json::object({{"ambient", {amb.x, amb.y, amb.z}}}));
-                comp_obj["GlobalLightComponent"].push_back(json::object({{"diffuse", {dif.x, dif.y, dif.z}}}));
-                comp_obj["GlobalLightComponent"].push_back(json::object({{"specular", {spec.x, spec.y, spec.z}}}));
+                comp_obj["GlobalLightComponent"].push_back(
+                    json::object({{"direction", {direction.x, direction.y, direction.z}}}));
+                comp_obj["GlobalLightComponent"].push_back(
+                    json::object({{"ambient", {amb.x, amb.y, amb.z}}}));
+                comp_obj["GlobalLightComponent"].push_back(
+                    json::object({{"diffuse", {dif.x, dif.y, dif.z}}}));
+                comp_obj["GlobalLightComponent"].push_back(
+                    json::object({{"specular", {spec.x, spec.y, spec.z}}}));
 
                 en_obj["Components"].push_back(comp_obj);
-            } else if (type == type_id<SelectableComponent>) {
+            }
+            else if (type == type_id<SelectableComponent>) {
                 auto comp = en->getComponent<SelectableComponent>();
 
                 json comp_obj = json::object();
@@ -230,18 +237,23 @@ void utils::fs::saveSimJson(const std::string &file_name,
                 comp_obj["SelectableComponent"].push_back({});
 
                 en_obj["Components"].push_back(comp_obj);
-            } else if (type == type_id<TerrainComponent>) {
+            }
+            else if (type == type_id<TerrainComponent>) {
                 auto comp = en->getComponent<TerrainComponent>();
                 auto terrain = comp->terrain;
 
                 json comp_obj = json::object();
                 comp_obj["TerrainComponent"] = json::array();
-                comp_obj["TerrainComponent"].push_back(json::object({{"height_image", terrain->getHeightImage()}}));
-                comp_obj["TerrainComponent"].push_back(json::object({{"texture_image", terrain->getTextureFile()}}));
-                comp_obj["TerrainComponent"].push_back(json::object({{"scale", terrain->getScale()}}));
+                comp_obj["TerrainComponent"].push_back(
+                    json::object({{"height_image", terrain->getHeightImage()}}));
+                comp_obj["TerrainComponent"].push_back(
+                    json::object({{"texture_image", terrain->getTextureFile()}}));
+                comp_obj["TerrainComponent"].push_back(
+                    json::object({{"scale", terrain->getScale()}}));
 
                 en_obj["Components"].push_back(comp_obj);
-            } else if (type == type_id<SkyboxComponent>) {
+            }
+            else if (type == type_id<SkyboxComponent>) {
                 auto comp = en->getComponent<SkyboxComponent>();
 
                 json comp_skybox = json::object();
@@ -262,14 +274,14 @@ void utils::fs::saveSimJson(const std::string &file_name,
     out.close();
 }
 
-std::vector<ecs::Entity>
-utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager)
+std::vector<ecs::Entity> utils::fs::loadSimJson(const std::string &file_name,
+                                                ecs::EcsManager &ecsManager)
 {
-    using std::chrono::high_resolution_clock;
-    using std::chrono::duration_cast;
     using std::chrono::duration;
+    using std::chrono::duration_cast;
+    using std::chrono::high_resolution_clock;
     using std::chrono::milliseconds;
-    
+
     if (!std::filesystem::exists(file_name))
         throw FSException((boost::format("Unable to load file %1") % file_name).str(),
                           logger::program_log_file_name(), Category::FS_ERROR);
@@ -285,9 +297,9 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
 
     json j = json::parse(ifs);
     ifs.close();
-    for (const auto& en: j["Entities"]) {
+    for (const auto &en : j["Entities"]) {
         ecs::Entity entity(ecsManager.genUniqueId());
-        for (const auto& comp: en["Components"]) {
+        for (const auto &comp : en["Components"]) {
             if (comp.contains("PositionComponent")) {
                 json json_pos = comp["PositionComponent"];
                 vec3 pos = json_pos[0]["pos"].get<glm::vec3>();
@@ -299,20 +311,23 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
                 pos_comp->pos = pos;
                 pos_comp->rot_axis = rot_axis;
                 pos_comp->angle = angle;
-            } else if (comp.contains("PositionComponentInst")) {
+            }
+            else if (comp.contains("PositionComponentInst")) {
                 json json_pos = comp["PositionComponentInst"];
-                std::vector<Position> position = json_pos[0]["position"].get<std::vector<Position>>();
+                std::vector<Position> position =
+                    json_pos[0]["position"].get<std::vector<Position>>();
 
                 entity.addComponent<PositionComponentInst>();
                 auto pos_comp = entity.getComponent<PositionComponentInst>();
-                for (const auto& pos: pos_comp->position) {
+                for (const auto &pos : pos_comp->position) {
                     Position p;
                     p.pos = pos.pos;
                     p.angle = pos.angle;
                     p.rot_axis = pos.rot_axis;
                     pos_comp->position.emplace_back(p);
                 }
-            } else if (comp.contains("SpriteComponent")) {
+            }
+            else if (comp.contains("SpriteComponent")) {
                 json json_sprite = comp["SpriteComponent"];
 
                 std::string model_file = json_sprite[0]["model_file"].get<std::string>();
@@ -322,11 +337,14 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
                 entity.addComponent<SpriteComponent>();
                 auto sprite_comp = entity.getComponent<SpriteComponent>();
                 sprite_comp->sprite = std::make_shared<Sprite>(model_file, size, uv_flipped);
-            } else if (comp.contains("BVHComponent")) {
+            }
+            else if (comp.contains("BVHComponent")) {
                 entity.addComponent<BVHComponent>();
-            } else if (comp.contains("SceneComponent")) {
+            }
+            else if (comp.contains("SceneComponent")) {
                 continue;
-            } else if (comp.contains("LidarComponent")) {
+            }
+            else if (comp.contains("LidarComponent")) {
                 json json_lidar = comp["LidarComponent"];
                 GLfloat yaw = json_lidar[0]["yaw"].get<GLfloat>();
                 GLfloat pitch = json_lidar[1]["pitch"].get<GLfloat>();
@@ -345,7 +363,8 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
                 lidar->freq = freq;
                 lidar->pitch = pitch;
                 lidar->yaw = yaw;
-            } else if (comp.contains("GlobalLightComponent")) {
+            }
+            else if (comp.contains("GlobalLightComponent")) {
                 json json_light = comp["GlobalLightComponent"];
                 vec3 direction = json_light[0]["direction"].get<vec3>();
                 vec3 ambient = json_light[1]["ambient"].get<vec3>();
@@ -358,9 +377,11 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
                 light->ambient = ambient;
                 light->diffuse = diffuse;
                 light->specular = specular;
-            } else if (comp.contains("SelectableComponent")) {
+            }
+            else if (comp.contains("SelectableComponent")) {
                 entity.addComponent<SelectableComponent>();
-            } else if (comp.contains("TerrainComponent")) {
+            }
+            else if (comp.contains("TerrainComponent")) {
                 json json_ter = comp["TerrainComponent"];
 
                 std::string height_image = json_ter[0]["height_image"].get<std::string>();
@@ -370,7 +391,8 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
                 entity.addComponent<TerrainComponent>();
                 auto terrain = entity.getComponent<TerrainComponent>();
                 terrain->terrain = std::make_shared<Terrain>(height_image, texture_image, scale);
-            } else if (comp.contains("SkyboxComponent")) {
+            }
+            else if (comp.contains("SkyboxComponent")) {
                 continue;
             }
         }
@@ -378,9 +400,9 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
     }
 
 #pragma omp parallel for
-    for (auto it = res.begin(); it != res.end(); ++it) {
+    for (auto it = res.begin(); it < res.end(); ++it) {
         auto bvh = it->getComponent<BVHComponent>();
-        
+
         if (!bvh)
             continue;
 
@@ -403,82 +425,8 @@ utils::fs::loadSimJson(const std::string &file_name, ecs::EcsManager& ecsManager
     return res;
 }
 
-void utils::fs::saveFrameToFileTxt(const Frame &frame, const std::string &file_name, bool intensity)
+bool utils::fs::writableFile(std::string_view file_name)
 {
-    std::ofstream out(file_name, std::ios::out | std::ios::app);
-
-    if (intensity) {
-        for (const auto& point: std::get<std::vector<glm::vec4>>(frame.points))
-            out << point.x << ", " << point.y << ", " << point.z << point.w << "\n";
-    } else {
-        for (const auto& point: std::get<std::vector<glm::vec3>>(frame.points))
-            out << point.x << ", " << point.y << ", " << point.z << "\n";
-    }
-
-    out.close();
+    return (std::filesystem::status(file_name).permissions() &
+            std::filesystem::perms::owner_write) != std::filesystem::perms::none;
 }
-
-void
-utils::fs::saveFrameToFileBin(const Frame &frame, const std::string &file_name, bool intensity)
-{
-    using glm::float32;
-
-    std::ofstream out(file_name, std::ios::out | std::ios::binary);
-
-    if (intensity) {
-        for (vec4 point: std::get<std::vector<glm::vec4>>(frame.points)) {
-            out.write((char*)&point.x, sizeof(glm::float32_t));
-            out.write((char*)&point.y, sizeof(glm::float32_t));
-            out.write((char*)&point.z, sizeof(glm::float32_t));
-            out.write((char*)&point.w, sizeof(glm::float32_t));
-        }
-    } else {
-        for (vec3 point: std::get<std::vector<glm::vec3>>(frame.points)) {
-            out.write((char*)&point.x, sizeof(glm::float32_t));
-            out.write((char*)&point.y, sizeof(glm::float32_t));
-            out.write((char*)&point.z, sizeof(glm::float32_t));
-        }
-    }
-
-    out.close();
-}
-
-void utils::fs::saveFrameToFilePcd(const Frame &frame, const std::string &file_name, bool intensity)
-{
-    if (intensity) {
-        pcl::PointCloud<pcl::PointXYZI> cloud;
-        // Fill in the cloud data
-        auto points = std::get<std::vector<vec4>>(frame.points);
-        cloud.width    = points.size();
-        cloud.height   = 1;
-        cloud.is_dense = false;
-        cloud.points.resize(cloud.width * cloud.height);
-        for (size_t i = 0; i < cloud.width; ++i) {
-            cloud[i].x = points[i].x;
-            cloud[i].y = points[i].y;
-            cloud[i].z = points[i].z;
-            cloud[i].intensity = points[i].w;
-        }
-
-        cloud.sensor_origin_ = Eigen::Vector4f(frame.sourcePos.x, frame.sourcePos.y,
-                                               frame.sourcePos.z, 1.f);
-        pcl::io::savePCDFileASCII (file_name, cloud);
-    } else {
-        pcl::PointCloud<pcl::PointXYZ> cloud;
-        // Fill in the cloud data
-        auto points = std::get<std::vector<vec3>>(frame.points);
-        cloud.width    = points.size();
-        cloud.height   = 1;
-        cloud.is_dense = false;
-        cloud.points.resize(cloud.width * cloud.height);
-        for (size_t i = 0; i < cloud.width; ++i) {
-            cloud[i].x = points[i].x;
-            cloud[i].y = points[i].y;
-            cloud[i].z = points[i].z;
-        }
-
-        pcl::io::savePCDFileASCII(file_name, cloud);
-    }
-}
-
-

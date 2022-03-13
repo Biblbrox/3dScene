@@ -74,28 +74,6 @@ namespace utils::data {
 		if (!node->m_left || !node->m_right) // Leaf case
 			func(node->m_data);
 	}
-
-//    template<typename K, typename V, typename Functor>
-//    void mapBVHTreeAtLevel(TreePtr node, Functor func, size_t level) {
-//        if (node->m_left)
-//            mapBinaryTreeAtLevel<K, V, Functor>(node->m_left, func, level - 1);
-//        if (node->m_right)
-//            mapBinaryTreeAtLevel<K, V, Functor>(node->m_right, func, level - 1);
-//
-//        if (!level)
-//            func(node->m_data);
-//    }
-//
-//    template<typename K, typename V, typename Functor>
-//    void mapBVHTreeLeafs(TreePtr node, Functor func) {
-//        if (node->m_left)
-//            mapBinaryTreeLeafs<K, V, Functor>(node->m_left, func);
-//        if (node->m_right)
-//            mapBinaryTreeLeafs<K, V, Functor>(node->m_right, func);
-//
-//        if (!node->m_left || !node->m_right) // Leaf case
-//            func(node->m_data);
-//    }
 }
 
 namespace utils
@@ -117,6 +95,18 @@ namespace utils
 		vec2 c;
 		vec2 d;
 	};
+
+        template <typename Type>
+        struct Rect3
+        {
+            Type x1;
+            Type x2;
+            Type y1;
+            Type y2;
+            Type z1;
+            Type z2;
+        };
+
 
 	struct Rect3D
 	{

@@ -6,6 +6,7 @@
 #include "logger/logger.hpp"
 #include "utils/utils.hpp"
 #include "base.hpp"
+#include "shadernames.hpp"
 
 using boost::format;
 using glm::mat4;

@@ -188,7 +188,7 @@ void Game::initGL()
     glClearColor(0.f, 0.f, 0.f, 1.f);
 
     glEnable(GL_LINE_SMOOTH);
-    glEnable(GL_POLYGON_SMOOTH);
+    //glEnable(GL_POLYGON_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
     glLineWidth(1.0f);

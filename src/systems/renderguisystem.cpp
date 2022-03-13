@@ -25,6 +25,7 @@
 #include "utils/texture.hpp"
 #include "view/fpscamera.hpp"
 #include "view/lidar.hpp"
+#include "shadernames.hpp"
 
 using std::string;
 

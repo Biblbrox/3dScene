@@ -11,6 +11,7 @@ class ComplexCloud
 {
 public:
     ComplexCloud(Image img, pcl::PointCloud<pcl::PointXYZ> xyzCloud);
+    ComplexCloud(Image img, pcl::PointCloud<pcl::PointXYZI> xyzCloud);
     ComplexCloud(Image img, pcl::PointCloud<pcl::PointXYZRGB> xyzCloud);
 
     /**
@@ -38,7 +39,7 @@ public:
      */
     void saveComplexCloud(const std::string& file_name,
                           const glm::vec3& scaling = glm::vec3(1.f, 1.f, 1.f),
-                          bool relative = false) const;
+                          bool relative = false, bool binary = false) const;
 
     /**
      * Filter ground points

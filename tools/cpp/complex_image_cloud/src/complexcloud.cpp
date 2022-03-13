@@ -1,16 +1,16 @@
 #include <pcl/point_cloud.h>
 #include <glm/ext/matrix_projection.hpp>
-#include <pcl/common/angles.h> // for pcl::deg2rad
 #include <pcl/features/normal_3d.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
-#include <pcl/console/parse.h>
 #include <filesystem>
 
 #include "complexcloud.hpp"
 #include "cvtools.hpp"
-#include "base.hpp"
+#include "utils/fs.hpp"
+#include "types.hpp"
 #include "pcltools.hpp"
+#include "view/lidar.hpp"
 
 using glm::vec2;
 using glm::vec3;
@@ -60,6 +60,51 @@ ComplexCloud::ComplexCloud(Image img, pcl::PointCloud<pcl::PointXYZ> xyzCloud)
         m_complexCloud->points[i].r = color[2];
     }
 }
+
+ComplexCloud::ComplexCloud(Image img, pcl::PointCloud<pcl::PointXYZI> xyzCloud)
+    : m_img(std::move(img)),
+      m_complexCloud(new pcl::PointCloud<pcl::PointXYZRGB>(xyzCloud.width, xyzCloud.height)),
+      m_sensorOrigin(xyzCloud.sensor_origin_)
+{
+    m_complexCloud->points.reserve(xyzCloud.size());
+    for (size_t i = 0; i < xyzCloud.size(); ++i) {
+        pcl::PointXYZI p = xyzCloud.points[i];
+        pcl::PointXYZRGB complexPoint;
+        complexPoint.x = p.x;
+        complexPoint.y = p.y;
+        complexPoint.z = p.z;
+        complexPoint.r = 200;
+        complexPoint.g = 1;
+        complexPoint.b = 1;
+        m_complexCloud->points[i] = complexPoint;
+    }
+
+    pcl::PointCloud<pcl::PointXYZI> cloud(std::move(xyzCloud));
+
+    m_projectedPoints.reserve(cloud.size());
+    Mat4 calMatrix = m_img.getCalMatrix();
+
+    float rows = static_cast<float>(m_img.getInnerMat().cols);
+    float cols = static_cast<float>(m_img.getInnerMat().rows);
+    cv::Mat invertedImg = m_img.getInnerMat();
+    cv::flip(invertedImg, invertedImg, 0);
+    for (size_t i = 0; i < cloud.size(); ++i) {
+        glm::vec3 p_3d{cloud[i].x, cloud[i].y, cloud[i].z};
+        glm::mat4 cal_glm;
+        cvtools::fromCV2GLM(calMatrix.t(), &cal_glm);
+        glm::vec4 viewport{0, 0, rows, cols};
+        glm::vec3 projected_glm = glm::project(p_3d, glm::mat4(1.f), cal_glm, viewport);
+
+        cv::Point projected(std::round(projected_glm.x), std::round(projected_glm.y));
+
+        m_projectedPoints.emplace_back(projected);
+        cv::Vec3b color = cvtools::getImgColor(invertedImg, projected);
+        m_complexCloud->points[i].b = color[0];
+        m_complexCloud->points[i].g = color[1];
+        m_complexCloud->points[i].r = color[2];
+    }
+}
+
 
 void ComplexCloud::drawProjected() const
 {
@@ -240,36 +285,41 @@ void ComplexCloud::setMaxDistance(float maxDst)
 }
 
 void ComplexCloud::saveComplexCloud(const std::string &file_name, const glm::vec3 &scaling,
-                                    bool relative) const
+                                    bool relative, bool binary) const
 {
-    if (!std::filesystem::exists(file_name)) {
-        std::ofstream out_file(file_name);
-        if (out_file.bad()) {
+    if (!binary) {
+        if (!std::filesystem::exists(file_name)) {
+            std::ofstream out_file(file_name);
+            if (out_file.bad()) {
+                out_file.close();
+                // TODO: throw error
+                return;
+            }
             out_file.close();
-            // TODO: throw error
-            return;
         }
-        out_file.close();
-    }
 
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr complexCloud
-            = pcl::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>(*m_complexCloud);
-    if (relative) {
-        complexCloud->sensor_origin_ = m_sensorOrigin;
-        std::cout << "Sensor origin: " << m_sensorOrigin.x() << ", "
-            << m_sensorOrigin.y() << ", " << m_sensorOrigin.z() << "\n";
-        for (auto& p: complexCloud->points) {
-            p.x -= m_sensorOrigin.x();
-            p.y -= m_sensorOrigin.y();
-            p.z -= m_sensorOrigin.z();
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr complexCloud =
+            pcl::make_shared<pcl::PointCloud<pcl::PointXYZRGB>>(*m_complexCloud);
+        if (relative) {
+            complexCloud->sensor_origin_ = m_sensorOrigin;
+            std::cout << "Sensor origin: " << m_sensorOrigin.x() << ", " << m_sensorOrigin.y()
+                      << ", " << m_sensorOrigin.z() << "\n";
+            for (auto &p : complexCloud->points) {
+                p.x -= m_sensorOrigin.x();
+                p.y -= m_sensorOrigin.y();
+                p.z -= m_sensorOrigin.z();
+            }
         }
-    }
 
-    for (auto& p: complexCloud->points) {
-        p.x *= scaling.x;
-        p.y *= scaling.y;
-        p.z *= scaling.z;
-    }
+        for (auto &p : complexCloud->points) {
+            p.x *= scaling.x;
+            p.y *= scaling.y;
+            p.z *= scaling.z;
+        }
 
-    pcl::io::savePCDFileASCII(file_name, *complexCloud);
+        pcl::io::savePCDFileASCII(file_name, *complexCloud);
+    } else {
+        Frame<pcl::PointXYZRGB> frame(glm::vec3(0.f), m_complexCloud->points);
+        frame.points = m_complexCloud->points;
+    }
 }

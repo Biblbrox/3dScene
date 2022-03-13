@@ -132,6 +132,8 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("RealCameraIntrinsicMat",
                        math::loadCameraIntrinsic(getResourcePath("intrinsic.txt"), 1.f, 1000.f),
                        "mat4");
+    if (!Config::hasKey("RealScale"))
+        Config::addVal("RealScale", glm::vec3(0.1f), "vec3");
 }
 
 World::~World()

@@ -143,7 +143,7 @@ raycastAABB(const Ray &ray, const utils::RectPoints3D &rect) noexcept
     return {true, ray_origin + ray_dir * tmin};
 }
 
-FORCE_INLINE inline bool interInRange(const Terrain &terrain, GLfloat start,
+FORCE_INLINE bool interInRange(const Terrain &terrain, GLfloat start,
                                       GLfloat end, const Ray &ray)
 {
     vec3 start_p = ray_point(ray, start);
@@ -161,7 +161,7 @@ FORCE_INLINE inline bool interInRange(const Terrain &terrain, GLfloat start,
  * @param num_iter
  * @return
  */
-FORCE_INLINE inline std::pair<bool, vec3>
+FORCE_INLINE std::pair<bool, vec3>
 rayTerrainIntersection(const Terrain &terrain, const Ray &ray, GLfloat start,
                        GLfloat end, size_t num_iter)
 {
@@ -190,7 +190,7 @@ rayTerrainIntersection(const Terrain &terrain, const Ray &ray, GLfloat start,
  * @param rect
  * @return
  */
-FORCE_INLINE inline std::pair<bool, vec3>
+FORCE_INLINE std::pair<bool, vec3>
 BVHCollision(BvhPtr tree, const Ray &ray, const std::vector<Triangle> &triangles, GLfloat& angle)
 {
     bvh::ClosestPrimitiveIntersector<Bvh, Triangle> primitive_intersector(*tree, triangles.data());

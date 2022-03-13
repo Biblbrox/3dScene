@@ -10,6 +10,7 @@
 #include "sceneprogram.hpp"
 #include "utils/math.hpp"
 #include "view/fpscamera.hpp"
+#include "shadernames.hpp"
 
 using boost::locale::generator;
 using boost::locale::gettext;

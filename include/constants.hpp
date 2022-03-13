@@ -9,7 +9,7 @@ const std::string MODEL_PATH = "../res/models/";
 const std::string LOCALE_PATH = "../locale/";
 const std::string SHADER_PATH = "../src/shaders/";
 
-const std::string GAME_NAME = "AutoNet";
+const std::string GAME_NAME = "LidarScene";
 
 /**
  * Return full path to resource fileName
