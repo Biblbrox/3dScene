@@ -51,6 +51,14 @@ void saveLidarDataCart(const std::string &data_file, const std::string &res_file
 void saveLidarDataSphere(const std::string &data_file, const std::string &res_file,
                          const glm::vec3 &lidar_pos);
 
+FORCE_INLINE size_t bytesInFile(std::ifstream& f)
+{
+    f.seekg(0, std::ifstream::end);
+    size_t length = f.tellg();
+    f.seekg (0, std::ifstream::beg);
+    return length;
+}
+
 /**
  * Check write access to file file_name
  * @return
@@ -63,11 +71,8 @@ typename pcl::PointCloud<PointType>::Ptr loadFromBin(const std::string &file_pat
     typename pcl::PointCloud<PointType>::Ptr cloud(new pcl::PointCloud<PointType>());
     size_t field_size = pcl::getFields<PointType>().size();
 
-
-    std::ifstream f(file_path);
-    f.seekg(0, std::ifstream::end);
-    size_t length = f.tellg();
-    f.seekg (0, std::ifstream::beg);
+    std::ifstream f(file_path, std::ios::binary);
+    size_t length = bytesInFile(f);
     size_t points_count = std::ceil(length / (field_size * sizeof(glm::float32_t)));
     cloud->points.reserve(points_count);
     cloud->width = points_count;
@@ -172,13 +177,20 @@ void saveFrame(const Frame<PointType> &frame, CloudType type, const std::string 
     if (use_real_world_space) {
         Matrix eigCloud = pcltools::frame2Eigen(frame);
 
+        vec3 camera_pos = FpsCamera::getInstance()->getPos();
+        eigCloud.col(0).array() -= frame.sourcePos.x;
+        eigCloud.col(1).array() -= frame.sourcePos.y;
+        eigCloud.col(2).array() -= frame.sourcePos.z;
+
         eigCloud(all, 2).array() *= -1;
         math::swap(eigCloud, 0, 2);
         math::swap(eigCloud, 1, 2);
-        eigCloud(all, 1) = -eigCloud(all, 1);
+        //eigCloud(all, 1) = -eigCloud(all, 1);
 
         // Scale cloud
         vec3 scale = Config::getVal<vec3>("RealScale");
+
+
         eigCloud.col(0) *= scale.x;
         eigCloud.col(1) *= scale.y;
         eigCloud.col(2) *= scale.z;

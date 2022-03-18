@@ -430,3 +430,4 @@ bool utils::fs::writableFile(std::string_view file_name)
     return (std::filesystem::status(file_name).permissions() &
             std::filesystem::perms::owner_write) != std::filesystem::perms::none;
 }
+
