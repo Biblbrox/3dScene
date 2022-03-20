@@ -470,3 +470,7 @@ void RenderSceneSystem::drawAxis()
     render::drawLinen({z1, z2});
 }
 
+void RenderSceneSystem::makeCheckerboardPhotos(unsigned int num, const std::string &dir)
+{
+
+}
