@@ -161,8 +161,8 @@ void LidarSystem::collision()
                                   coll_dots.cend());
 
     Frame<pcl::PointXYZI> frame(pos->pos, math::vecGlm2Pcl(coll_dots));
-    utils::fs::saveFrameToFileBin(frame, getResourcePath("cloud/000001.bin"));
+    //utils::fs::saveFrameToFileBin(frame, getResourcePath("cloud/000001.bin"));
     utils::fs::saveFrame(frame, CloudType::pcd, getResourcePath("cloud/000001.pcd"), true);
-    //utils::fs::saveFrame(frame, CloudType::binary, getResourcePath("cloud/000001.bin"), true);
+    utils::fs::saveFrame(frame, CloudType::binary, getResourcePath("cloud/000001.bin"), true);
     Config::getVal<bool>("CheckCollision") = false;
 }

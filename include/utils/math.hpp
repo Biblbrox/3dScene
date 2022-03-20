@@ -11,8 +11,8 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <numeric>
-#include <pcl/point_types.h>
 #include <pcl/io/io.h>
+#include <pcl/point_types.h>
 #include <vector>
 
 #include "base.hpp"
@@ -120,7 +120,15 @@ glm::vec3 viewportToWorld(const glm::vec2 &pos, const glm::vec2 &clip, const glm
  * @param path
  * @return
  */
-glm::mat4 loadCameraIntrinsic(const std::string &path, GLfloat near, GLfloat far);
+glm::mat4 loadCameraIntrinsic(const std::string &path, GLfloat near, GLfloat far, GLfloat width,
+                              GLfloat height);
+
+/**
+ * Convert homogenous coordinates to cartesian space
+ * @param hom_mat
+ * @return
+ */
+glm::mat4x3 homogen2cartesian(const glm::mat4x4& hom_mat);
 
 /**
  * Save calibration file in kitti format
@@ -129,15 +137,15 @@ glm::mat4 loadCameraIntrinsic(const std::string &path, GLfloat near, GLfloat far
  * @param intrinsic
  * @param extrinsic
  */
-void saveKittiCalib(const std::string &path, const glm::mat3x4 &intr, const glm::mat3x4 &extr);
+void saveKittiCalib(const std::string &path, const glm::mat4x4 &intr, const glm::mat4x4 &extr);
 
 /**
  * Convert vector of glm points to vector of pcl points
  * @param points
  */
 template <int Length, typename GlmType, typename PointType>
-std::vector<PointType,Eigen::aligned_allocator<PointType>>
-vecGlm2Pcl(const std::vector<glm::vec<Length, GlmType>, Eigen::aligned_allocator<PointType>> &points)
+std::vector<PointType, Eigen::aligned_allocator<PointType>> vecGlm2Pcl(
+    const std::vector<glm::vec<Length, GlmType>, Eigen::aligned_allocator<PointType>> &points)
 {
     assert(Length == pcl::getFields<PointType>().size());
 
@@ -304,7 +312,6 @@ template <typename T, int R, int C> std::string to_string(const glm::mat<C, R, T
     return res;
 }
 
-
 template <typename T, int C, int R> void print_glm(const glm::mat<C, R, T> &val)
 {
     for (int i = 0; i < C; ++i) {
@@ -322,9 +329,6 @@ template <typename T, int R, int C> void print_eigen(const Eigen::Matrix<T, R, C
         std::cout << "\n";
     }
 }
-
-
-
 
 template <typename T> constexpr int sgn(T val)
 {

@@ -2,6 +2,7 @@
 #include <fstream>
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtc/matrix_access.hpp>
 #include <pcl/point_types.h>
 
 #include "exceptions/fsexception.hpp"
@@ -88,28 +89,32 @@ glm::vec3 math::viewportToWorld(const vec2 &pos, const vec2 &clip, const mat4 &p
     return ray_world;
 }
 
-glm::mat4 math::loadCameraIntrinsic(const std::string &path, GLfloat near, GLfloat far)
+glm::mat4 math::loadCameraIntrinsic(const std::string &path, GLfloat near, GLfloat far,
+                                    GLfloat width, GLfloat height)
 {
-    glm::mat3 intrinsic = loadMat<3, 3, GLfloat>(path);
+    glm::mat3 K = loadMat<3, 3, GLfloat>(path);
+    K = glm::transpose(K);
 
-    auto projection = glm::zero<glm::mat4>();
+    K[2][0] *= -1;
+    K[2][1] *= -1;
+    K[2][2] *= -1; // 960 x 1280 -- WxH
 
-    GLfloat alpha = intrinsic[0][0];
-    GLfloat beta = intrinsic[1][1];
-    GLfloat cx = intrinsic[0][2];
-    GLfloat cy = intrinsic[1][2];
+    GLfloat A = near + far;
+    GLfloat B = near * far;
 
-    projection[0][0] = alpha / cx;
-    projection[1][1] = beta / cy;
-    projection[2][2] = -(far + near) / (far - near);
-    projection[2][3] = -2 * far * near / (far - near);
-    projection[3][2] = -1;
-    projection[3][3] = 0;
+    glm::mat4x4 persp;
+    persp = glm::row(persp, 0, {glm::row(K, 0), 0.f});
+    persp = glm::row(persp, 1, {glm::row(K, 1), 0.f});
+    persp = glm::row(persp, 2, {0.f, 0.f, A, B});
+    persp = glm::row(persp, 3, {0.f, 0.f, -1.f, 0.f});
 
-    return projection;
+    glm::mat4x4 NDC = glm::ortho(0.f, width, height, 0.f, near, far);
+    glm::mat4x4 proj = NDC * persp;
+
+    return proj;
 }
 
-void math::saveKittiCalib(const std::string &path, const glm::mat3x4 &intr, const glm::mat3x4 &extr)
+void math::saveKittiCalib(const std::string &path, const glm::mat4x4 &intr, const glm::mat4x4 &extr)
 {
     glm::mat4x3 P0, P1, P2, P3;
     glm::mat3x3 R0_rect;
@@ -119,7 +124,7 @@ void math::saveKittiCalib(const std::string &path, const glm::mat3x4 &intr, cons
     GLfloat scale_factor =
         std::sqrt(extr[0][0] * extr[0][0] + extr[0][1] * extr[0][1] + extr[0][2] * extr[0][2]);
 
-    mat3 rotation =
+    R0_rect =
         (1.f / scale_factor) * mat3(extr[0][0], extr[0][1], extr[0][2], extr[1][0], extr[1][1],
                                     extr[1][2], extr[2][0], extr[2][1], extr[2][2]);
     vec3 translation{extr[0][3], extr[1][3], extr[2][3]};
@@ -136,9 +141,14 @@ void math::saveKittiCalib(const std::string &path, const glm::mat3x4 &intr, cons
                 << "P1: " << math::to_string(P1) << "\n"
                 << "P2: " << math::to_string(P2) << "\n"
                 << "P3: " << math::to_string(P3) << "\n"
-                << "R0_rect: " << math::to_string(rotation) << "\n"
+                << "R0_rect: " << math::to_string(R0_rect) << "\n"
                 << "Tr_velo_to_cam: " << math::to_string(tr_lid_to_cam) << "\n"
                 << "Tr_imu_to_velo: " << math::to_string(tr_imu_to_lid) << "\n";
 
     kitti_calib.close();
+}
+
+glm::mat4x3 math::homogen2cartesian(const glm::mat4x4 &hom_mat)
+{
+    return glm::mat4x3();
 }

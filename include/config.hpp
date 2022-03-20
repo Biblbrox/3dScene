@@ -108,6 +108,11 @@ class Config {
         return m_values.find(key) != m_values.cend();
     }
 
+    static void removeKey(const std::string &key)
+    {
+        m_values.erase(key);
+    }
+
     template <class T> static T &getVal(const std::string &key)
     {
         return std::any_cast<T &>(m_values[key]);

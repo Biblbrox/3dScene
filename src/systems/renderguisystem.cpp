@@ -276,6 +276,7 @@ void RenderGuiSystem::update_state(size_t delta)
 
             Checkbox(_("Draw Vertices"), &Config::getVal<bool>("DrawVertices"));
             Checkbox(_("Draw Leafs"), &Config::getVal<bool>("DrawLeafs"));
+            Checkbox(_("Draw Axis"), &Config::getVal<bool>("DrawAxis"));
             Checkbox(_("Draw Rays"), &Config::getVal<bool>("DrawRays"));
             Checkbox(_("Draw bounding boxes"), &Config::getVal<bool>("DrawBoundingBoxes"));
             Checkbox(_("Use real camera intrinsic"), &Config::getVal<bool>("RealCameraIntrinsic"));
