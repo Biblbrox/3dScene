@@ -638,6 +638,11 @@ void RenderGuiSystem::selection_settings()
     if (InputFloat3("##sprite_scale", glm::value_ptr(sprite->getSize())))
         coll::updateBVH(selEn);
 
+    TextUnformatted(_("Entity name"));
+    if (InputText("##entity_name", &selEn->name())) {
+        
+    }
+
     TextUnformatted(_("Sprite position"));
     if (InputFloat3("##sprite_position", glm::value_ptr(posComp->pos)))
         coll::updateBVH(selEn);

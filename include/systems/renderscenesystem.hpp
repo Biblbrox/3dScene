@@ -27,6 +27,13 @@ private:
     void makeScreenshot();
     void setupLighting();
     void drawAxis();
+
+    /**
+     * Make multiple screenshots of checkerboard pattern and save them to directory dir
+     * @param num
+     * @param dir
+     */
+    void makeCheckerboardPhotos(unsigned int num, const std::string& dir);
     void drawSkybox();
     void fillInstanceAttributes();
 
