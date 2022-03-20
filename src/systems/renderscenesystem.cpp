@@ -363,6 +363,8 @@ void RenderSceneSystem::drawToFramebuffer()
     drawTerrain();
 
     drawSprites();
+    if (Config::getVal<bool>("DrawAxis"))
+        drawAxis();
     if (Config::getVal<bool>("DrawBoundingBoxes"))
         drawBoundingBoxes();
 }
@@ -439,3 +441,32 @@ void RenderSceneSystem::makeScreenshot()
     program->setMat4(U_PROJECTION_MATRIX, old_perspective);
     Config::getVal<bool>("MakeScreenshot") = false;
 }
+
+void RenderSceneSystem::drawAxis()
+{
+    auto program = SceneProgram::getInstance();
+    program->useFramebufferProgram();
+    program->setInt(U_IS_PRIMITIVE, true);
+    glLineWidth(4.f);
+
+    GLfloat axis_length = 500.f;
+
+    // Draw x axis
+    glm::vec3 x1(0.f, 0.f, 0.f);
+    glm::vec3 x2(axis_length, 0.f, 0.f);
+    program->setVec3(U_PRIM_COLOR, {1.f, 0.f, 0.f});
+    render::drawLinen({x1, x2});
+
+    // Draw y axis
+    glm::vec3 y1(0.f, 0.f, 0.f);
+    glm::vec3 y2(0.f, axis_length, 0.f);
+    program->setVec3(U_PRIM_COLOR, {0.f, 1.f, 0.f});
+    render::drawLinen({y1, y2});
+
+    // Draw z axis
+    glm::vec3 z1(0.f, 0.f, 0.f);
+    glm::vec3 z2(0.f, 0.f, axis_length);
+    program->setVec3(U_PRIM_COLOR, {0.f, 0.f, 1.f});
+    render::drawLinen({z1, z2});
+}
+

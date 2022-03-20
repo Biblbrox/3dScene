@@ -119,7 +119,7 @@ World::World() : m_wasInit(false), m_initFromFile(false)
     if (!Config::hasKey("ObjDistance"))
         Config::addVal("ObjDistance", 10.f, "float");
     if (!Config::hasKey("ViewportSize"))
-        Config::addVal("ViewportSize", vec2i(0, 0), "vec2i");
+        Config::addVal("ViewportSize", vec2i(0.f, 0.f), "vec2i");
     if (!Config::hasKey("DataFileTmp"))
         Config::addVal("DataFileTmp", std::string("000000.txt"), "string");
     if (!Config::hasKey("MakeScreenshot"))
@@ -128,12 +128,17 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("RefractiveIndex", 1.5f, "float");
     if (!Config::hasKey("RealCameraIntrinsic"))
         Config::addVal("RealCameraIntrinsic", false, "bool");
-    if (!Config::hasKey("RealCameraIntrinsicMat"))
-        Config::addVal("RealCameraIntrinsicMat",
-                       math::loadCameraIntrinsic(getResourcePath("intrinsic.txt"), 1.f, 1000.f),
-                       "mat4");
+    if (!Config::hasKey("RealCameraIntrinsicMat")) {
+        // int screen_width = utils::getWindowWidth<int>(*Game::getWindow());
+        // int screen_height = utils::getWindowHeight<int>(*Game::getWindow());
+        // Config::addVal("RealCameraIntrinsicMat",
+        //                math::loadCameraIntrinsic(getResourcePath("intrinsic.txt"), 1.f, 1000.f,
+        //                screen_width, screen_height), "mat4");
+    }
     if (!Config::hasKey("RealScale"))
         Config::addVal("RealScale", glm::vec3(0.1f), "vec3");
+    if (!Config::hasKey("DrawAxis"))
+        Config::addVal("DrawAxis", true, "bool");
 }
 
 World::~World()
@@ -200,6 +205,12 @@ void World::init()
     init_sprites();
     init_scene();
     init_skybox();
+
+    vec2i viewport_size = Config::getVal<vec2i>("ViewportSize");
+    Config::addVal(
+        "RealCameraIntrinsicMat",
+        math::loadCameraIntrinsic(getResourcePath("intrinsic.txt"), 1.f, 1000.f, 960, 1280),
+        "mat4");
 
     m_wasInit = true;
 }

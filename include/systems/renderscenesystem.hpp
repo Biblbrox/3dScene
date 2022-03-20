@@ -26,6 +26,7 @@ private:
     void drawTerrain();
     void makeScreenshot();
     void setupLighting();
+    void drawAxis();
     void drawSkybox();
     void fillInstanceAttributes();
 
