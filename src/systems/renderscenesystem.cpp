@@ -1,4 +1,5 @@
 #include <boost/format.hpp>
+#include <crossguid/guid.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
@@ -18,12 +19,12 @@
 #include "logger/logger.hpp"
 #include "render/render.hpp"
 #include "sceneprogram.hpp"
+#include "shadernames.hpp"
 #include "systems/renderscenesystem.hpp"
 #include "utils/fs.hpp"
 #include "utils/math.hpp"
 #include "utils/texture.hpp"
 #include "view/fpscamera.hpp"
-#include "shadernames.hpp"
 
 using boost::format;
 using glm::mat3;
@@ -331,8 +332,16 @@ void RenderSceneSystem::update_state(size_t delta)
 {
     auto game_state = getGameState();
     if (game_state == GameStates::PLAY || game_state == GameStates::EDIT) {
-        if (Config::getVal<bool>("MakeScreenshot"))
-            makeScreenshot();
+        if (Config::getVal<bool>("MakeScreenshot")) {
+            auto lidar_entities = getEntitiesByTag<LidarComponent>().begin()->second;
+            auto lidar_comp = lidar_entities->getComponent<LidarComponent>();
+            makeScreenshot(
+                Config::getVal<mat4>("RealCameraIntrinsicMat"),
+                math::viewFromEuler(lidar_entities->getComponent<PositionComponent>()->pos,
+                                    lidar_comp->yaw, lidar_comp->pitch),
+                getResourcePath("cloud/screenshot.png"));
+            Config::getVal<bool>("MakeScreenshot") = false;
+        }
 
         renderScene();
     }
@@ -365,6 +374,10 @@ void RenderSceneSystem::drawToFramebuffer()
     drawSprites();
     if (Config::getVal<bool>("DrawAxis"))
         drawAxis();
+    if (Config::getVal<bool>("CalibrateCameraPressed")) {
+        calibrateCamera(10, getResourcePath("cloud/intrinsic"));
+    }
+
     if (Config::getVal<bool>("DrawBoundingBoxes"))
         drawBoundingBoxes();
 }
@@ -383,63 +396,70 @@ void RenderSceneSystem::drawTerrain()
     glCullFace(GL_BACK);
 }
 
-void RenderSceneSystem::makeScreenshot()
+void RenderSceneSystem::makeScreenshot(const glm::mat4 &perspective, const glm::mat4 &view,
+                                       const std::string &path)
 {
-    vec3 pos =
-        getEntitiesByTag<LidarComponent>().begin()->second->getComponent<PositionComponent>()->pos;
-    auto lidar = getEntitiesByTag<LidarComponent>().begin()->second->getComponent<LidarComponent>();
+    // vec3 pos =
+    // getEntitiesByTag<LidarComponent>().begin()->second->getComponent<PositionComponent>()->pos;
+    // auto lidar =
+    // getEntitiesByTag<LidarComponent>().begin()->second->getComponent<LidarComponent>();
     auto camera = FpsCamera::getInstance();
 
     auto program = SceneProgram::getInstance();
     program->useFramebufferProgram();
 
-    vec3 old_pos = camera->getPos();
-    GLfloat old_pitch = camera->getPitch();
-    GLfloat old_yaw = camera->getYaw();
+    // vec3 old_pos = camera->getPos();
+    // GLfloat old_pitch = camera->getPitch();
+    // GLfloat old_yaw = camera->getYaw();
+    glm::mat4 old_view = camera->getView();
     mat4 old_perspective = program->getMat4(U_PROJECTION_MATRIX);
 
     vec2i size = Config::getVal<vec2i>("ViewportSize");
 
     // Set camera position to lidar position
-    camera->setPos(pos);
-    camera->setPitch(lidar->pitch);
-    camera->setYaw(lidar->yaw);
-    mat4 view = camera->getView();
+    // camera->setPos(pos);
+    // camera->setPitch(lidar->pitch);
+    // camera->setYaw(lidar->yaw);
+    // camera->setPitch(pitch);
+    // camera->setYaw(yaw);
+    camera->setView(view);
+    // mat4 view = camera->getView();
     program->setMat4(U_VIEW_MATRIX, view);
-    program->setMat4(U_PROJECTION_MATRIX, Config::getVal<mat4>("RealCameraIntrinsicMat"));
+    // program->setMat4(U_PROJECTION_MATRIX, Config::getVal<mat4>("RealCameraIntrinsicMat"));
+    program->setMat4(U_PROJECTION_MATRIX, perspective);
     glViewport(0, 0, size.x, size.y);
     renderScene();
     glFlush();
     SDL_GL_SwapWindow(Game::getWindow());
-    utils::texture::saveScreen(getResourcePath("cloud/screenshot.png"), size.x, size.y);
+    // utils::texture::saveScreen(getResourcePath("cloud/screenshot.png"), size.x, size.y);
+    utils::texture::saveScreen(path, size.x, size.y);
 
     // Save projected coordinates
     program->useFramebufferProgram();
-    std::ofstream f(getResourcePath("cloud/projected.txt"), std::ios::out | std::ios::trunc);
-    glm::vec4 viewport = {0, 0, size};
-    glm::mat4 perspective = program->getMat4(U_PROJECTION_MATRIX);
-    for (const vec3 &p : lidar->coll_points) {
-        vec3 projected = glm::project(p, view, perspective, viewport);
-        f << projected.x << " " << projected.y << "\n";
-    }
+    // std::ofstream f(getResourcePath("cloud/projected.txt"), std::ios::out | std::ios::trunc);
+    // glm::vec4 viewport = {0, 0, size};
+    // glm::mat4 perspective = program->getMat4(U_PROJECTION_MATRIX);
+    // for (const vec3 &p : lidar->coll_points) {
+    //  vec3 projected = glm::project(p, view, perspective, viewport);
+    //     f << projected.x << " " << projected.y << "\n";
+    // }
 
-    f.close();
+    // f.close();
 
     // Save calibration matrix
-    glm::mat4 calMat = perspective * view;
-    utils::fs::saveMatTxt(getResourcePath("cloud/cal_matrix.txt"), calMat, true);
+    // glm::mat4 calMat = perspective * view;
+    // utils::fs::saveMatTxt(getResourcePath("cloud/cal_matrix.txt"), calMat, true);
 
     // Save camera kitti calib file
-    math::saveKittiCalib(getResourcePath("cloud/calib.txt"), perspective, view);
-
+    // math::saveKittiCalib(getResourcePath("cloud/calib.txt"), perspective, view);
 
     // Restore camera parameters
-    camera->setPos(old_pos);
-    camera->setPitch(old_pitch);
-    camera->setYaw(old_yaw);
+    // camera->setPos(old_pos);
+    // camera->setPitch(old_pitch);
+    // camera->setYaw(old_yaw);
+    camera->setView(old_view);
     program->setMat4(U_VIEW_MATRIX, camera->getView());
     program->setMat4(U_PROJECTION_MATRIX, old_perspective);
-    Config::getVal<bool>("MakeScreenshot") = false;
 }
 
 void RenderSceneSystem::drawAxis()
@@ -470,7 +490,48 @@ void RenderSceneSystem::drawAxis()
     render::drawLinen({z1, z2});
 }
 
-void RenderSceneSystem::makeCheckerboardPhotos(unsigned int num, const std::string &dir)
+void RenderSceneSystem::makeCheckerboardPhotos(const std::vector<glm::mat4> &transforms,
+                                               std::string dir)
 {
+    auto program = SceneProgram::getInstance();
+    if (dir.back() != '/')
+        dir += '/';
 
+    const std::string ext = ".png";
+    for (auto tr : transforms)
+        makeScreenshot(program->getMat4(U_PROJECTION_MATRIX), tr, dir + xg::newGuid().str() + ext);
+}
+
+void RenderSceneSystem::calibrateCamera(unsigned num, const std::string &dir)
+{
+    Config::getVal<bool>("CalibrateCameraPressed") =
+        false; // TODO: check more accurate way to fix recursion here
+
+    auto entityNames = m_ecsManager->getEntityByNames();
+
+    if (!getEntityByName("CalibrationPattern"))
+        return;
+
+    auto checkerboard = getEntityByName("CalibrationPattern");
+
+    auto pat_pos = checkerboard->getComponent<PositionComponent>();
+    std::vector<glm::mat4> transforms(num);
+    glm::vec3 normal = glm::vec3(0.f, 0.f, 1.f);
+    GLfloat distance = 100.f;
+    glm::vec3 photo_point = pat_pos->pos + distance * normal;
+    GLfloat alpha = 0;
+    GLfloat step = 2.f * glm::pi<GLfloat>() / static_cast<GLfloat>(num);
+    GLfloat rad = 50.f;
+    for (glm::mat4 &m : transforms) {
+        glm::vec3 p{photo_point.x + rad * glm::cos(alpha), photo_point.y + rad * glm::sin(alpha),
+                    photo_point.z};
+
+        m = glm::lookAt(p, pat_pos->pos, glm::vec3(0.f, 1.f, 0.f));
+        alpha += step;
+    }
+
+    makeCheckerboardPhotos(transforms, dir);
+
+    // Calibration process
+    
 }

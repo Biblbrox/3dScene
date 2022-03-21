@@ -152,3 +152,18 @@ glm::mat4x3 math::homogen2cartesian(const glm::mat4x4 &hom_mat)
 {
     return glm::mat4x3();
 }
+
+glm::mat4 math::viewFromEuler(const vec3 &pos, GLfloat yaw, GLfloat pitch)
+{
+    // calculate the new Front vector
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front = glm::normalize(front);
+    // also re-calculate the Right and Up vector
+    glm::vec3 right = glm::normalize(glm::cross(front, glm::vec3(0.f, 1.f, 0.f)));
+    glm::vec3 up = glm::normalize(glm::cross(right, front));
+
+    return glm::lookAt(pos, pos + front, up);
+}

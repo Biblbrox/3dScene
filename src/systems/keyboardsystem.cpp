@@ -1,4 +1,5 @@
 #include <imgui_impl_sdl.h>
+#include <imgui_internal.h>
 
 #include "base.hpp"
 #include "systems/keyboardsystem.hpp"
@@ -39,6 +40,7 @@ void KeyboardSystem::update_state(size_t delta)
     program->useFramebufferProgram();
     while (SDL_PollEvent(&e)) {
         ImGui_ImplSDL2_ProcessEvent(&e);
+
         switch (e.type) {
             case SDL_QUIT:
                 setGameRunnable(false);
