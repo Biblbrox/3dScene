@@ -1,30 +1,26 @@
-#include <memory>
-#include <vector>
 #include <SDL_opengl.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <memory>
+#include <vector>
 
 #include "view/fpscamera.hpp"
 
 std::shared_ptr<FpsCamera> FpsCamera::instance = nullptr;
 
-FpsCamera::FpsCamera(float posX, float posY, float posZ, float upX, float upY,
-                     float upZ, float yaw, float pitch) :
-        m_front(glm::vec3(0.0f, 0.0f, -1.0f)), m_movSpeed(SPEED),
-        m_mouseSens(SENSITIVITY), m_zoom(ZOOM),
-        m_pos(posX, posY, posZ),
-        m_worldUp(upX, upY, upZ),
-        m_yaw(yaw),
-        m_pitch(pitch)
+FpsCamera::FpsCamera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw,
+                     float pitch)
+    : m_front(glm::vec3(0.0f, 0.0f, -1.0f)), m_movSpeed(SPEED), m_mouseSens(SENSITIVITY),
+      m_zoom(ZOOM), m_pos(posX, posY, posZ), m_worldUp(upX, upY, upZ), m_yaw(yaw), m_pitch(pitch)
 {
     updateCameraVectors();
 }
 
-FpsCamera::FpsCamera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) :
-        FpsCamera(position.x, position.y, position.z, up.x, up.y, up.z,
-                  yaw, pitch) {}
+FpsCamera::FpsCamera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
+    : FpsCamera(position.x, position.y, position.z, up.x, up.y, up.z, yaw, pitch)
+{
+}
 
-
-void FpsCamera::setPos(const glm::vec3& pos) noexcept
+void FpsCamera::setPos(const glm::vec3 &pos) noexcept
 {
     m_pos = pos;
 }
@@ -70,12 +66,11 @@ void FpsCamera::processMouseMovement(float xoffset, float yoffset, GLboolean con
     xoffset *= m_mouseSens;
     yoffset *= m_mouseSens;
 
-    m_yaw   += xoffset;
+    m_yaw += xoffset;
     m_pitch += yoffset;
 
     // make sure that when pitch is out of bounds, screen doesn't get flipped
-    if (constrainPitch)
-    {
+    if (constrainPitch) {
         if (m_pitch > 89.0f)
             m_pitch = 89.0f;
         if (m_pitch < -89.0f)
@@ -109,8 +104,10 @@ void FpsCamera::updateCameraVectors()
     front.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
     m_front = glm::normalize(front);
     // also re-calculate the Right and Up vector
-    m_right = glm::normalize(glm::cross(m_front, m_worldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-    m_up    = glm::normalize(glm::cross(m_right, m_front));
+    m_right = glm::normalize(glm::cross(
+        m_front, m_worldUp)); // normalize the vectors, because their length gets closer to 0 the
+                              // more you look up or down which results in slower movement.
+    m_up = glm::normalize(glm::cross(m_right, m_front));
 }
 
 glm::vec3 FpsCamera::getUp() const
@@ -144,4 +141,15 @@ GLfloat FpsCamera::getYaw() const
 GLfloat FpsCamera::getPitch() const
 {
     return m_pitch;
+}
+
+void FpsCamera::setView(glm::mat4 view)
+{
+    const glm::mat4 inverted = glm::inverse(view);
+    m_pos = glm::vec3(view[3]);
+    const glm::vec3 dir = -glm::vec3(inverted[2]);
+    m_yaw = glm::degrees(glm::atan(dir.z, dir.x));
+    m_pitch = glm::degrees(glm::asin(dir.y));
+
+    updateCameraVectors();
 }

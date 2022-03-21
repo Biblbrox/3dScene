@@ -131,6 +131,17 @@ glm::mat4 loadCameraIntrinsic(const std::string &path, GLfloat near, GLfloat far
 glm::mat4x3 homogen2cartesian(const glm::mat4x4& hom_mat);
 
 /**
+ * Build view matrix from euler angles and position
+ * @param pos
+ * @param yaw
+ * @param pitch
+ * @return
+ */
+glm::mat4 viewFromEuler(const glm::vec3& pos, GLfloat yaw, GLfloat pitch);
+
+//std::pair<GLfloat, GLfloat> eulerFromView(const glm::mat4& view);
+
+/**
  * Save calibration file in kitti format
  * See: http://www.cvlibs.net/datasets/kitti/
  * @param path

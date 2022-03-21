@@ -120,6 +120,7 @@ void utils::fs::saveSimJson(const std::string &file_name,
         json en_obj = json::object();
         // Component list
         en_obj["Components"] = json::array();
+        en_obj["EntityName"] = en->name();
         for (const auto &[type, comp_gen] : en->getComponents()) {
             if (type == type_id<PositionComponent>) {
                 auto comp = en->getComponent<PositionComponent>();
@@ -299,6 +300,9 @@ std::vector<ecs::Entity> utils::fs::loadSimJson(const std::string &file_name,
     ifs.close();
     for (const auto &en : j["Entities"]) {
         ecs::Entity entity(ecsManager.genUniqueId());
+        entity.name() = !en["EntityName"].get<std::string>().empty()
+                            ? en["EntityName"].get<std::string>()
+                            : ecsManager.genUniqueName();
         for (const auto &comp : en["Components"]) {
             if (comp.contains("PositionComponent")) {
                 json json_pos = comp["PositionComponent"];
@@ -430,4 +434,3 @@ bool utils::fs::writableFile(std::string_view file_name)
     return (std::filesystem::status(file_name).permissions() &
             std::filesystem::perms::owner_write) != std::filesystem::perms::none;
 }
-

@@ -77,6 +77,12 @@ public:
      */
     void setPos(const glm::vec3& pos) noexcept;
 
+    /**
+     * Set view matrix
+     * @param view
+     */
+    void setView(glm::mat4 view);
+
     // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
     void processKeyboard(Movement direction, float deltaTime);
 

@@ -86,6 +86,8 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("DrawLeafs", false, "bool");
     if (!Config::hasKey("EditMode"))
         Config::addVal("EditMode", false, "bool");
+    if (!Config::hasKey("CalibrateCameraPressed"))
+        Config::addVal("CalibrateCameraPressed", false, "bool");
     if (!Config::hasKey("BackgroundColor"))
         Config::addVal("BackgroundColor", glm::vec4(0.2f, 0.f, 0.2f, 1.f), "vec4");
     if (!Config::hasKey("InverseRotation"))
@@ -244,6 +246,7 @@ void World::init_from_file(const std::string &init_file)
         auto e = std::make_shared<ecs::Entity>(en);
         e->activate();
         m_entities.emplace(e->getId(), e);
+        m_entityByNames.emplace(e->name(), e->getId());
         if (e->getComponent<TerrainComponent>())
             m_terrainID = e->getId();
     }

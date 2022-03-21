@@ -59,6 +59,7 @@ endif ()
 
 
 add_subdirectory(${EXT_PATH}/bvh)
+add_subdirectory(${EXT_PATH}/crossguid)
 #add_subdirectory("${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud")
 
 add_compile_definitions(GLM_FORCE_CUDA)
@@ -103,14 +104,14 @@ add_executable(${GAME_NAME} ${SOURCES})
 set(SCENE_LIBRARY_DEPENDENCIES ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES}
         ${SDL2_TTF_LIBRARIES} ${SDL2_MIXER_LIBRARIES} ${Boost_LIBRARIES} GLEW
         libGLEW.so libGLU.so libGL.so imgui pthread Eigen3::Eigen ${ASSIMP_LIBRARIES}
-        ${PCL_LIBRARIES} bvh strutils logger)
+        ${PCL_LIBRARIES} bvh strutils logger crossguid)
 target_link_libraries(${GAME_NAME} ${SCENE_LIBRARY_DEPENDENCIES} ${PCL_LIBRARIES})
 
 set(SCENE_INCLUDE_DEPENDENCIES include
         ${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIR}
         ${SDL2_TTF_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS}
         ${GLM_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} ${PCL_INCLUDE_DIRS}
-        ${EXT_PATH}/ImGuiFileDialog/ ${EXT_PATH})
+        ${EXT_PATH}/ImGuiFileDialog/ ${EXT_PATH} ${EXT_PATH}/crossguid/include)
 target_include_directories(${GAME_NAME} PRIVATE ${SCENE_INCLUDE_DEPENDENCIES})
 
 # Add Eigen
