@@ -17,10 +17,12 @@
 #include "exceptions/glexception.hpp"
 #include "game.hpp"
 #include "logger/logger.hpp"
+#include "opencv.hpp"
 #include "render/render.hpp"
 #include "sceneprogram.hpp"
 #include "shadernames.hpp"
 #include "systems/renderscenesystem.hpp"
+#include "utils/cvtools.hpp"
 #include "utils/fs.hpp"
 #include "utils/math.hpp"
 #include "utils/texture.hpp"
@@ -533,5 +535,58 @@ void RenderSceneSystem::calibrateCamera(unsigned num, const std::string &dir)
     makeCheckerboardPhotos(transforms, dir);
 
     // Calibration process
-    
+    int board_width = 9;
+    int board_height = 6;
+    GLfloat square_size = 3.54f;
+
+    std::vector<std::vector<cv::Point3f>> obj_points;
+    std::vector<std::vector<cv::Point2f>> img_points;
+    std::vector<cv::Point2f> corners;
+    cv::Size board_size = cv::Size(board_width, board_height);
+
+    std::vector<std::string> photos;
+    for (auto &photo : std::filesystem::directory_iterator(dir))
+        if (photo.path().extension() == ".png")
+            photos.push_back(photo.path().string());
+
+    cv::Mat img, gray;
+    for (const auto &photo : photos) {
+        img = cv::imread(photo, cv::IMREAD_COLOR);
+        cvtColor(img, gray, cv::COLOR_BGR2GRAY);
+
+        bool found = false;
+        found = findChessboardCorners(img, board_size, corners,
+                                      cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_FILTER_QUADS);
+        if (found) {
+            std::cout << "Corners found\n";
+            cornerSubPix(
+                gray, corners, cv::Size(5, 5), cv::Size(-1, -1),
+                cv::TermCriteria(cv::TermCriteria::EPS | cv::TermCriteria::MAX_ITER, 30, 0.1));
+            // drawChessboardCorners(gray, board_size, corners, found);
+        }
+
+        std::vector<cv::Point3f> obj;
+        for (int i = 0; i < board_height; ++i)
+            for (int j = 0; j < board_width; ++j)
+                obj.emplace_back((float)j * square_size, (float)i * square_size, 0);
+
+        if (found) {
+            img_points.push_back(corners);
+            obj_points.push_back(obj);
+        }
+    }
+
+    cv::Mat K;
+    cv::Mat D;
+    vector<cv::Mat> rvecs, tvecs;
+    int flag = 0;
+    flag |= cv::CALIB_FIX_K4;
+    flag |= cv::CALIB_FIX_K5;
+    cv::calibrateCamera(obj_points, img_points, img.size(), K, D, rvecs, tvecs, flag);
+
+    glm::mat3x3 K_glm;
+    cv::Mat K_32f;
+    K.convertTo(K_32f, CV_32F);
+    cvtools::fromCV2GLM(K_32f, &K_glm);
+    utils::fs::saveMatTxt(getResourcePath("cloud/intrinsic/K.txt"), K_glm);
 }

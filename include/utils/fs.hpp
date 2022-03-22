@@ -236,6 +236,31 @@ void saveMatTxt(const std::string &fileName, const glm::mat<N, K, T> &m, bool tr
     out.close();
 }
 
+/**
+ * Load glm matrix of arbitrary length from file
+ * @tparam Length
+ * @tparam Type
+ * @param file_name
+ * @param mat
+ */
+template <int C, int R, typename Type>
+glm::mat<C, R, Type, glm::defaultp> loadMat(const std::string &file_name)
+{
+    if (!std::filesystem::exists(file_name)) {
+        // TODO: throw error
+    }
+
+    glm::mat<C, R, Type, glm::defaultp> mat;
+    std::ifstream f(file_name);
+    for (int i = 0; i < R; ++i)
+        for (int j = 0; j < C; ++j)
+            f >> mat[i][j];
+
+    f.close();
+
+    return mat;
+}
+
 } // namespace utils::fs
 
 #endif // FS_HPP
