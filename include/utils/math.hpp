@@ -50,49 +50,6 @@ template <typename T, int N, int K> void swap(Eigen::Matrix<T, N, K> &mat, int c
 }
 
 /**
- * Load glm matrix of arbitrary length from file
- * @tparam Length
- * @tparam Type
- * @param file_name
- * @param mat
- */
-template <int C, int R, typename Type>
-glm::mat<C, R, Type, glm::defaultp> loadMat(const std::string &file_name)
-{
-    if (!std::filesystem::exists(file_name)) {
-        // TODO: throw error
-    }
-
-    glm::mat<C, R, Type, glm::defaultp> mat;
-    std::ifstream f(file_name);
-    for (int i = 0; i < R; ++i)
-        for (int j = 0; j < C; ++j)
-            f >> mat[i][j];
-
-    f.close();
-
-    return mat;
-}
-
-/**
- * Save glm matrix of arbitrary length to file
- * @tparam Length
- * @tparam Type
- * @param file_name
- * @param mat
- */
-template <int Length, typename Type>
-void saveMat(const std::string &file_name, glm::vec<Length, Type, glm::defaultp> &mat)
-{
-    std::ofstream f(file_name);
-    for (int i = 0; i < Length; ++i)
-        for (int j = 0; j < Length; ++j)
-            mat[i][j] >> f;
-
-    f.close();
-}
-
-/**
  * Build covariance matrix from set of points
  * @param points
  * @return

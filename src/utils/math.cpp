@@ -8,6 +8,7 @@
 #include "exceptions/fsexception.hpp"
 #include "logger/logger.hpp"
 #include "utils/math.hpp"
+#include "utils/fs.hpp"
 
 using glm::mat3;
 
@@ -92,7 +93,7 @@ glm::vec3 math::viewportToWorld(const vec2 &pos, const vec2 &clip, const mat4 &p
 glm::mat4 math::loadCameraIntrinsic(const std::string &path, GLfloat near, GLfloat far,
                                     GLfloat width, GLfloat height)
 {
-    glm::mat3 K = loadMat<3, 3, GLfloat>(path);
+    glm::mat3 K = utils::fs::loadMat<3, 3, GLfloat>(path);
     K = glm::transpose(K);
 
     K[2][0] *= -1;

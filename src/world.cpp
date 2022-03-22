@@ -465,24 +465,26 @@ void World::init_skybox()
 
 void World::addEntityFromFile(const std::string &model_file)
 {
-    std::shared_ptr<Sprite> sprite = std::make_shared<Sprite>(model_file, vec3(1.f, 1.f, 1.f));
+    std::shared_ptr<Sprite> sprite = make_shared<Sprite>(model_file, vec3(1.f, 1.f, 1.f));
     auto terrainEn = m_entities[m_terrainID];
     auto terrain = terrainEn->getComponent<TerrainComponent>()->terrain;
 
     auto en = createEntity(genUniqueId());
     en->activate();
+    en->name() = xg::newGuid();
     en->addComponents<SpriteComponent, PositionComponent, SelectableComponent, BVHComponent>();
+
     auto sprite_comp = en->getComponent<SpriteComponent>();
     sprite_comp->sprite = sprite;
-    auto pos_chair = en->getComponent<PositionComponent>();
-    pos_chair->pos.x = 200.f;
-    pos_chair->pos.z = 400.f;
-    pos_chair->pos.y = terrain->getAltitude({pos_chair->pos.x, pos_chair->pos.z}) + 40.f;
+
+    auto pos_comp = en->getComponent<PositionComponent>();
+    auto camera = FpsCamera::getInstance();
+    pos_comp->pos = camera->getPos();
+
     auto &triangles = sprite->getTriangles();
-    mat4 chair_transform =
-        math::createTransform(pos_chair->pos, 0, {0.f, 1.f, 1.f}, {1.f, 1.f, 1.f});
-    triangles = math::transformTriangles(triangles, chair_transform);
+    mat4 transform = math::createTransform(pos_comp->pos, 0, {0.f, 1.f, 1.f}, {1.f, 1.f, 1.f});
+    triangles = math::transformTriangles(triangles, transform);
+
     en->getComponent<BVHComponent>()->bvh_tree = coll::buildBVH(triangles);
-    en->getComponent<BVHComponent>()->triangles =
-        std::make_shared<std::vector<Triangle>>(triangles);
+    en->getComponent<BVHComponent>()->triangles = make_shared<std::vector<Triangle>>(triangles);
 }

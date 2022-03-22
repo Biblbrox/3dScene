@@ -50,6 +50,8 @@ find_package(ASSIMP REQUIRED)
 find_package(Boost REQUIRED COMPONENTS locale serialization)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(OpenMP)
+find_package(OpenCV 4.2 REQUIRED)
+include_directories ("/usr/include/opencv4/")
 if (OPENMP_FOUND)
     message("OpenMP found")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -105,7 +107,8 @@ set(SCENE_LIBRARY_DEPENDENCIES ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES}
         ${SDL2_TTF_LIBRARIES} ${SDL2_MIXER_LIBRARIES} ${Boost_LIBRARIES} GLEW
         libGLEW.so libGLU.so libGL.so imgui pthread Eigen3::Eigen ${ASSIMP_LIBRARIES}
         ${PCL_LIBRARIES} bvh strutils logger crossguid)
-target_link_libraries(${GAME_NAME} ${SCENE_LIBRARY_DEPENDENCIES} ${PCL_LIBRARIES})
+message("************************${OpenCV_LIBS}*************************")
+target_link_libraries(${GAME_NAME} ${SCENE_LIBRARY_DEPENDENCIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
 
 set(SCENE_INCLUDE_DEPENDENCIES include
         ${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIR}
@@ -127,7 +130,6 @@ find_package(VTK COMPONENTS
         vtkRenderingOpenGL2
         REQUIRED)
 INCLUDE(${VTK_USE_FILE}) # include UseVTK.cmake
-find_package(OpenCV REQUIRED)
 
 set(CMAKE_AUTOMOC ON) # For meta object compiler
 set(CMAKE_AUTORCC ON) # Resource files
