@@ -333,12 +333,13 @@ void RenderSceneSystem::renderScene()
 void RenderSceneSystem::update_state(size_t delta)
 {
     auto game_state = getGameState();
+    auto program = SceneProgram::getInstance();
     if (game_state == GameStates::PLAY || game_state == GameStates::EDIT) {
         if (Config::getVal<bool>("MakeScreenshot")) {
             auto lidar_entities = getEntitiesByTag<LidarComponent>().begin()->second;
             auto lidar_comp = lidar_entities->getComponent<LidarComponent>();
             makeScreenshot(
-                Config::getVal<mat4>("RealCameraIntrinsicMat"),
+                program->getMat4(U_PROJECTION_MATRIX),
                 math::viewFromEuler(lidar_entities->getComponent<PositionComponent>()->pos,
                                     lidar_comp->yaw, lidar_comp->pitch),
                 getResourcePath("cloud/screenshot.png"));
@@ -466,6 +467,8 @@ void RenderSceneSystem::makeScreenshot(const glm::mat4 &perspective, const glm::
 
 void RenderSceneSystem::drawAxis()
 {
+    glDisable(GL_DEPTH_TEST);
+
     auto program = SceneProgram::getInstance();
     program->useFramebufferProgram();
     program->setInt(U_IS_PRIMITIVE, true);
@@ -490,6 +493,8 @@ void RenderSceneSystem::drawAxis()
     glm::vec3 z2(0.f, 0.f, axis_length);
     program->setVec3(U_PRIM_COLOR, {0.f, 0.f, 1.f});
     render::drawLinen({z1, z2});
+
+    glEnable(GL_DEPTH_TEST);
 }
 
 void RenderSceneSystem::makeCheckerboardPhotos(const std::vector<glm::mat4> &transforms,
@@ -589,4 +594,10 @@ void RenderSceneSystem::calibrateCamera(unsigned num, const std::string &dir)
     K.convertTo(K_32f, CV_32F);
     cvtools::fromCV2GLM(K_32f, &K_glm);
     utils::fs::saveMatTxt(getResourcePath("cloud/intrinsic/K.txt"), K_glm);
+
+    glm::mat3x3 D_glm;
+    cv::Mat D_32f;
+    K.convertTo(D_32f, CV_32F);
+    cvtools::fromCV2GLM(K_32f, &D_glm);
+    utils::fs::saveMatTxt(getResourcePath("cloud/intrinsic/D.txt"), D_glm);
 }
