@@ -145,9 +145,13 @@ void saveFrameToFilePcd(const Frame<PointType> &frame, const std::string &file_n
     cloud.height = 1;
     cloud.is_dense = false;
     cloud.points.resize(cloud.width * cloud.height);
-    for (size_t i = 0; i < cloud.width; ++i)
+    for (size_t i = 0; i < cloud.width; ++i) {
         for (size_t j = 0; j < pcl::getFields<PointType>().size(); ++j)
             cloud[i].data[j] = frame.points[i].data[j];
+
+        if constexpr (std::is_same_v<PointType, pcl::PointXYZRGB>)
+            cloud[i].rgb = frame.points[i].rgb;
+    }
 
     cloud.sensor_origin_ =
         Eigen::Vector4f(frame.sourcePos.x, frame.sourcePos.y, frame.sourcePos.z, 1.f);
@@ -185,7 +189,7 @@ void saveFrame(const Frame<PointType> &frame, CloudType type, const std::string 
         eigCloud(all, 2).array() *= -1;
         math::swap(eigCloud, 0, 2);
         math::swap(eigCloud, 1, 2);
-        //eigCloud(all, 1) = -eigCloud(all, 1);
+        eigCloud(all, 1) = -eigCloud(all, 1);
 
         // Scale cloud
         vec3 scale = Config::getVal<vec3>("RealScale");

@@ -23,8 +23,8 @@ class RenderSceneSystem : public ecs::System<PositionComponent> {
     void drawBoundingBoxes();
     void drawToFramebuffer();
     void drawTerrain();
-    void makeScreenshot(const glm::mat4 &perspective, const glm::mat4& view,
-                        const std::string &path);
+    void makeScreenshot(const glm::mat4 &perspective, const glm::mat4 &view,
+                        const std::string &path, const vec2i &size);
     void setupLighting();
     void drawAxis();
 

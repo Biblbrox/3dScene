@@ -6,11 +6,12 @@
 #include <filesystem>
 
 #include "complexcloud.hpp"
-#include "include/utils/cvtools.hpp"
+#include "utils/cvtools.hpp"
 #include "utils/fs.hpp"
 #include "types.hpp"
-#include "pcltools.hpp"
+#include "cloud/pcltools.hpp"
 #include "view/lidar.hpp"
+#include "image.hpp"
 
 using glm::vec2;
 using glm::vec3;
@@ -22,7 +23,7 @@ ComplexCloud::ComplexCloud(Image img, pcl::PointCloud<pcl::PointXYZ> xyzCloud)
           m_complexCloud(new pcl::PointCloud<pcl::PointXYZRGB>(xyzCloud.width, xyzCloud.height)),
           m_sensorOrigin(xyzCloud.sensor_origin_)
 {
-    m_complexCloud->points.reserve(xyzCloud.size());
+    /*m_complexCloud->points.reserve(xyzCloud.size());
     for (size_t i = 0; i < xyzCloud.size(); ++i) {
         pcl::PointXYZ p = xyzCloud.points[i];
         pcl::PointXYZRGB complexPoint;
@@ -40,8 +41,8 @@ ComplexCloud::ComplexCloud(Image img, pcl::PointCloud<pcl::PointXYZ> xyzCloud)
     m_projectedPoints.reserve(cloud.size());
     Mat4 calMatrix = m_img.getCalMatrix();
 
-    float rows = static_cast<float>(m_img.getInnerMat().cols);
-    float cols = static_cast<float>(m_img.getInnerMat().rows);
+    float rows = static_cast<float>(m_img.getMat().cols);
+    float cols = static_cast<float>(m_img.getMat().rows);
     cv::Mat invertedImg = m_img.getInnerMat();
     cv::flip(invertedImg, invertedImg, 0);
     for (size_t i = 0; i < cloud.size(); ++i) {
@@ -58,7 +59,7 @@ ComplexCloud::ComplexCloud(Image img, pcl::PointCloud<pcl::PointXYZ> xyzCloud)
         m_complexCloud->points[i].b = color[0];
         m_complexCloud->points[i].g = color[1];
         m_complexCloud->points[i].r = color[2];
-    }
+    }*/
 }
 
 ComplexCloud::ComplexCloud(Image img, pcl::PointCloud<pcl::PointXYZI> xyzCloud)
@@ -66,7 +67,7 @@ ComplexCloud::ComplexCloud(Image img, pcl::PointCloud<pcl::PointXYZI> xyzCloud)
       m_complexCloud(new pcl::PointCloud<pcl::PointXYZRGB>(xyzCloud.width, xyzCloud.height)),
       m_sensorOrigin(xyzCloud.sensor_origin_)
 {
-    m_complexCloud->points.reserve(xyzCloud.size());
+    /*m_complexCloud->points.reserve(xyzCloud.size());
     for (size_t i = 0; i < xyzCloud.size(); ++i) {
         pcl::PointXYZI p = xyzCloud.points[i];
         pcl::PointXYZRGB complexPoint;
@@ -84,9 +85,9 @@ ComplexCloud::ComplexCloud(Image img, pcl::PointCloud<pcl::PointXYZI> xyzCloud)
     m_projectedPoints.reserve(cloud.size());
     Mat4 calMatrix = m_img.getCalMatrix();
 
-    float rows = static_cast<float>(m_img.getInnerMat().cols);
-    float cols = static_cast<float>(m_img.getInnerMat().rows);
-    cv::Mat invertedImg = m_img.getInnerMat();
+    float rows = static_cast<float>(m_img.getMat().cols);
+    float cols = static_cast<float>(m_img.getMat().rows);
+    cv::Mat invertedImg = m_img.getMat();
     cv::flip(invertedImg, invertedImg, 0);
     for (size_t i = 0; i < cloud.size(); ++i) {
         glm::vec3 p_3d{cloud[i].x, cloud[i].y, cloud[i].z};
@@ -102,13 +103,13 @@ ComplexCloud::ComplexCloud(Image img, pcl::PointCloud<pcl::PointXYZI> xyzCloud)
         m_complexCloud->points[i].b = color[0];
         m_complexCloud->points[i].g = color[1];
         m_complexCloud->points[i].r = color[2];
-    }
+    }*/
 }
 
 
 void ComplexCloud::drawProjected() const
 {
-    cv::Mat copy = m_img.getInnerMat();
+    cv::Mat copy = m_img.getMat();
     cv::flip(copy, copy, 0);
     for (const auto &p: m_projectedPoints)
         cv::circle(copy, p, 0, cv::Scalar(255, 0, 10), -1);

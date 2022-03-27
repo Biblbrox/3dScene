@@ -19,15 +19,38 @@ FORCE_INLINE vec3 ray_point(const Ray &ray, GLfloat distance)
     return {pos[0], pos[1], pos[2]};
 }
 
+/**
+ * Holds point cloud
+ * @tparam PointType
+ */
 template <typename PointType> struct Frame {
     using Ptr = std::shared_ptr<Frame<PointType>>;
+    using Type = Frame<PointType>;
 
-    Frame() : sourcePos(glm::vec3(0.f)), points() {}
+    Frame() : sourcePos(glm::vec3(0.f)), points()
+    {
+    }
 
-    Frame(glm::vec3 _sourcePos,
-          std::vector<PointType, Eigen::aligned_allocator<PointType>> _points)
+    Frame(glm::vec3 _sourcePos, std::vector<PointType, Eigen::aligned_allocator<PointType>> _points)
         : sourcePos(_sourcePos), points(_points)
     {
+    }
+
+    template <typename RightPointType>
+    Type &
+    operator=(const Frame<RightPointType>& right)
+    {
+        assert(points.size() == right.points.size() && "Assignable clouds must have same size");
+
+        const int min_field_size =
+            std::min(pcl::getFields<RightPointType>().size(), pcl::getFields<PointType>().size());
+        for (int i = 0; i < points.size(); ++i)
+            for (int j = 0; j < min_field_size; ++j)
+                points[i].data[j] = right.points[i].data[j];
+
+        sourcePos = right.sourcePos;
+
+        return *this;
     }
 
     // Position of lidar or other source

@@ -2,6 +2,9 @@
 #define CVTOOLS_HPP
 
 #include <glm/fwd.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include "opencv.hpp"
 
 namespace cvtools
 {

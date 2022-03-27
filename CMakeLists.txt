@@ -106,9 +106,9 @@ add_executable(${GAME_NAME} ${SOURCES})
 set(SCENE_LIBRARY_DEPENDENCIES ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES}
         ${SDL2_TTF_LIBRARIES} ${SDL2_MIXER_LIBRARIES} ${Boost_LIBRARIES} GLEW
         libGLEW.so libGLU.so libGL.so imgui pthread Eigen3::Eigen ${ASSIMP_LIBRARIES}
-        ${PCL_LIBRARIES} bvh strutils logger crossguid)
+        ${PCL_LIBRARIES} bvh strutils logger crossguid tbb ${PCL_LIBRARIES} ${OpenCV_LIBS})
 message("************************${OpenCV_LIBS}*************************")
-target_link_libraries(${GAME_NAME} ${SCENE_LIBRARY_DEPENDENCIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(${GAME_NAME} ${SCENE_LIBRARY_DEPENDENCIES})
 
 set(SCENE_INCLUDE_DEPENDENCIES include
         ${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIR}
@@ -141,17 +141,19 @@ find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 set(COMPLEX_IMAGE_CLOUD ${CMAKE_SOURCE_DIR}/tools/cpp/complex_image_cloud)
 QT5_WRAP_UI(${COMPLEX_IMAGE_CLOUD}/src/ui_pclviewer.h ${COMPLEX_IMAGE_CLOUD}/src/src/pclviewer.ui)
 
-FILE(GLOB_RECURSE COMPLEX_CLOUD_CPP "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/src/*.cpp")
+FILE(GLOB_RECURSE COMPLEX_CLOUD_CPP "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/src/*.cpp"
+        "${PROJECT_SOURCE_DIR}/src/*.cpp")
 FILE(GLOB_RECURSE COMPLEX_CLOUD_HPP "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/include/*.hpp"
         "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/include/*.h"
         "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/src/*.hpp"
         "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/src/*.h")
+list(REMOVE_ITEM COMPLEX_CLOUD_CPP "${PROJECT_SOURCE_DIR}/src/main.cpp")
 add_executable(${TOOL_NAME} ${COMPLEX_CLOUD_CPP} ${COMPLEX_CLOUD_HPP})
 target_link_libraries(${TOOL_NAME} Qt5::Core Qt5::Gui Qt5::Widgets ${SCENE_LIBRARY_DEPENDENCIES})
 
 target_link_libraries(${TOOL_NAME} ${Boost_LIBRARIES} GLEW
         libGLEW.so libGLU.so libGL.so pthread Eigen3::Eigen
-        ${PCL_LIBRARIES} vtkGUISupportQt ${OpenCV_LIBS})
+        ${PCL_LIBRARIES} vtkGUISupportQt ${OpenCV_LIBS} ${SCENE_LIBRARY_DEPENDENCIES})
 
 target_include_directories(${TOOL_NAME} PRIVATE ${PROJECT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/include ${SCENE_INCLUDE_DEPENDENCIES})
