@@ -6,4 +6,6 @@ res/data.txt
 *~
 *.pcd
 *.bin
+*.blend
 build
+res/cloud/*
