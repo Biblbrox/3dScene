@@ -1,39 +1,18 @@
-#include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 
-#include "complexcloud.hpp"
+#include "cloud/pointcloud.hpp"
 #include "constants.hpp"
-#include "image.hpp"
-#include "pcltools.hpp"
 #include "pclviewer.hpp"
 #include "ui_pclviewer.h"
-#include "utils/fs.hpp"
 
 PCLViewer::PCLViewer(QMainWindow *parent) : QMainWindow(parent), m_ui(new Ui::PCLViewer)
 {
     m_ui->setupUi(this);
     this->setWindowTitle("PCL viewer");
 
-    Image img("/home/biblbrox/autonet/3dscene/res/cloud/screenshot.png",
-              "/home/biblbrox/autonet/3dscene/res/cloud/cal_matrix.txt");
+    LdPointCloud<pcl::PointXYZRGB> cloud("/home/biblbrox/Projects/3dscene/res/cloud/000001_complex.pcd");
 
-    // pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    // pcl::io::loadPCDFile<pcl::PointXYZ> ("/home/biblbrox/autonet/3dscene/res/cloud/000000.pcd",
-    // *cloud);
-    pcl::PointCloud<pcl::PointXYZI>::Ptr cloud = utils::fs::loadFromBin<pcl::PointXYZI>(
-        "/home/biblbrox/autonet/3dscene/res/cloud/000001.bin");
-
-    m_cloud = std::make_shared<ComplexCloud>(img, *cloud);
-    //complexCloud.drawProjected();
-
-    //complexCloud.drawComplexCloud();
-    //    complexCloud.drawIntensityCloud();
-    m_cloud->drawComplexCloud();
-    m_cloud->drawProjected();
-    m_cloud->saveIntensityCloud(getResourcePath("xyzi.pcd"));
-    m_cloud->saveIntensityCloud(getResourcePath("xyzi_relative.pcd"), {1.f, 1.f, 1.f}, true);
-    m_cloud->saveComplexCloud(getResourcePath("xyzrgb.pcd"));
-    m_cloud->saveComplexCloud(getResourcePath("xyzrgb_relative.pcd"), {1.f, 1.f, 1.f}, true);
+    cloud.drawCloud("XYZRGB cloud");
 
     // Set up the QVTK window
     m_viewer.reset(new pcl::visualization::PCLVisualizer("viewer", false));

@@ -370,10 +370,10 @@ void RenderGuiSystem::update_state(size_t delta)
                     ->dirty = true;
 
             Config::getVal<vec2>("ViewportPos") = {pos.x, pos.y};
-            Config::getVal<vec2i>("ViewportSize") = {size.x, size.y};
+            //Config::getVal<vec2i>("ViewportSize") = {size.x, size.y};
 
             if (getGameState() != GameStates::STOP)
-                Image((ImTextureID)sceneComp->texture, ImVec2(size.x, size.y), {0, 1}, {1, 0});
+                ImGui::Image((ImTextureID)sceneComp->texture, ImVec2(size.x, size.y), {0, 1}, {1, 0});
         }
 
         if (Button(_("Make screenshot")))

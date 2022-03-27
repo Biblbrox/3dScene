@@ -1,5 +1,6 @@
 #include <boost/format.hpp>
 #include <crossguid/guid.hpp>
+#include <execution>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
@@ -25,6 +26,7 @@
 #include "utils/cvtools.hpp"
 #include "utils/fs.hpp"
 #include "utils/math.hpp"
+#include "utils/random.hpp"
 #include "utils/texture.hpp"
 #include "view/fpscamera.hpp"
 
@@ -338,11 +340,12 @@ void RenderSceneSystem::update_state(size_t delta)
         if (Config::getVal<bool>("MakeScreenshot")) {
             auto lidar_entities = getEntitiesByTag<LidarComponent>().begin()->second;
             auto lidar_comp = lidar_entities->getComponent<LidarComponent>();
+            vec2i size = Config::getVal<vec2i>("ViewportSize");
             makeScreenshot(
                 program->getMat4(U_PROJECTION_MATRIX),
                 math::viewFromEuler(lidar_entities->getComponent<PositionComponent>()->pos,
                                     lidar_comp->yaw, lidar_comp->pitch),
-                getResourcePath("cloud/screenshot.png"));
+                getResourcePath("cloud/screenshot.png"), size);
             Config::getVal<bool>("MakeScreenshot") = false;
         }
 
@@ -378,7 +381,7 @@ void RenderSceneSystem::drawToFramebuffer()
     if (Config::getVal<bool>("DrawAxis"))
         drawAxis();
     if (Config::getVal<bool>("CalibrateCameraPressed")) {
-        calibrateCamera(10, getResourcePath("cloud/intrinsic"));
+        calibrateCamera(100, getResourcePath("cloud/intrinsic"));
     }
 
     if (Config::getVal<bool>("DrawBoundingBoxes"))
@@ -400,66 +403,25 @@ void RenderSceneSystem::drawTerrain()
 }
 
 void RenderSceneSystem::makeScreenshot(const glm::mat4 &perspective, const glm::mat4 &view,
-                                       const std::string &path)
+                                       const std::string &path, const vec2i &size)
 {
-    // vec3 pos =
-    // getEntitiesByTag<LidarComponent>().begin()->second->getComponent<PositionComponent>()->pos;
-    // auto lidar =
-    // getEntitiesByTag<LidarComponent>().begin()->second->getComponent<LidarComponent>();
     auto camera = FpsCamera::getInstance();
 
     auto program = SceneProgram::getInstance();
     program->useFramebufferProgram();
 
-    // vec3 old_pos = camera->getPos();
-    // GLfloat old_pitch = camera->getPitch();
-    // GLfloat old_yaw = camera->getYaw();
     glm::mat4 old_view = camera->getView();
     mat4 old_perspective = program->getMat4(U_PROJECTION_MATRIX);
 
-    vec2i size = Config::getVal<vec2i>("ViewportSize");
-
-    // Set camera position to lidar position
-    // camera->setPos(pos);
-    // camera->setPitch(lidar->pitch);
-    // camera->setYaw(lidar->yaw);
-    // camera->setPitch(pitch);
-    // camera->setYaw(yaw);
     camera->setView(view);
-    // mat4 view = camera->getView();
     program->setMat4(U_VIEW_MATRIX, view);
-    // program->setMat4(U_PROJECTION_MATRIX, Config::getVal<mat4>("RealCameraIntrinsicMat"));
     program->setMat4(U_PROJECTION_MATRIX, perspective);
     glViewport(0, 0, size.x, size.y);
     renderScene();
     glFlush();
     SDL_GL_SwapWindow(Game::getWindow());
-    // utils::texture::saveScreen(getResourcePath("cloud/screenshot.png"), size.x, size.y);
     utils::texture::saveScreen(path, size.x, size.y);
 
-    // Save projected coordinates
-    program->useFramebufferProgram();
-    // std::ofstream f(getResourcePath("cloud/projected.txt"), std::ios::out | std::ios::trunc);
-    // glm::vec4 viewport = {0, 0, size};
-    // glm::mat4 perspective = program->getMat4(U_PROJECTION_MATRIX);
-    // for (const vec3 &p : lidar->coll_points) {
-    //  vec3 projected = glm::project(p, view, perspective, viewport);
-    //     f << projected.x << " " << projected.y << "\n";
-    // }
-
-    // f.close();
-
-    // Save calibration matrix
-    // glm::mat4 calMat = perspective * view;
-    // utils::fs::saveMatTxt(getResourcePath("cloud/cal_matrix.txt"), calMat, true);
-
-    // Save camera kitti calib file
-    // math::saveKittiCalib(getResourcePath("cloud/calib.txt"), perspective, view);
-
-    // Restore camera parameters
-    // camera->setPos(old_pos);
-    // camera->setPitch(old_pitch);
-    // camera->setYaw(old_yaw);
     camera->setView(old_view);
     program->setMat4(U_VIEW_MATRIX, camera->getView());
     program->setMat4(U_PROJECTION_MATRIX, old_perspective);
@@ -505,8 +467,10 @@ void RenderSceneSystem::makeCheckerboardPhotos(const std::vector<glm::mat4> &tra
         dir += '/';
 
     const std::string ext = ".png";
+    vec2i size = Config::getVal<vec2i>("ViewportSize");
     for (auto tr : transforms)
-        makeScreenshot(program->getMat4(U_PROJECTION_MATRIX), tr, dir + xg::newGuid().str() + ext);
+        makeScreenshot(program->getMat4(U_PROJECTION_MATRIX), tr, dir + xg::newGuid().str() + ext,
+                       size);
 }
 
 void RenderSceneSystem::calibrateCamera(unsigned num, const std::string &dir)
@@ -524,17 +488,26 @@ void RenderSceneSystem::calibrateCamera(unsigned num, const std::string &dir)
     auto pat_pos = checkerboard->getComponent<PositionComponent>();
     std::vector<glm::mat4> transforms(num);
     glm::vec3 normal = glm::vec3(0.f, 0.f, 1.f);
-    GLfloat distance = 100.f;
-    glm::vec3 photo_point = pat_pos->pos + distance * normal;
+    GLfloat distance_mean = 100.f;
+    GLfloat distance_min = distance_mean - 10.f;
+    GLfloat distance_max = distance_mean + 10.f;
     GLfloat alpha = 0;
-    GLfloat step = 2.f * glm::pi<GLfloat>() / static_cast<GLfloat>(num);
-    GLfloat rad = 50.f;
+    GLfloat step_mean = 2.f * glm::pi<GLfloat>() / static_cast<GLfloat>(num);
+    GLfloat step_min = step_mean - 0.2f;
+    GLfloat step_max = step_mean + 0.2f;
+    GLfloat rad_mean = 50.f;
+    GLfloat rad_min = rad_mean - 5.f;
+    GLfloat rad_max = rad_mean + 5.f;
+    utils::Random rand;
     for (glm::mat4 &m : transforms) {
-        glm::vec3 p{photo_point.x + rad * glm::cos(alpha), photo_point.y + rad * glm::sin(alpha),
-                    photo_point.z};
+        GLfloat distance = rand.generateu(distance_min, distance_max);
+        glm::vec3 photo_point = pat_pos->pos + distance * normal;
+        GLfloat rad = rand.generateu(rad_min, rad_max);
+        vec3 p{photo_point.x + rad * glm::cos(alpha), photo_point.y + rad * glm::sin(alpha),
+               photo_point.z};
 
         m = glm::lookAt(p, pat_pos->pos, glm::vec3(0.f, 1.f, 0.f));
-        alpha += step;
+        alpha += rand.generateu(step_min, step_max);
     }
 
     makeCheckerboardPhotos(transforms, dir);
@@ -567,7 +540,13 @@ void RenderSceneSystem::calibrateCamera(unsigned num, const std::string &dir)
             cornerSubPix(
                 gray, corners, cv::Size(5, 5), cv::Size(-1, -1),
                 cv::TermCriteria(cv::TermCriteria::EPS | cv::TermCriteria::MAX_ITER, 30, 0.1));
-            // drawChessboardCorners(gray, board_size, corners, found);
+
+            std::string corners_path = dir;
+            if (corners_path.back() != '/')
+                corners_path += '/';
+
+            cv::drawChessboardCorners(img, board_size, corners, found);
+            cv::imwrite(dir + "/corners/" + std::filesystem::path(photo).filename().string(), img);
         }
 
         std::vector<cv::Point3f> obj;
@@ -587,17 +566,17 @@ void RenderSceneSystem::calibrateCamera(unsigned num, const std::string &dir)
     int flag = 0;
     flag |= cv::CALIB_FIX_K4;
     flag |= cv::CALIB_FIX_K5;
-    cv::calibrateCamera(obj_points, img_points, img.size(), K, D, rvecs, tvecs, flag);
+    cv::calibrateCamera(obj_points, img_points, img.size(), K, D, rvecs, tvecs/*, flag*/);
 
     glm::mat3x3 K_glm;
     cv::Mat K_32f;
     K.convertTo(K_32f, CV_32F);
     cvtools::fromCV2GLM(K_32f, &K_glm);
-    utils::fs::saveMatTxt(getResourcePath("cloud/intrinsic/K.txt"), K_glm);
+    utils::fs::saveMatTxt(getResourcePath("cloud/intrinsic/K.txt"), glm::transpose(K_glm));
 
     glm::mat3x3 D_glm;
     cv::Mat D_32f;
-    K.convertTo(D_32f, CV_32F);
-    cvtools::fromCV2GLM(K_32f, &D_glm);
-    utils::fs::saveMatTxt(getResourcePath("cloud/intrinsic/D.txt"), D_glm);
+    D.convertTo(D_32f, CV_32F);
+    cvtools::fromCV2GLM(D_32f, &D_glm);
+    utils::fs::saveMatTxt(getResourcePath("cloud/intrinsic/D.txt"), glm::transpose(D_glm));
 }
