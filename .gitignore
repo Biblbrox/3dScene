@@ -9,3 +9,4 @@ res/data.txt
 *.blend
 build
 res/cloud/*
+res/.ipynb_checkpoints
