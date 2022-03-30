@@ -10,7 +10,7 @@ if file_path.endswith(".bin"):
     lidar_data = np.fromfile(file_path, dtype=np.float32).reshape(-1, 4)
 elif file_path.endswith(".pcd"):
     print(f"Load .pcd file {file_path}")
-    with open(lidar_file) as f:
+    with open(file_path) as f:
         lidar_data = np.genfromtxt(file_path, dtype=np.float32, skip_header=11,
                                    usecols=(0, 1, 2, 3), comments='%').reshape(-1, 4)
 
