@@ -14,49 +14,44 @@
 // Visualization Toolkit (VTK)
 #include <vtkRenderWindow.h>
 
-#include "complexcloud.hpp"
+class ComplexCloud;
 
 typedef pcl::PointXYZRGB PointT;
 typedef pcl::PointCloud<PointT> PointCloudT;
 
-
 QT_BEGIN_NAMESPACE
-namespace Ui
-{
-    class PCLViewer;
+namespace Ui {
+class PCLViewer;
 }
 QT_END_NAMESPACE
 
-class PCLViewer : public QMainWindow
-{
-Q_OBJECT
+class PCLViewer : public QMainWindow {
+    Q_OBJECT
 
-public:
+  public:
     explicit PCLViewer(QMainWindow *parent = nullptr);
 
     ~PCLViewer() override;
 
-public Q_SLOTS:
-    void
-    filterButtonPressed ();
+  public Q_SLOTS:
+    void filterButtonPressed();
 
-    void RGBsliderReleased ();
+    void RGBsliderReleased();
 
-    void windowSizeChanged (int value);
+    void windowSizeChanged(int value);
 
-    void slopeChanged (float value);
+    void slopeChanged(float value);
 
-    void initialDistanceChanged (float value);
+    void initialDistanceChanged(float value);
 
-    void maxDistanceChanged (float value);
+    void maxDistanceChanged(float value);
 
-private:
+  private:
     Ui::PCLViewer *m_ui;
 
-protected:
+  protected:
     pcl::visualization::PCLVisualizer::Ptr m_viewer;
     std::shared_ptr<ComplexCloud> m_cloud;
 };
 
-
-#endif //PCLVIEWER_HPP
+#endif // PCLVIEWER_HPP

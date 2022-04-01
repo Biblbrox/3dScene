@@ -5,6 +5,7 @@
 #include <glm/exponential.hpp>
 #include <glm/glm.hpp>
 #include <json/json.hpp>
+#include <execution>
 
 #ifndef NDEBUG // use callgrind profiler
 #    include <valgrind/callgrind.h>
@@ -27,40 +28,6 @@
 using glm::vec3;
 using math::createTransform;
 using math::transformTriangles;
-
-void utils::fs::saveLidarDataCart(const std::string &data_file, const std::string &res_file)
-{
-    const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
-    std::filesystem::copy(data_file, res_file, copyOptions);
-}
-
-void utils::fs::saveLidarDataSphere(const std::string &data_file, const std::string &res_file,
-                                    const glm::vec3 &lidar_pos)
-{
-    std::ifstream in(data_file);
-    std::ofstream out(res_file, std::ios::out);
-
-    std::string line;
-    while (std::getline(in, line)) {
-        std::istringstream iss(line);
-        vec3 point;
-        if (!(iss >> point.x >> point.y >> point.z)) {
-            // Error
-        }
-
-        vec3 p = point - lidar_pos;
-        GLfloat rho = glm::length(p);
-        GLfloat alpha = 1.f / glm::tan(p.y / p.x);
-        GLfloat gamma = 1.f / glm::sin(p.z / rho);
-
-        if (!(out << rho << ", " << alpha << ", " << gamma << "\n")) {
-            // Error
-        }
-    }
-
-    in.close();
-    out.close();
-}
 
 using nlohmann::json;
 namespace glm {
@@ -403,8 +370,24 @@ std::vector<ecs::Entity> utils::fs::loadSimJson(const std::string &file_name,
         res.push_back(entity);
     }
 
-#pragma omp parallel for
-    for (auto it = res.begin(); it < res.end(); ++it) {
+//#pragma omp parallel for
+    std::for_each(std::execution::par, res.begin(), res.end(), [](ecs::Entity& en){
+        auto bvh = en.getComponent<BVHComponent>();
+
+        if (!bvh)
+            return;
+
+        auto sprite = en.getComponent<SpriteComponent>()->sprite;
+        auto pos = en.getComponent<PositionComponent>();
+        auto triangles = sprite->getTriangles();
+        mat4 transform = createTransform(pos->pos, pos->angle, pos->rot_axis, sprite->getSize());
+
+        triangles = transformTriangles(triangles, transform);
+        bvh->bvh_tree = coll::buildBVH(triangles);
+        bvh->triangles = std::make_shared<std::vector<Triangle>>(triangles);
+    });
+
+    /*for (auto it = res.begin(); it < res.end(); ++it) {
         auto bvh = it->getComponent<BVHComponent>();
 
         if (!bvh)
@@ -419,7 +402,7 @@ std::vector<ecs::Entity> utils::fs::loadSimJson(const std::string &file_name,
         bvh->bvh_tree = coll::buildBVH(triangles);
 
         bvh->triangles = std::make_shared<std::vector<Triangle>>(triangles);
-    }
+    }*/
 
 #ifndef NDEBUG
     CALLGRIND_TOGGLE_COLLECT;

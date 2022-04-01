@@ -3,6 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <omp.h>
 
+#include "cloud/pcltools.hpp"
 #include "components/bvhcomponent.hpp"
 #include "components/lidarcomponent.hpp"
 #include "components/positioncomponent.hpp"
@@ -23,9 +24,9 @@ using glm::cos;
 using glm::sin;
 using glm::sqrt;
 using logger::Logger;
+using pcltools::saveFrameToFilePcd;
+using pcltools::saveFrameToFileTxt;
 using std::string;
-using utils::fs::saveFrameToFilePcd;
-using utils::fs::saveFrameToFileTxt;
 
 LidarSystem::LidarSystem() : m_posChanged(true), m_prevPos{0.f, 0.f, 0.f}
 {
@@ -163,13 +164,12 @@ void LidarSystem::collision()
     Frame<pcl::PointXYZI> frame(pos->pos, math::vecGlm2Pcl(coll_dots));
     glm::mat4 projection = program->getMat4(U_PROJECTION_MATRIX);
     Image screenshot(getResourcePath("cloud/screenshot.png"));
-    Frame<pcl::PointXYZRGB> complex_cloud =
-        pcltools::projectToImage(frame, screenshot, projection);
-    utils::fs::saveFrame(frame, CloudType::pcd, getResourcePath("cloud/000001.pcd"), true);
-    utils::fs::saveFrame(frame, CloudType::binary, getResourcePath("cloud/000001.bin"), true);
-    utils::fs::saveFrame(complex_cloud, CloudType::binary,
-                         getResourcePath("cloud/000001_complex.bin"), true);
-    utils::fs::saveFrame(complex_cloud, CloudType::pcd, getResourcePath("cloud/000001_complex.pcd"),
-                         true);
+    Frame<pcl::PointXYZRGB> complex_cloud = pcltools::projectToImage(frame, screenshot, projection);
+    pcltools::saveFrame(frame, CloudType::pcd, getResourcePath("cloud/000001.pcd"), true);
+    pcltools::saveFrame(frame, CloudType::binary, getResourcePath("cloud/000001.bin"), true);
+    pcltools::saveFrame(complex_cloud, CloudType::binary,
+                        getResourcePath("cloud/000001_complex.bin"), true);
+    pcltools::saveFrame(complex_cloud, CloudType::pcd, getResourcePath("cloud/000001_complex.pcd"),
+                        true);
     Config::getVal<bool>("CheckCollision") = false;
 }

@@ -1,7 +1,7 @@
 #include <GL/glew.h>
 #include <SDL.h>
 #include <SDL_image.h>
-#include <SDL_ttf.h>
+//#include <SDL_ttf.h>
 #include <boost/format.hpp>
 
 #include "game.hpp"
@@ -40,8 +40,8 @@ void quit()
 {
     if (Game::getGLContext())
         SDL_GL_DeleteContext(Game::getGLContext());
-    if (TTF_WasInit())
-        TTF_Quit();
+//    if (TTF_WasInit())
+//        TTF_Quit();
     if (imgInit)
         IMG_Quit();
     if (Game::getWindow())
@@ -110,10 +110,10 @@ void Game::initOnceSDL2()
     mixerInit = true;
 #endif
 
-    if (TTF_Init() == -1)
+    /*if (TTF_Init() == -1)
         throw SdlException((format("SDL_TTF initialization error: %1%\n")
                             % TTF_GetError()).str(), program_log_file_name(),
-                           Category::INITIALIZATION_ERROR);
+                           Category::INITIALIZATION_ERROR);*/
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);

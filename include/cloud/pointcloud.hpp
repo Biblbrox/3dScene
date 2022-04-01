@@ -6,7 +6,6 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_cloud.h>
 #include <pcl/visualization/pcl_visualizer.h>
-
 #include <Eigen/Dense>
 
 #include "base.hpp"

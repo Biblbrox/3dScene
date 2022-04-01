@@ -4,8 +4,8 @@
 #include "Eigen/Dense"
 
 #include "base.hpp"
-#include "utils/cvtools.hpp"
-#include "opencv.hpp"
+#include "cvutils/cvtools.hpp"
+#include "cvutils/opencv.hpp"
 
 typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> MatrixXuc;
 

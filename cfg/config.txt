@@ -1,0 +1,43 @@
+DotDens:float:1000.000000
+PrismStartAngle:vec2:0.000000 0.000000
+RealCameraIntrinsicMat:mat4:2.120647 0.000000 0.000000 0.000000 0.000000 -1.585492 0.000000 0.000000 0.058019 0.001939 -1.001001 -1.000000 0.000000 0.000000 -1.001001 0.000000
+ProjectiveMat:mat4:1.008332 0.000000 0.000000 0.000000 0.000000 1.792591 0.000000 0.000000 0.000000 0.000000 -1.000100 -1.000000 0.000000 0.000000 -1.000100 0.000000
+ExportType:int:0
+MouseSens:float:1.000000
+ConfigFile:const char*:config.txt
+RealScale:vec3:0.100000 0.100000 0.100000
+EditMode:bool:0
+MakeScreenshot:bool:0
+ViewportSize:vec2i:1600 900
+DrawPattern:bool:1
+LightPos:vec3:0.000000 200.000000 0.000000
+RealCameraIntrinsic:bool:0
+IsSelected:bool:0
+DrawVertices:bool:1
+DrawTextures:bool:0
+RefractiveIndex:float:1.500000
+StepTime:float:5.000000
+ObjDistance:float:30.000000
+MSAASamples:int:16
+CellColor:vec4:0.870466 0.228215 0.067653 1.000000
+ShowCameraPos:bool:1
+ExportFileName:string:data.txt
+RayLength:float:100.000000
+TreeLevelShow:int:0
+DrawRays:bool:0
+SelectedObj:int:12
+MinRectSize:vec3:1.000000 1.000000 1.000000
+EnableLight:bool:1
+DrawLeafs:bool:0
+ShowMoveSpeed:bool:1
+MSAA:bool:0
+CalibrateCameraPressed:bool:0
+InverseRotation:bool:0
+ViewportPos:vec2:189.000000 52.000000
+CheckCollision:bool:0
+PrismFreq:vec2:66.099998 77.199997
+BackgroundColor:vec4:0.619229 0.504911 0.619231 1.000000
+DataFileTmp:string:000000.txt
+DrawBoundingBoxes:bool:0
+Theme:int:2
+DrawAxis:bool:1
