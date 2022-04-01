@@ -14,6 +14,7 @@
 #include "components/lidarcomponent.hpp"
 #include "components/movablecomponent.hpp"
 #include "components/scenecomponent.hpp"
+#include "components/spritecomponent.hpp"
 #include "config.hpp"
 #include "game.hpp"
 #include "logger/logger.hpp"
@@ -26,6 +27,8 @@
 #include "utils/texture.hpp"
 #include "view/fpscamera.hpp"
 #include "view/lidar.hpp"
+#include "components/globallightcomponent.hpp"
+#include "components/selectablecomponent.hpp"
 
 using std::string;
 
@@ -438,47 +441,6 @@ void RenderGuiSystem::export_settings()
     TextUnformatted(_("Export data type"));
     const char *items[] = {"Cartesian", "Polar"};
     ListBox("##Export type", &Config::getVal<int>("ExportType"), items, 2);
-
-    int type = Config::getVal<int>("ExportType");
-    string tmp_file = getResourcePath(Config::getVal<string>("DataFileTmp"));
-    string out_file = getResourcePath(Config::getVal<string>("ExportFileName"));
-
-    auto write_data = [this](const string &tmp_file, const string &out_file, int type) {
-        if (type == 0) {
-            utils::fs::saveLidarDataCart(tmp_file, out_file);
-        }
-        else {
-            auto lidarEn = getEntitiesByTag<LidarComponent>().begin()->second;
-            auto pos = lidarEn->getComponent<PositionComponent>();
-            utils::fs::saveLidarDataSphere(tmp_file, out_file, pos->pos);
-        }
-    };
-
-    if (Button(_("Export"))) {
-        if (std::filesystem::exists(std::filesystem::absolute(out_file)))
-            m_openExportDialog = true;
-        else
-            write_data(tmp_file, out_file, type);
-    }
-
-    if (m_openExportDialog) {
-        OpenPopup("Warning");
-        if (BeginPopupModal(_("Warning"), nullptr)) {
-            TextUnformatted(_("File exists. Do you want to rewrite it?"));
-            if (Button(_("Yes"))) {
-                write_data(tmp_file, out_file, type);
-                m_openExportDialog = false;
-                ImGui::CloseCurrentPopup();
-            }
-
-            if (Button(_("No"))) {
-                m_openExportDialog = false;
-                ImGui::CloseCurrentPopup();
-            }
-
-            ImGui::EndPopup();
-        }
-    }
 
     End();
 }

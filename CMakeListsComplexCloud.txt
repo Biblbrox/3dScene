@@ -1,0 +1,96 @@
+set(TOOL_NAME "ComplexPointCloud")
+
+set(COMPLEX_IMAGE_CLOUD ${CMAKE_SOURCE_DIR}/tools/cpp/complex_image_cloud)
+set(COMPLEX_CLOUD_INCLUDE_DIR "${COMPLEX_IMAGE_CLOUD}/include")
+set(CMAKE_AUTOMOC ON) # For meta object compiler
+set(CMAKE_AUTORCC ON) # Resource files
+set(CMAKE_AUTOUIC ON) # UI files
+if (CMAKE_VERSION VERSION_LESS "3.7.0")
+    set(CMAKE_INCLUDE_CURRENT_DIR ON)
+endif ()
+
+FILE(GLOB_RECURSE COMPLEX_CLOUD_CPP "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/src/*.cpp"
+        "${PROJECT_SOURCE_DIR}/src/*.cpp")
+FILE(GLOB_RECURSE COMPLEX_CLOUD_HPP "${COMPLEX_CLOUD_INCLUDE_DIR}/*.hpp" "${COMPLEX_CLOUD_INCLUDE_DIR}/*.h"
+        "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/src/*.hpp"
+        "${PROJECT_SOURCE_DIR}/tools/cpp/complex_image_cloud/src/*.h")
+list(REMOVE_ITEM COMPLEX_CLOUD_CPP "${PROJECT_SOURCE_DIR}/src/main.cpp")
+add_executable(${TOOL_NAME} ${COMPLEX_CLOUD_CPP} ${COMPLEX_CLOUD_HPP})
+
+target_include_directories(${TOOL_NAME} PRIVATE ${PROJECT_SOURCE_DIR} ${COMPLEX_CLOUD_INCLUDE_DIR} include ${EXT_PATH})
+
+# Add sdl
+target_link_libraries(${TOOL_NAME} ${SDL2_LIBRARIES})
+target_include_directories(${TOOL_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+
+# Add SDL2_image
+target_link_libraries(${TOOL_NAME} ${SDL2_IMAGE_LIBRARIES})
+target_include_directories(${TOOL_NAME} PRIVATE ${SDL2_IMAGE_INCLUDE_DIR})
+
+# Add opencv
+target_link_libraries(${TOOL_NAME} ${OpenCV_LIBS})
+
+# Add sdl
+target_link_libraries(${TOOL_NAME} ${SDL2_LIBRARIES})
+target_include_directories(${TOOL_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+
+# Add logger
+target_link_libraries(${TOOL_NAME} logger)
+
+# Add bvh
+target_link_libraries(${TOOL_NAME} bvh)
+
+# Add pcl
+target_link_libraries(${TOOL_NAME} ${PCL_LIBRARIES})
+target_include_directories(${TOOL_NAME} PRIVATE ${PCL_INCLUDE_DIRS})
+
+# Add crossguid
+target_link_libraries(${TOOL_NAME} crossguid)
+target_include_directories(${TOOL_NAME} PRIVATE ${EXT_PATH}/crossguid/include)
+
+# Add imgui
+# Make SDL2 available to Imgui
+target_include_directories(imgui PUBLIC ${SDL2_INCLUDE_DIRS} ${ASSIMP_INCLUDE_DIRS})
+
+# imgui/backends/ contains the SDL implementation
+target_include_directories(imgui PUBLIC ${EXT_PATH}/imgui/ ${EXT_PATH}/imgui/backends/
+        ${EXT_PATH}/imgui/misc/cpp)
+
+# Configure Imgui to use OpengGL through SDL2
+target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<SDL_opengl.h>
+        IMGUI_DISABLE_DEMO_WINDOWS=1 GL_GLEXT_PROTOTYPES=1)
+
+target_link_libraries(${TOOL_NAME} imgui)
+target_include_directories(${TOOL_NAME} PRIVATE ${EXT_PATH}/ImGuiFileDialog/)
+
+# Add opengl
+target_link_libraries(${TOOL_NAME} libGLU.so libGL.so)
+target_include_directories(${TOOL_NAME} PRIVATE ${OPENGL_INCLUDE_DIRS})
+
+# Add tbb
+target_link_libraries(${TOOL_NAME} tbb)
+
+# Add strutils
+target_link_libraries(${TOOL_NAME} strutils)
+
+# Add boost
+target_link_libraries(${TOOL_NAME} ${Boost_LIBRARIES})
+target_include_directories(${TOOL_NAME} PRIVATE ${Boost_INCLUDE_DIR})
+
+# Add cvtools
+target_link_libraries(${TOOL_NAME} cvutils)
+
+# Add vtk
+find_package(VTK COMPONENTS vtkGUISupportQt vtkRenderingOpenGL2 REQUIRED)
+INCLUDE(${VTK_USE_FILE}) # include UseVTK.cmake
+
+target_link_libraries(${TOOL_NAME} ${VTK_LIBRARIES})
+
+# Add qt
+find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
+QT5_WRAP_UI(${COMPLEX_IMAGE_CLOUD}/src/ui_pclviewer.h ${COMPLEX_IMAGE_CLOUD}/src/pclviewer.ui)
+target_link_libraries(${TOOL_NAME} Qt5::Core Qt5::Gui Qt5::Widgets vtkGUISupportQt)
+
+# Add assimp
+target_link_libraries(${TOOL_NAME} ${ASSIMP_LIBRARIES})
+target_include_directories(${TOOL_NAME} PRIVATE ${ASSIMP_INCLUDE_DIRS})

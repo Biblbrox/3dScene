@@ -1,5 +1,5 @@
 #include "image.hpp"
-#include "utils/cvtools.hpp"
+#include "cvutils/cvtools.hpp"
 
 Image::Image(const std::string& imagePath)
 {

@@ -3,7 +3,7 @@
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "utils/cvtools.hpp"
+#include "cvtools.hpp"
 
 cv::Mat cvtools::readMatTxt(const std::string& fileName, int rows, int cols)
 {

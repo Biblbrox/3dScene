@@ -1,16 +1,22 @@
 #include <pcl/point_types.h>
 
+#if VTK_MAJOR_VERSION > 8
+#include <vtkGenericOpenGLRenderWindow.h>
+#endif
+
+#include "ui_pclviewer.h"
 #include "cloud/pointcloud.hpp"
 #include "constants.hpp"
 #include "pclviewer.hpp"
-#include "ui_pclviewer.h"
+#include "complexcloud.hpp"
 
 PCLViewer::PCLViewer(QMainWindow *parent) : QMainWindow(parent), m_ui(new Ui::PCLViewer)
 {
     m_ui->setupUi(this);
     this->setWindowTitle("PCL viewer");
 
-    LdPointCloud<pcl::PointXYZRGB> cloud("/home/biblbrox/Projects/3dscene/res/cloud/000001_complex.pcd");
+    LdPointCloud<pcl::PointXYZRGB> cloud(
+        "/home/biblbrox/Projects/3dscene/res/cloud/000001_complex.pcd");
 
     cloud.drawCloud("XYZRGB cloud");
 

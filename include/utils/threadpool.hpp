@@ -2,17 +2,16 @@
 #define THREADPOOL_HPP
 
 #include <cstddef>
-#include <memory>
-#include <future>
 #include <functional>
+#include <future>
+#include <memory>
 #include <queue>
 
 /**
  * Thread pool class
  */
-class ThreadPool
-{
-public:
+class ThreadPool {
+  public:
     explicit ThreadPool(size_t threadsCount);
     ~ThreadPool();
 
@@ -24,13 +23,11 @@ public:
 
     size_t getThreadsCount() const;
 
-    template <typename F, typename... Args>
-    void addJob(F&& f, Args&& ...args)
+    template <typename F, typename... Args> void addJob(F &&f, Args &&...args)
     {
         {
             std::unique_lock<std::mutex> lock(m_queueMut);
-            std::function<void()> func{
-                    std::bind(std::forward<F>(f), std::forward<Args>(args)...)};
+            std::function<void()> func{std::bind(std::forward<F>(f), std::forward<Args>(args)...)};
             m_jobs.push(func);
         }
 
@@ -39,7 +36,7 @@ public:
 
     void waitForFinish();
 
-private:
+  private:
     size_t m_threadsCount;
     std::queue<std::function<void()>> m_jobs;
     std::vector<std::thread> m_pool;
@@ -49,11 +46,10 @@ private:
     std::condition_variable m_hasJob;
     std::condition_variable m_finished;
 
-
     bool m_terminate;
     bool m_stopped;
 
     int m_busy;
 };
 
-#endif //THREADPOOL_HPP
+#endif // THREADPOOL_HPP

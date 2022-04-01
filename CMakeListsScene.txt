@@ -1,0 +1,116 @@
+# Target 3DScene
+FILE(GLOB_RECURSE CPP RELATIVE ${PROJECT_SOURCE_DIR} "src/*.cpp")
+FILE(GLOB_RECURSE HPP RELATIVE ${PROJECT_SOURCE_DIR} "include/*.hpp" "include/*.h" src/*.hpp src/*.h)
+set(SOURCES ${HPP} ${CPP} include/utils/kitti/kitti.hpp)
+add_executable(${GAME_NAME} ${SOURCES})
+target_link_libraries(${GAME_NAME} tbb pthread)
+target_include_directories(${GAME_NAME} PRIVATE ${EXT_PATH}/ImGuiFileDialog/ ${EXT_PATH} include ${EXT_PATH}/crossguid/include)
+
+# Add pcl
+find_package(PCL REQUIRED)
+target_link_libraries(${GAME_NAME} ${PCL_LIBRARIES})
+target_include_directories(${GAME_NAME} PRIVATE ${PCL_INCLUDE_DIRS})
+
+# Add SDL2
+find_package(SDL2 REQUIRED)
+target_link_libraries(${GAME_NAME} ${SDL2_LIBRARIES})
+target_include_directories(${GAME_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+
+# Add SDL2_image
+find_package(SDL2_image REQUIRED)
+target_link_libraries(${GAME_NAME} ${SDL2_IMAGE_LIBRARIES})
+target_include_directories(${GAME_NAME} PRIVATE ${SDL2_IMAGE_INCLUDE_DIR})
+
+# Add opengl
+find_package(OpenGL REQUIRED)
+target_link_libraries(${GAME_NAME} libGLU.so libGL.so)
+target_include_directories(${GAME_NAME} PRIVATE ${OPENGL_INCLUDE_DIRS})
+
+# Add glew
+find_package(GLEW REQUIRED)
+target_link_libraries(${GAME_NAME} libGLEW.so)
+target_include_directories(${GAME_NAME} PRIVATE ${GLEW_INCLUDE_DIRS})
+
+# Add glm
+find_package(GLM REQUIRED)
+target_include_directories(${GAME_NAME} PRIVATE ${GLM_INCLUDE_DIRS})
+target_compile_definitions(${GAME_NAME} PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE=1 GLM_FORCE_CUDA GLM_FORCE_INLINE)
+
+# Add assimp
+find_package(ASSIMP REQUIRED)
+target_link_libraries(${GAME_NAME} ${ASSIMP_LIBRARIES})
+target_include_directories(${GAME_NAME} PRIVATE ${ASSIMP_INCLUDE_DIRS})
+
+# Add boost
+find_package(Boost REQUIRED COMPONENTS locale serialization)
+target_link_libraries(${GAME_NAME} ${Boost_LIBRARIES})
+target_include_directories(${GAME_NAME} PRIVATE ${Boost_INCLUDE_DIR})
+
+# Add Eigen
+#find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+set(EIGEN_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/libs")
+target_include_directories(${GAME_NAME} PRIVATE ${EIGEN_INCLUDE_DIRS})
+
+# Add openmp
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    message("OpenMP found")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif ()
+
+# Add opencv
+find_package(OpenCV 4.2 REQUIRED)
+include_directories ("/usr/include/opencv4/")
+target_link_libraries(${GAME_NAME} ${OpenCV_LIBS})
+
+# Add bvh
+add_subdirectory(${EXT_PATH}/bvh)
+target_link_libraries(${GAME_NAME} bvh)
+
+# Add crossguid
+add_subdirectory(${EXT_PATH}/crossguid)
+target_link_libraries(${GAME_NAME} crossguid)
+target_include_directories(${GAME_NAME} PRIVATE ${EXT_PATH}/crossguid/include)
+
+# Add strutils
+add_library(strutils ${EXT_PATH}/strutils/strutils.cpp
+        ${EXT_PATH}/strutils/strutils.hpp)
+target_link_libraries(${GAME_NAME} strutils)
+
+# Add cvutils
+add_library(cvutils ${EXT_PATH}/cvutils/cvtools.cpp
+        ${EXT_PATH}/cvutils/cvtools.hpp ${EXT_PATH}/cvutils/opencv.hpp)
+target_include_directories(cvutils PRIVATE ${EIGEN_INCLUDE_DIRS})
+target_link_libraries(${GAME_NAME} cvutils)
+
+# Add logger
+add_library(logger ${EXT_PATH}/logger/logger.cpp ${LOGGER_INCLUDE_DIRS} ${EXT_PATH}/logger/logger.hpp)
+target_link_libraries(${GAME_NAME} logger)
+
+# Add imgui
+add_library(imgui
+        # Main Imgui files
+        ${EXT_PATH}/imgui/imgui.cpp ${EXT_PATH}/imgui/imgui_draw.cpp
+        ${EXT_PATH}/imgui/imgui_tables.cpp ${EXT_PATH}/imgui/imgui_widgets.cpp
+        # SDL2+OpenGL-specific files
+        ${EXT_PATH}/imgui/backends/imgui_impl_sdl.cpp
+        ${EXT_PATH}/imgui/backends/imgui_impl_opengl3.cpp
+        # ImGui misc path
+        ${EXT_PATH}/imgui/misc/cpp/imgui_stdlib.cpp
+        ${EXT_PATH}/ImGuiFileDialog/ImGuiFileDialog.cpp)
+
+# Make SDL2 available to Imgui
+target_include_directories(imgui PUBLIC ${SDL2_INCLUDE_DIRS} ${ASSIMP_INCLUDE_DIRS})
+
+# imgui/backends/ contains the SDL implementation
+target_include_directories(imgui PUBLIC ${EXT_PATH}/imgui/ ${EXT_PATH}/imgui/backends/
+        ${EXT_PATH}/imgui/misc/cpp)
+
+# Configure Imgui to use OpengGL through SDL2
+target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<SDL_opengl.h>
+        IMGUI_DISABLE_DEMO_WINDOWS=1 GL_GLEXT_PROTOTYPES=1)
+
+target_link_libraries(${GAME_NAME} imgui)
+target_include_directories(${GAME_NAME} PRIVATE ${EXT_PATH}/ImGuiFileDialog/)
