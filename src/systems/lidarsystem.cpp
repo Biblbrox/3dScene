@@ -164,12 +164,17 @@ void LidarSystem::collision()
     Frame<pcl::PointXYZI> frame(pos->pos, math::vecGlm2Pcl(coll_dots));
     glm::mat4 projection = program->getMat4(U_PROJECTION_MATRIX);
     Image screenshot(getResourcePath("cloud/screenshot.png"));
-    Frame<pcl::PointXYZRGB> complex_cloud = pcltools::projectToImage(frame, screenshot, projection);
+    Frame<pcl::PointXYZRGB> complex_cloud =
+        pcltools::projectToImageColor(frame, screenshot, projection);
+    Frame<pcl::PointXYZI> intensity_cloud =
+        pcltools::projectToImageIntensity(frame, screenshot, projection);
     pcltools::saveFrame(frame, CloudType::pcd, getResourcePath("cloud/000001.pcd"), true);
     pcltools::saveFrame(frame, CloudType::binary, getResourcePath("cloud/000001.bin"), true);
     pcltools::saveFrame(complex_cloud, CloudType::binary,
                         getResourcePath("cloud/000001_complex.bin"), true);
     pcltools::saveFrame(complex_cloud, CloudType::pcd, getResourcePath("cloud/000001_complex.pcd"),
                         true);
+    pcltools::saveFrame(intensity_cloud, CloudType::pcd,
+                        getResourcePath("cloud/000001_intensity.pcd"), true);
     Config::getVal<bool>("CheckCollision") = false;
 }

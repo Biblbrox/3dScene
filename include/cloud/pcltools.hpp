@@ -3,23 +3,41 @@
 
 #include <initializer_list>
 #include <pcl/common/io.h>
-#include <pcl/segmentation/progressive_morphological_filter.h>
 #include <pcl/filters/extract_indices.h>
+#include <pcl/segmentation/progressive_morphological_filter.h>
 
 #include "base.hpp"
-#include "image.hpp"
-#include "cvutils/opencv.hpp"
-#include "pcloperators.hpp"
+#include "config.hpp"
 #include "cvutils/cvtools.hpp"
+#include "cvutils/opencv.hpp"
+#include "image.hpp"
+#include "pcloperators.hpp"
+#include "utils/fs.hpp"
 #include "utils/math.hpp"
 #include "view/lidar.hpp"
-#include "utils/fs.hpp"
-#include "config.hpp"
 
 namespace pcltools {
 
-/////// Convert function to different datatypes
+template <typename PointType>
+void shiftCloud(pcl::PointCloud<PointType> &cloud, const glm::vec3 &shift)
+{
+    std::for_each(cloud.points.begin(), cloud.points.end(), [shift](PointType &p) {
+        p.x += shift.x;
+        p.y += shift.y;
+        p.z += shift.z;
+    });
+}
 
+template <typename PointType> void shiftCloud(Frame<PointType> &cloud, const glm::vec3 &shift)
+{
+    std::for_each(cloud.points.begin(), cloud.points.end(), [shift](PointType &p) {
+        p.x += shift.x;
+        p.y += shift.y;
+        p.z += shift.z;
+    });
+}
+
+/////// Convert function to different datatypes
 template <typename PointType>
 typename pcl::PointCloud<PointType>::Ptr frame2pcl(const Frame<PointType> &frame)
 {
@@ -56,6 +74,9 @@ template <typename PointType> Matrix pcl2Eigen(const pcl::PointCloud<PointType> 
         for (int j = 0; j < pcl::getFields<PointType>().size(); ++j)
             values(0, j) = point.data[j];
 
+        if constexpr (std::is_same_v<PointType, pcl::PointXYZI>)
+            values(0, 3) = point.intensity;
+
         if constexpr (std::is_same_v<PointType, pcl::PointXYZRGB>) {
             values(0, 3) = point.r;
             values(0, 4) = point.g;
@@ -86,7 +107,13 @@ template <typename PointType> typename Frame<PointType>::Ptr eigen2Frame(const M
             frame->points[i].r = matrix(i, 3);
             frame->points[i].g = matrix(i, 4);
             frame->points[i].b = matrix(i, 5);
-        } else {
+        }
+        else if constexpr (std::is_same_v<PointType, pcl::PointXYZI>) {
+            for (int j = 0; j < 3; ++j)
+                frame->points[i].data[j] = matrix(i, j);
+            frame->points[i].intensity = matrix(i, 3);
+        }
+        else {
             for (int j = 0; j < matrix.cols(); ++j)
                 frame->points[i].data[j] = matrix(i, j);
         }
@@ -159,9 +186,9 @@ filterUniques(pcl::PointCloud<PointType> &cloud, std::initializer_list<int> indi
     return {{}, unique_cloud};
 }
 
-template <typename PointType>
-Frame<pcl::PointXYZRGB> projectToImage(const Frame<PointType> &cloud, Image image,
-                                       const glm::mat4 &projection)
+template <typename InPointType>
+Frame<pcl::PointXYZRGB> projectToImageColor(const Frame<InPointType> &cloud, Image image,
+                                            const glm::mat4 &projection)
 {
     float rows = static_cast<float>(image.getMat().cols);
     float cols = static_cast<float>(image.getMat().rows);
@@ -173,18 +200,15 @@ Frame<pcl::PointXYZRGB> projectToImage(const Frame<PointType> &cloud, Image imag
 
     // Change coordiate system to sensor origin
     glm::vec3 sensor_origin = cloud.sourcePos;
-    std::for_each(xyzrgb_cloud.points.begin(), xyzrgb_cloud.points.end(),
-                  [sensor_origin](pcl::PointXYZRGB &p) {
-                      p.x -= sensor_origin.x;
-                      p.y -= sensor_origin.y;
-                      p.z -= sensor_origin.z;
-                  });
+    shiftCloud(xyzrgb_cloud, -sensor_origin);
 
     // Project point cloud to image and get rgb colors from it
     for (size_t i = 0; i < cloud.points.size(); ++i) {
-        glm::vec3 p_3d{xyzrgb_cloud.points[i].x, xyzrgb_cloud.points[i].y, xyzrgb_cloud.points[i].z};
+        glm::vec3 p_3d{xyzrgb_cloud.points[i].x, xyzrgb_cloud.points[i].y,
+                       xyzrgb_cloud.points[i].z};
         glm::vec4 viewport{0, 0, rows, cols};
-        glm::vec3 projected_glm = glm::project(p_3d, glm::mat4(1.f), glm::transpose(projection), viewport);
+        glm::vec3 projected_glm =
+            glm::project(p_3d, glm::mat4(1.f), glm::transpose(projection), viewport);
 
         cv::Point projected(std::round(projected_glm.x), std::round(projected_glm.y));
 
@@ -195,14 +219,44 @@ Frame<pcl::PointXYZRGB> projectToImage(const Frame<PointType> &cloud, Image imag
     }
 
     // Change coordiate system to sensor origin
-    std::for_each(xyzrgb_cloud.points.begin(), xyzrgb_cloud.points.end(),
-                  [sensor_origin](pcl::PointXYZRGB &p) {
-                      p.x += sensor_origin.x;
-                      p.y += sensor_origin.y;
-                      p.z += sensor_origin.z;
-                  });
+    shiftCloud(xyzrgb_cloud, sensor_origin);
 
     return xyzrgb_cloud;
+}
+
+template <typename InPointType>
+Frame<pcl::PointXYZI> projectToImageIntensity(const Frame<InPointType> &cloud, Image image,
+                                              const glm::mat4 &projection)
+{
+    float rows = static_cast<float>(image.getMat().cols);
+    float cols = static_cast<float>(image.getMat().rows);
+    image.invert(0);
+    cv::Mat invertedImg = image.getMat();
+    Frame<pcl::PointXYZI> xyzi_cloud;
+    xyzi_cloud.points.resize(cloud.points.size());
+    xyzi_cloud = cloud;
+
+    // Change coordiate system to sensor origin
+    glm::vec3 sensor_origin = cloud.sourcePos;
+    shiftCloud(xyzi_cloud, -sensor_origin);
+
+    // Project point cloud to image and get rgb colors from it
+    for (size_t i = 0; i < cloud.points.size(); ++i) {
+        glm::vec3 p_3d{xyzi_cloud.points[i].x, xyzi_cloud.points[i].y, xyzi_cloud.points[i].z};
+        glm::vec4 viewport{0, 0, rows, cols};
+        glm::vec3 projected_glm =
+            glm::project(p_3d, glm::mat4(1.f), glm::transpose(projection), viewport);
+
+        cv::Point projected(std::round(projected_glm.x), std::round(projected_glm.y));
+
+        cv::Vec3b color = cvtools::getImgColor(invertedImg, projected);
+        xyzi_cloud.points[i].intensity = cvtools::getIntensitySqrt(color);
+    }
+
+    // Change coordiate system to sensor origin
+    shiftCloud(xyzi_cloud, sensor_origin);
+
+    return xyzi_cloud;
 }
 
 template <typename PointType>
@@ -229,31 +283,30 @@ typename pcl::PointCloud<PointType>::Ptr loadFromBin(const std::string &file_pat
 }
 
 /**
-     * Filter ground points
-     * @tparam PointT
-     * @param cloud
+ * Filter ground points
+ * @tparam PointT
+ * @param cloud
  */
-template<typename PointT>
-void
-filterGround(typename pcl::PointCloud<PointT>::Ptr cloud,
-             typename pcl::PointCloud<PointT>::Ptr cloud_filtered, int windowSize, float slope,
-             float initialDst, float maxDst)
+template <typename PointT>
+void filterGround(typename pcl::PointCloud<PointT>::Ptr cloud,
+                  typename pcl::PointCloud<PointT>::Ptr cloud_filtered, int windowSize, float slope,
+                  float initialDst, float maxDst)
 {
-    pcl::PointIndicesPtr ground (new pcl::PointIndices);
+    pcl::PointIndicesPtr ground(new pcl::PointIndices);
 
     pcl::ProgressiveMorphologicalFilter<PointT> pmf;
     pmf.setInputCloud(cloud);
     pmf.setMaxWindowSize(windowSize);
     pmf.setSlope(slope);
-    pmf.setInitialDistance (initialDst);
-    pmf.setMaxDistance (maxDst);
-    pmf.extract (ground->indices);
+    pmf.setInitialDistance(initialDst);
+    pmf.setMaxDistance(maxDst);
+    pmf.extract(ground->indices);
 
     // Create the filtering object
     pcl::ExtractIndices<PointT> extract;
-    extract.setInputCloud (cloud);
-    extract.setIndices (ground);
-    extract.filter (*cloud_filtered);
+    extract.setInputCloud(cloud);
+    extract.setIndices(ground);
+    extract.filter(*cloud_filtered);
 }
 
 /**
@@ -316,6 +369,9 @@ void saveFrameToFilePcd(const Frame<PointType> &frame, const std::string &file_n
     for (size_t i = 0; i < cloud.width; ++i) {
         for (size_t j = 0; j < pcl::getFields<PointType>().size(); ++j)
             cloud[i].data[j] = frame.points[i].data[j];
+
+        if constexpr (std::is_same_v<PointType, pcl::PointXYZI>)
+            cloud[i].intensity = frame.points[i].intensity;
 
         if constexpr (std::is_same_v<PointType, pcl::PointXYZRGB>)
             cloud[i].rgb = frame.points[i].rgb;
