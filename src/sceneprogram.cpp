@@ -1,24 +1,24 @@
 #include <GL/glew.h>
 #include <filesystem>
 
-#include "boost/format.hpp"
-#include "sceneprogram.hpp"
-#include "logger/logger.hpp"
-#include "utils/utils.hpp"
 #include "base.hpp"
+#include "boost/format.hpp"
+#include "logger/logger.hpp"
+#include "sceneprogram.hpp"
 #include "shadernames.hpp"
+#include "utils/utils.hpp"
 
 using boost::format;
 using glm::mat4;
 using glm::vec3;
 using glm::vec4;
-using utils::loadShaderFromFile;
 using logger::Category;
 using logger::Logger;
 using logger::program_log_file_name;
 using logger::shader_log_file_name;
 using std::filesystem::absolute;
 using std::filesystem::canonical;
+using utils::loadShaderFromFile;
 
 std::shared_ptr<SceneProgram> SceneProgram::instance = nullptr;
 
@@ -30,18 +30,18 @@ constexpr int next_offset(int cur_offset, int base_alignment)
     return cur_offset + base_alignment - cur_offset % base_alignment;
 }
 
-SceneProgram::SceneProgram() {}
+SceneProgram::SceneProgram()
+{
+}
 
 void SceneProgram::initPrograms()
 {
     // Create framebuffer program
     addProgram("framebuffer", "framebuffer/Scene.glvs", "framebuffer/Scene.glfs");
-
     addProgram("framebuffer_instance", "framebuffer/SceneInstance.glvs", "framebuffer/Scene.glfs");
 
     // Create screen program
     addProgram("screen", "screen/Scene.glvs", "screen/Scene.glfs");
-
     addProgram("skybox", "skybox/Scene.glvs", "skybox/Scene.glfs");
 
     useFramebufferProgram();
@@ -77,12 +77,19 @@ void SceneProgram::useSkyboxProgram()
 
 glm::mat4 SceneProgram::getMVP()
 {
-    return m_mat4Uniforms[m_programID][U_PROJECTION_MATRIX] *  m_mat4Uniforms[m_programID][U_VIEW_MATRIX]
-           * m_mat4Uniforms[m_programID][U_MODEL_MATRIX];
+    return m_mat4Uniforms[m_programID][U_PROJECTION_MATRIX] *
+           m_mat4Uniforms[m_programID][U_VIEW_MATRIX] * m_mat4Uniforms[m_programID][U_MODEL_MATRIX];
 }
 
 glm::mat4 SceneProgram::getPVM()
 {
-    return m_mat4Uniforms[m_programID][U_MODEL_MATRIX] * m_mat4Uniforms[m_programID][U_VIEW_MATRIX]
-           * m_mat4Uniforms[m_programID][U_PROJECTION_MATRIX];
+    return m_mat4Uniforms[m_programID][U_MODEL_MATRIX] *
+           m_mat4Uniforms[m_programID][U_VIEW_MATRIX] *
+           m_mat4Uniforms[m_programID][U_PROJECTION_MATRIX];
+}
+
+glm::mat4 SceneProgram::getPV()
+{
+    return m_mat4Uniforms[m_programID][U_VIEW_MATRIX] *
+           m_mat4Uniforms[m_programID][U_PROJECTION_MATRIX];
 }

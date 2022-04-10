@@ -1,6 +1,8 @@
 #ifndef BASE_HPP
 #define BASE_HPP
 
+#include <Eigen/Core>
+#include <Eigen/Dense>
 #include <GL/glew.h>
 #include <boost/locale.hpp>
 #include <bvh/bvh.hpp>
@@ -11,8 +13,6 @@
 #include <bvh/triangle.hpp>
 #include <bvh/vector.hpp>
 #include <glm/vec3.hpp>
-#include <Eigen/Dense>
-#include <Eigen/Core>
 
 #ifndef NDEBUG
 constexpr const bool debug = true;
@@ -58,6 +58,49 @@ inline int get_thread_count()
 #endif
 
     return thread_count <= 0 ? thread_count : 4;
+}
+
+namespace {
+template <class SharedPointer> struct Holder {
+    SharedPointer p;
+
+    Holder(const SharedPointer &p) : p(p)
+    {
+    }
+    Holder(const Holder &other) : p(other.p)
+    {
+    }
+    Holder(Holder &&other) : p(std::move(other.p))
+    {
+    }
+
+    void operator()(...)
+    {
+        p.reset();
+    }
+};
+} // namespace
+
+template <class T> std::shared_ptr<T> to_std_ptr(const boost::shared_ptr<T> &p)
+{
+    typedef Holder<std::shared_ptr<T>> H;
+    if (H *h = boost::get_deleter<H>(p)) {
+        return h->p;
+    }
+    else {
+        return std::shared_ptr<T>(p.get(), Holder<boost::shared_ptr<T>>(p));
+    }
+}
+
+template <class T> boost::shared_ptr<T> to_boost_ptr(const std::shared_ptr<T> &p)
+{
+    typedef Holder<boost::shared_ptr<T>> H;
+    if (H *h = std::get_deleter<H>(p)) {
+        return h->p;
+    }
+    else {
+        return boost::shared_ptr<T>(p.get(), Holder<std::shared_ptr<T>>(p));
+    }
 }
 
 typedef glm::vec<3, GLuint> vec3u;

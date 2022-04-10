@@ -1,24 +1,22 @@
 #include <pcl/point_types.h>
 
 #if VTK_MAJOR_VERSION > 8
-#include <vtkGenericOpenGLRenderWindow.h>
+#    include <vtkGenericOpenGLRenderWindow.h>
 #endif
 
-#include "ui_pclviewer.h"
 #include "cloud/pointcloud.hpp"
 #include "constants.hpp"
 #include "pclviewer.hpp"
-#include "complexcloud.hpp"
+#include "ui_pclviewer.h"
+#include "base.hpp"
 
 PCLViewer::PCLViewer(QMainWindow *parent) : QMainWindow(parent), m_ui(new Ui::PCLViewer)
 {
     m_ui->setupUi(this);
     this->setWindowTitle("PCL viewer");
 
-    LdPointCloud<pcl::PointXYZRGB> cloud(
+    m_cloud = std::make_shared<LdPointCloud<pcl::PointXYZRGB>>(
         "/home/biblbrox/Projects/3dscene/res/cloud/000001_complex.pcd");
-
-    cloud.drawCloud("XYZRGB cloud");
 
     // Set up the QVTK window
     m_viewer.reset(new pcl::visualization::PCLVisualizer("viewer", false));
@@ -44,7 +42,7 @@ PCLViewer::PCLViewer(QMainWindow *parent) : QMainWindow(parent), m_ui(new Ui::PC
     connect(m_ui->horizontalSlider_p, SIGNAL(valueChanged(int)), this,
             SLOT(windowSizeChanged(int)));
 
-    m_viewer->addPointCloud(m_cloud->getComplexCloud(), "m_cloud");
+    m_viewer->addPointCloud<pcl::PointXYZRGB>(to_boost_ptr(m_cloud), "m_cloud");
     windowSizeChanged(2);
     m_viewer->resetCamera();
     m_ui->qvtkWidget->update();
@@ -54,36 +52,36 @@ void PCLViewer::filterButtonPressed()
 {
     printf("Random button was pressed\n");
 
-    m_cloud->filterGround();
-    m_viewer->updatePointCloud(m_cloud->getComplexCloud(), "m_cloud");
+    //m_cloud->filterGround();
+    //m_viewer->updatePointCloud(m_cloud->getComplexCloud(), "m_cloud");
     m_ui->qvtkWidget->update();
 }
 
 void PCLViewer::RGBsliderReleased()
 {
-    m_viewer->updatePointCloud(m_cloud->getComplexCloud(), "m_cloud");
+    //m_viewer->updatePointCloud(m_cloud->getComplexCloud(), "m_cloud");
     m_ui->qvtkWidget->update();
 }
 
 void PCLViewer::windowSizeChanged(int value)
 {
-    m_cloud->setWindowSize(value);
+    //m_cloud->setWindowSize(value);
     m_ui->qvtkWidget->update();
 }
 
 void PCLViewer::slopeChanged(float value)
 {
-    m_cloud->setSlope(value);
+    //m_cloud->setSlope(value);
 }
 
 void PCLViewer::initialDistanceChanged(float value)
 {
-    m_cloud->setInitialDistance(value);
+    //m_cloud->setInitialDistance(value);
 }
 
 void PCLViewer::maxDistanceChanged(float value)
 {
-    m_cloud->setMaxDistance(value);
+    //m_cloud->setMaxDistance(value);
 }
 
 PCLViewer::~PCLViewer()

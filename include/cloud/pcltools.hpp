@@ -188,7 +188,8 @@ filterUniques(pcl::PointCloud<PointType> &cloud, std::initializer_list<int> indi
 
 template <typename InPointType>
 Frame<pcl::PointXYZRGB> projectToImageColor(const Frame<InPointType> &cloud, Image image,
-                                            const glm::mat4 &projection)
+                                            const glm::mat4 &p_matrix, const glm::mat4 &v_matrix,
+                                            bool normalize = false)
 {
     float rows = static_cast<float>(image.getMat().cols);
     float cols = static_cast<float>(image.getMat().rows);
@@ -198,35 +199,35 @@ Frame<pcl::PointXYZRGB> projectToImageColor(const Frame<InPointType> &cloud, Ima
     xyzrgb_cloud.points.resize(cloud.points.size());
     xyzrgb_cloud = cloud;
 
-    // Change coordiate system to sensor origin
-    glm::vec3 sensor_origin = cloud.sourcePos;
-    shiftCloud(xyzrgb_cloud, -sensor_origin);
-
     // Project point cloud to image and get rgb colors from it
     for (size_t i = 0; i < cloud.points.size(); ++i) {
         glm::vec3 p_3d{xyzrgb_cloud.points[i].x, xyzrgb_cloud.points[i].y,
                        xyzrgb_cloud.points[i].z};
         glm::vec4 viewport{0, 0, rows, cols};
-        glm::vec3 projected_glm =
-            glm::project(p_3d, glm::mat4(1.f), glm::transpose(projection), viewport);
+        glm::vec3 projected_glm = glm::project(p_3d, v_matrix, glm::transpose(p_matrix), viewport);
 
         cv::Point projected(std::round(projected_glm.x), std::round(projected_glm.y));
 
         cv::Vec3b color = cvtools::getImgColor(invertedImg, projected);
-        xyzrgb_cloud.points[i].b = color[0];
-        xyzrgb_cloud.points[i].g = color[1];
-        xyzrgb_cloud.points[i].r = color[2];
+        if (normalize) {
+            xyzrgb_cloud.points[i].b = color[0] / 255.f;
+            xyzrgb_cloud.points[i].g = color[1] / 255.f;
+            xyzrgb_cloud.points[i].r = color[2] / 255.f;
+        }
+        else {
+            xyzrgb_cloud.points[i].b = color[0];
+            xyzrgb_cloud.points[i].g = color[1];
+            xyzrgb_cloud.points[i].r = color[2];
+        }
     }
-
-    // Change coordiate system to sensor origin
-    shiftCloud(xyzrgb_cloud, sensor_origin);
 
     return xyzrgb_cloud;
 }
 
 template <typename InPointType>
 Frame<pcl::PointXYZI> projectToImageIntensity(const Frame<InPointType> &cloud, Image image,
-                                              const glm::mat4 &projection)
+                                              const glm::mat4 &p_matrix, const glm::mat4 &v_matrix,
+                                              bool normalize = false)
 {
     float rows = static_cast<float>(image.getMat().cols);
     float cols = static_cast<float>(image.getMat().rows);
@@ -236,25 +237,18 @@ Frame<pcl::PointXYZI> projectToImageIntensity(const Frame<InPointType> &cloud, I
     xyzi_cloud.points.resize(cloud.points.size());
     xyzi_cloud = cloud;
 
-    // Change coordiate system to sensor origin
-    glm::vec3 sensor_origin = cloud.sourcePos;
-    shiftCloud(xyzi_cloud, -sensor_origin);
-
     // Project point cloud to image and get rgb colors from it
     for (size_t i = 0; i < cloud.points.size(); ++i) {
         glm::vec3 p_3d{xyzi_cloud.points[i].x, xyzi_cloud.points[i].y, xyzi_cloud.points[i].z};
         glm::vec4 viewport{0, 0, rows, cols};
-        glm::vec3 projected_glm =
-            glm::project(p_3d, glm::mat4(1.f), glm::transpose(projection), viewport);
+        glm::vec3 projected_glm = glm::project(p_3d, v_matrix, glm::transpose(p_matrix), viewport);
 
         cv::Point projected(std::round(projected_glm.x), std::round(projected_glm.y));
 
         cv::Vec3b color = cvtools::getImgColor(invertedImg, projected);
-        xyzi_cloud.points[i].intensity = cvtools::getIntensitySqrt(color);
+        xyzi_cloud.points[i].intensity =
+            normalize ? cvtools::getIntensitySqrt(color) / 255.f : cvtools::getIntensitySqrt(color);
     }
-
-    // Change coordiate system to sensor origin
-    shiftCloud(xyzi_cloud, sensor_origin);
 
     return xyzi_cloud;
 }

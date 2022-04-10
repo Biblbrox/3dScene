@@ -29,6 +29,7 @@ public:
 
     glm::mat4 getMVP();
     glm::mat4 getPVM();
+    glm::mat4 getPV();
 
 
     /**

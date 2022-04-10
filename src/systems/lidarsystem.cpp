@@ -161,20 +161,52 @@ void LidarSystem::collision()
     lidarComp->coll_points.insert(lidarComp->coll_points.end(), coll_dots.cbegin(),
                                   coll_dots.cend());
 
+    // XYZ
+    std::string xyz_bin = getResourcePath("cloud/000001.bin");
+    std::string xyz_pcd = getResourcePath("cloud/000001.pcd");
+    // RGB color
+    std::string xyzrgb_bin = getResourcePath("cloud/000001_complex.bin");
+    std::string xyzrgb_pcd = getResourcePath("cloud/000001_complex.pcd");
+    // Single channel intensity from RGB color
+    std::string xyzi_bin = getResourcePath("cloud/000001_intensity.bin");
+    std::string xyzi_pcd = getResourcePath("cloud/000001_intensity.pcd");
+    // RGB color (normalized to 0-1 color)
+    std::string xyzrgb_bin_norm = getResourcePath("cloud/000001_complex_norm.bin");
+    std::string xyzrgb_pcd_norm = getResourcePath("cloud/000001_complex_norm.pcd");
+    // Single channel intensity from RGB color (normalized to 0-1 intensity)
+    std::string xyzi_bin_norm = getResourcePath("cloud/000001_intensity_norm.bin");
+    std::string xyzi_pcd_norm = getResourcePath("cloud/000001_intensity_norm.pcd");
+
+    // Screenshot for getting color from it
+    std::string screenshot_path = getResourcePath("cloud/screenshot.png");
+
     Frame<pcl::PointXYZI> frame(pos->pos, math::vecGlm2Pcl(coll_dots));
-    glm::mat4 projection = program->getMat4(U_PROJECTION_MATRIX);
-    Image screenshot(getResourcePath("cloud/screenshot.png"));
+    glm::mat4 v_matrix = math::viewFromEuler(pos->pos, lidar.getYaw(), lidar.getPitch());
+    glm::mat4 p_matrix = program->getMat4(U_PROJECTION_MATRIX);
+    Image screenshot(screenshot_path);
+
     Frame<pcl::PointXYZRGB> complex_cloud =
-        pcltools::projectToImageColor(frame, screenshot, projection);
+        pcltools::projectToImageColor(frame, screenshot, p_matrix, v_matrix);
+
     Frame<pcl::PointXYZI> intensity_cloud =
-        pcltools::projectToImageIntensity(frame, screenshot, projection);
-    pcltools::saveFrame(frame, CloudType::pcd, getResourcePath("cloud/000001.pcd"), true);
-    pcltools::saveFrame(frame, CloudType::binary, getResourcePath("cloud/000001.bin"), true);
-    pcltools::saveFrame(complex_cloud, CloudType::binary,
-                        getResourcePath("cloud/000001_complex.bin"), true);
-    pcltools::saveFrame(complex_cloud, CloudType::pcd, getResourcePath("cloud/000001_complex.pcd"),
-                        true);
-    pcltools::saveFrame(intensity_cloud, CloudType::pcd,
-                        getResourcePath("cloud/000001_intensity.pcd"), true);
+        pcltools::projectToImageIntensity(frame, screenshot, p_matrix, v_matrix);
+
+    Frame<pcl::PointXYZRGB> complex_cloud_norm =
+        pcltools::projectToImageColor(frame, screenshot, p_matrix, v_matrix, true);
+
+    Frame<pcl::PointXYZI> intensity_cloud_norm =
+        pcltools::projectToImageIntensity(frame, screenshot, p_matrix, v_matrix, true);
+
+    pcltools::saveFrame(frame, CloudType::binary, xyz_bin, true);
+    pcltools::saveFrame(frame, CloudType::pcd, xyz_pcd, true);
+    pcltools::saveFrame(complex_cloud, CloudType::binary, xyzrgb_bin, true);
+    pcltools::saveFrame(complex_cloud, CloudType::pcd, xyzrgb_pcd, true);
+    pcltools::saveFrame(intensity_cloud, CloudType::binary, xyzi_bin, true);
+    pcltools::saveFrame(intensity_cloud, CloudType::pcd, xyzi_pcd, true);
+    pcltools::saveFrame(complex_cloud_norm, CloudType::binary, xyzrgb_bin_norm, true);
+    pcltools::saveFrame(complex_cloud_norm, CloudType::pcd, xyzrgb_pcd_norm, true);
+    pcltools::saveFrame(intensity_cloud_norm, CloudType::binary, xyzi_bin_norm, true);
+    pcltools::saveFrame(intensity_cloud_norm, CloudType::pcd, xyzi_pcd_norm, true);
+
     Config::getVal<bool>("CheckCollision") = false;
 }

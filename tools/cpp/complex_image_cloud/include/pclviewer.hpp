@@ -14,7 +14,7 @@
 // Visualization Toolkit (VTK)
 #include <vtkRenderWindow.h>
 
-class ComplexCloud;
+#include "cloud/pointcloud.hpp"
 
 typedef pcl::PointXYZRGB PointT;
 typedef pcl::PointCloud<PointT> PointCloudT;
@@ -51,7 +51,7 @@ class PCLViewer : public QMainWindow {
 
   protected:
     pcl::visualization::PCLVisualizer::Ptr m_viewer;
-    std::shared_ptr<ComplexCloud> m_cloud;
+    std::shared_ptr<LdPointCloud<pcl::PointXYZRGB>> m_cloud;
 };
 
 #endif // PCLVIEWER_HPP

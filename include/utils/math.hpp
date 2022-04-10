@@ -108,8 +108,16 @@ FORCE_INLINE glm::mat4 rotate_around(const glm::mat4 &m, const glm::vec3 &v, GLf
     return tr2;
 }
 
-inline glm::mat4 createTransform(const glm::vec3 &position, GLfloat angle,
-                                 const glm::vec3 &rot_axis, const glm::vec3 &sizes)
+/**
+ * Create transformation matrix from given position, angle, rotation and scale
+ * @param position
+ * @param angle
+ * @param rot_axis
+ * @param sizes
+ * @return
+ */
+FORCE_INLINE glm::mat4 createTransform(const glm::vec3 &position, GLfloat angle,
+                                       const glm::vec3 &rot_axis, const glm::vec3 &sizes)
 {
     glm::vec3 pos = position / sizes;
 
@@ -131,8 +139,14 @@ inline glm::mat4 createTransform(const glm::vec3 &position, GLfloat angle,
     return transform;
 }
 
-inline std::vector<glm::vec3> transformVertices(const std::vector<glm::vec3> &vertices,
-                                                const glm::mat4 &transform)
+/**
+ * Apply transformation to vertices
+ * @param vertices
+ * @param transform
+ * @return
+ */
+FORCE_INLINE std::vector<glm::vec3> transformVertices(const std::vector<glm::vec3> &vertices,
+                                                      const glm::mat4 &transform)
 {
     std::vector<glm::vec3> res;
     res.reserve(vertices.size());
@@ -142,8 +156,8 @@ inline std::vector<glm::vec3> transformVertices(const std::vector<glm::vec3> &ve
     return res;
 }
 
-inline std::vector<Triangle> transformTriangles(const std::vector<Triangle> &triangles,
-                                                const glm::mat4 &transform)
+FORCE_INLINE std::vector<Triangle> transformTriangles(const std::vector<Triangle> &triangles,
+                                                      const glm::mat4 &transform)
 {
     std::vector<Triangle> res;
     res.reserve(triangles.size());
@@ -174,6 +188,11 @@ inline glm::vec3 computeCentroid(const std::vector<glm::vec3> &points)
     return means;
 }
 
+/**
+ * Get translation part from matrix
+ * @param m
+ * @return
+ */
 constexpr glm::vec3 getTranslation(const glm::mat4 &m) noexcept
 {
     return m[3];
