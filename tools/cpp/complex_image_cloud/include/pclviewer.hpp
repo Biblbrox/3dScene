@@ -34,17 +34,17 @@ class PCLViewer : public QMainWindow {
     ~PCLViewer() override;
 
   public Q_SLOTS:
-    void filterButtonPressed();
+    void ransacButtonPressed();
 
-    void RGBsliderReleased();
+    void toggleDetectPlane();
+    void toggleDetectSphere();
+    void toggleDetectCircle();
 
-    void windowSizeChanged(int value);
-
-    void slopeChanged(float value);
-
-    void initialDistanceChanged(float value);
-
-    void maxDistanceChanged(float value);
+  signals:
+    void detectPlaneToggled();
+    void detectSphereToggled();
+    void detectCircleToggled();
+    void setThresholdValue(int value);
 
   private:
     Ui::PCLViewer *m_ui;
@@ -52,6 +52,10 @@ class PCLViewer : public QMainWindow {
   protected:
     pcl::visualization::PCLVisualizer::Ptr m_viewer;
     std::shared_ptr<LdPointCloud<pcl::PointXYZRGB>> m_cloud;
+    bool m_detectPlane;
+    bool m_detectCircle;
+    bool m_detectSphere;
+    double m_threshold;
 };
 
 #endif // PCLVIEWER_HPP

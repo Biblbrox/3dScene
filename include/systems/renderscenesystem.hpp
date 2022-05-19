@@ -20,7 +20,6 @@ class RenderSceneSystem : public ecs::System<PositionComponent> {
     void renderScene();
     void drawSprites();
     void drawSpritesInstancing();
-    void drawBoundingBoxes();
     void drawToFramebuffer();
     void drawTerrain();
     void makeScreenshot(const glm::mat4 &perspective, const glm::mat4 &view,

@@ -15,6 +15,7 @@
 #include "components/globallightcomponent.hpp"
 #include "components/lidarcomponent.hpp"
 #include "components/positioncomponent.hpp"
+#include "components/screenshotcomponent.hpp"
 #include "components/positioncomponentinst.hpp"
 #include "components/selectablecomponent.hpp"
 #include "components/skyboxcomponent.hpp"
@@ -229,6 +230,14 @@ void utils::fs::saveSimJson(const std::string &file_name,
                 comp_skybox["SkyboxComponent"].push_back({});
 
                 en_obj["Components"].push_back(comp_skybox);
+            } else if (type == type_id<ScreenshotComponent>) {
+                auto comp = en->getComponent<ScreenshotComponent>();
+
+                json comp_obj = json::object();
+                comp_obj["ScreenshotComponent"] = json::array();
+                comp_obj["ScreenshotComponent"].push_back({});
+
+                en_obj["Components"].push_back(comp_obj);
             }
         }
 
@@ -351,6 +360,8 @@ std::vector<ecs::Entity> utils::fs::loadSimJson(const std::string &file_name,
             }
             else if (comp.contains("SelectableComponent")) {
                 entity.addComponent<SelectableComponent>();
+            } else if (comp.contains("ScreenshotComponent")) {
+                entity.addComponent<ScreenshotComponent>();
             }
             else if (comp.contains("TerrainComponent")) {
                 json json_ter = comp["TerrainComponent"];

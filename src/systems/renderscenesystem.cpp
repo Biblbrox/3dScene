@@ -1,6 +1,5 @@
 #include <boost/format.hpp>
 #include <crossguid/guid.hpp>
-#include <execution>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
@@ -9,21 +8,22 @@
 #include "components/lidarcomponent.hpp"
 #include "components/positioncomponentinst.hpp"
 #include "components/scenecomponent.hpp"
+#include "components/screenshotcomponent.hpp"
 #include "components/selectablecomponent.hpp"
 #include "components/selectablecomponentinst.hpp"
 #include "components/skyboxcomponent.hpp"
 #include "components/spritecomponent.hpp"
 #include "components/terraincomponent.hpp"
 #include "config.hpp"
+#include "cvutils/cvtools.hpp"
+#include "cvutils/opencv.hpp"
 #include "exceptions/glexception.hpp"
 #include "game.hpp"
 #include "logger/logger.hpp"
-#include "cvutils/opencv.hpp"
 #include "render/render.hpp"
 #include "sceneprogram.hpp"
 #include "shadernames.hpp"
 #include "systems/renderscenesystem.hpp"
-#include "cvutils/cvtools.hpp"
 #include "utils/fs.hpp"
 #include "utils/math.hpp"
 #include "utils/random.hpp"
@@ -252,50 +252,6 @@ void RenderSceneSystem::drawSprites()
             program_log_file_name(), Category::INTERNAL_ERROR);
 }
 
-void RenderSceneSystem::drawBoundingBoxes()
-{
-    //    using NodeDataPtr = std::shared_ptr<utils::RectPoints3D>;
-    //    auto program = SceneProgram::getInstance();
-    //    const auto &sprites = getEntitiesByTag<SpriteComponent>();
-    //
-    //    program->setInt("isPrimitive", true);
-    //    program->setFloat("alpha", 0.6f);
-    //    program->setVec3("primColor", {0.8f, 0.1f, 0.1f});
-    //
-    //    for (const auto&[key, en]: sprites) {
-    //        auto treeComp = en->getComponent<BVHComponent>();
-    //        auto lightComp = en->getComponent<LightComponent>();
-    //        if (lightComp) // Do not draw bb for light source
-    //            continue;
-    //
-    //        if (!treeComp)
-    //            continue;
-    //
-    //        auto posComp = en->getComponent<PositionComponent>();
-    //        auto sprite = en->getComponent<SpriteComponent>()->sprite;
-    //        auto points = buildAABB(sprite->getVertices()[0]);
-    //        auto tree = en->getComponent<BVHComponent>()->vbh_tree;
-    //
-    //        auto draw_fun = [program, sprite, posComp](NodeDataPtr bound_rect) {
-    //            auto vert_vec = coll::buildVerticesFromRect3D(*bound_rect);
-    //            render::drawTriangles(vert_vec);
-    //        };
-    //
-    //        if (Config::getVal<bool>("DrawLeafs")) {
-    //            mapBinaryTreeLeafs(treeComp->vbh_tree, draw_fun);
-    //        } else {
-    //            mapBinaryTreeAtLevel(treeComp->vbh_tree, draw_fun,
-    //                                 Config::getVal<int>("TreeLevelShow"));
-    //        }
-    //    }
-    //
-    //    if (GLenum error = glGetError(); error != GL_NO_ERROR)
-    //        throw GLException(
-    //                (format("\n\tRender while drawing bounding boxes: %1%\n")
-    //                 % glewGetErrorString(error)).str(),
-    //                program_log_file_name(), Category::INTERNAL_ERROR);
-}
-
 void RenderSceneSystem::renderScene()
 {
     //        auto window_size = utils::getWindowSize<GLfloat>(*Game::getWindow());
@@ -337,7 +293,9 @@ void RenderSceneSystem::update_state(size_t delta)
     auto game_state = getGameState();
     auto program = SceneProgram::getInstance();
     if (game_state == GameStates::PLAY || game_state == GameStates::EDIT) {
-        if (Config::getVal<bool>("MakeScreenshot")) {
+        auto screenshot_en = *getEntitiesByTag<ScreenshotComponent>().begin()->second;
+        auto screenshot_comp = screenshot_en.getComponent<ScreenshotComponent>();
+        if (screenshot_comp->makeScreenshot) {
             auto lidar_entities = getEntitiesByTag<LidarComponent>().begin()->second;
             auto lidar_comp = lidar_entities->getComponent<LidarComponent>();
             vec2i size = Config::getVal<vec2i>("ViewportSize");
@@ -345,8 +303,9 @@ void RenderSceneSystem::update_state(size_t delta)
                 program->getMat4(U_PROJECTION_MATRIX),
                 math::viewFromEuler(lidar_entities->getComponent<PositionComponent>()->pos,
                                     lidar_comp->yaw, lidar_comp->pitch),
-                getResourcePath("cloud/screenshot.png"), size);
-            Config::getVal<bool>("MakeScreenshot") = false;
+                screenshot_comp->pathNextScreenshot, size);
+
+            screenshot_comp->doneScreenshot();
         }
 
         renderScene();
@@ -383,9 +342,6 @@ void RenderSceneSystem::drawToFramebuffer()
     if (Config::getVal<bool>("CalibrateCameraPressed")) {
         calibrateCamera(100, getResourcePath("cloud/intrinsic"));
     }
-
-    if (Config::getVal<bool>("DrawBoundingBoxes"))
-        drawBoundingBoxes();
 }
 
 void RenderSceneSystem::drawTerrain()
@@ -566,7 +522,7 @@ void RenderSceneSystem::calibrateCamera(unsigned num, const std::string &dir)
     int flag = 0;
     flag |= cv::CALIB_FIX_K4;
     flag |= cv::CALIB_FIX_K5;
-    cv::calibrateCamera(obj_points, img_points, img.size(), K, D, rvecs, tvecs/*, flag*/);
+    cv::calibrateCamera(obj_points, img_points, img.size(), K, D, rvecs, tvecs /*, flag*/);
 
     glm::mat3x3 K_glm;
     cv::Mat K_32f;

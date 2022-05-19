@@ -11,6 +11,7 @@
 #include "components/lidarcomponent.hpp"
 #include "components/positioncomponent.hpp"
 #include "components/scenecomponent.hpp"
+#include "components/screenshotcomponent.hpp"
 #include "components/selectablecomponent.hpp"
 #include "components/skyboxcomponent.hpp"
 #include "components/spritecomponent.hpp"
@@ -70,8 +71,6 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("IsSelected", false, "bool");
     if (!Config::hasKey("DrawVertices"))
         Config::addVal("DrawVertices", true, "bool");
-    if (!Config::hasKey("DrawBoundingBoxes"))
-        Config::addVal("DrawBoundingBoxes", false, "bool");
     if (!Config::hasKey("DrawRays"))
         Config::addVal("DrawRays", false, "bool");
     if (!Config::hasKey("CheckCollision"))
@@ -126,8 +125,6 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("ViewportPos", vec2(0, 0), "vec2");
     if (!Config::hasKey("DataFileTmp"))
         Config::addVal("DataFileTmp", std::string("000000.txt"), "string");
-    if (!Config::hasKey("MakeScreenshot"))
-        Config::addVal("MakeScreenshot", false, "bool");
     if (!Config::hasKey("RefractiveIndex"))
         Config::addVal("RefractiveIndex", 1.5f, "float");
     if (!Config::hasKey("RealCameraIntrinsic"))
@@ -317,6 +314,11 @@ void World::init_scene()
         utils::texture::generateFBO(msaa, screen_width, screen_height, textureMSAA, rbo, texture,
                                     scene_fb);
     }
+
+    size_t screenshotId = genUniqueId();
+    auto screenshot = createEntity(m_sceneID);
+    screenshot->activate();
+    screenshot->addComponent<ScreenshotComponent>();
 }
 
 void World::init_sprites()

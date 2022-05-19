@@ -4,6 +4,12 @@
 #include <initializer_list>
 #include <pcl/common/io.h>
 #include <pcl/filters/extract_indices.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/sample_consensus/ransac.h>
+#include <pcl/sample_consensus/sac_model_circle3d.h>
+#include <pcl/sample_consensus/sac_model_plane.h>
+#include <pcl/sample_consensus/sac_model_sphere.h>
 #include <pcl/segmentation/progressive_morphological_filter.h>
 
 #include "base.hpp"
@@ -301,6 +307,49 @@ void filterGround(typename pcl::PointCloud<PointT>::Ptr cloud,
     extract.setInputCloud(cloud);
     extract.setIndices(ground);
     extract.filter(*cloud_filtered);
+}
+
+enum class RansacModel { sphere, plane, circle };
+
+template <typename PointT>
+typename pcl::PointCloud<PointT>::Ptr ransac(typename pcl::PointCloud<PointT>::Ptr cloud,
+                                               RansacModel model, double threshold = 0.01)
+{
+    using namespace pcl;
+
+    std::vector<int> inliers;
+    typename pcl::PointCloud<PointT>::Ptr final(new pcl::PointCloud<PointT>);
+
+    // created RandomSampleConsensus object and compute the appropriated model
+    typename pcl::SampleConsensusModelSphere<PointT>::Ptr model_s(
+        new pcl::SampleConsensusModelSphere<PointT>(cloud));
+    typename pcl::SampleConsensusModelPlane<PointT>::Ptr model_p(
+        new pcl::SampleConsensusModelPlane<PointT>(cloud));
+    typename pcl::SampleConsensusModelCircle3D<PointT>::Ptr model_c(
+        new pcl::SampleConsensusModelCircle3D<PointT>(cloud));
+    if (model == RansacModel::plane) {
+        pcl::RandomSampleConsensus<PointT> ransac(model_p);
+        ransac.setDistanceThreshold(threshold);
+        ransac.computeModel();
+        ransac.getInliers(inliers);
+    }
+    else if (model == RansacModel::sphere) {
+        pcl::RandomSampleConsensus<PointT> ransac(model_s);
+        ransac.setDistanceThreshold(threshold);
+        ransac.computeModel();
+        ransac.getInliers(inliers);
+    }
+    else if (model == RansacModel::circle) {
+        pcl::RandomSampleConsensus<PointT> ransac(model_c);
+        ransac.setDistanceThreshold(threshold);
+        ransac.computeModel();
+        ransac.getInliers(inliers);
+    }
+
+    // copies all inliers of the model computed to another PointCloud
+    pcl::copyPointCloud(*cloud, inliers, *final);
+
+    return final;
 }
 
 /**

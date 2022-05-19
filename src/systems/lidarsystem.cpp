@@ -1,12 +1,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/epsilon.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <omp.h>
 
 #include "cloud/pcltools.hpp"
 #include "components/bvhcomponent.hpp"
 #include "components/lidarcomponent.hpp"
 #include "components/positioncomponent.hpp"
+#include "components/screenshotcomponent.hpp"
 #include "components/terraincomponent.hpp"
 #include "config.hpp"
 #include "logger/logger.hpp"
@@ -24,9 +24,14 @@ using glm::cos;
 using glm::sin;
 using glm::sqrt;
 using logger::Logger;
+using pcl::PointXYZI;
+using pcl::PointXYZRGB;
+using pcltools::projectToImageColor;
+using pcltools::projectToImageIntensity;
 using pcltools::saveFrameToFilePcd;
 using pcltools::saveFrameToFileTxt;
 using std::string;
+using std::to_string;
 
 LidarSystem::LidarSystem() : m_posChanged(true), m_prevPos{0.f, 0.f, 0.f}
 {
@@ -161,41 +166,43 @@ void LidarSystem::collision()
     lidarComp->coll_points.insert(lidarComp->coll_points.end(), coll_dots.cbegin(),
                                   coll_dots.cend());
 
+    auto screenshot_en = *getEntitiesByTag<ScreenshotComponent>().begin()->second;
+    auto screenshot_comp = screenshot_en.getComponent<ScreenshotComponent>();
+
     // XYZ
-    std::string xyz_bin = getResourcePath("cloud/000001.bin");
-    std::string xyz_pcd = getResourcePath("cloud/000001.pcd");
+    size_t curCloud = screenshot_comp->curIdx - 1;
+    string xyz_bin = getResourcePath("cloud/000001.bin" + to_string(curCloud));
+    string xyz_pcd = getResourcePath("cloud/000001.pcd" + to_string(curCloud));
     // RGB color
-    std::string xyzrgb_bin = getResourcePath("cloud/000001_complex.bin");
-    std::string xyzrgb_pcd = getResourcePath("cloud/000001_complex.pcd");
+    string xyzrgb_bin = getResourcePath("cloud/000001_complex.bin" + to_string(curCloud));
+    string xyzrgb_pcd = getResourcePath("cloud/000001_complex.pcd" + to_string(curCloud));
     // Single channel intensity from RGB color
-    std::string xyzi_bin = getResourcePath("cloud/000001_intensity.bin");
-    std::string xyzi_pcd = getResourcePath("cloud/000001_intensity.pcd");
+    string xyzi_bin = getResourcePath("cloud/000001_intensity.bin" + to_string(curCloud));
+    string xyzi_pcd = getResourcePath("cloud/000001_intensity.pcd" + to_string(curCloud));
     // RGB color (normalized to 0-1 color)
-    std::string xyzrgb_bin_norm = getResourcePath("cloud/000001_complex_norm.bin");
-    std::string xyzrgb_pcd_norm = getResourcePath("cloud/000001_complex_norm.pcd");
+    string xyzrgb_bin_norm = getResourcePath("cloud/000001_complex_norm.bin" + to_string(curCloud));
+    string xyzrgb_pcd_norm = getResourcePath("cloud/000001_complex_norm.pcd" + to_string(curCloud));
     // Single channel intensity from RGB color (normalized to 0-1 intensity)
-    std::string xyzi_bin_norm = getResourcePath("cloud/000001_intensity_norm.bin");
-    std::string xyzi_pcd_norm = getResourcePath("cloud/000001_intensity_norm.pcd");
+    string xyzi_bin_norm = getResourcePath("cloud/000001_intensity_norm.bin" + to_string(curCloud));
+    string xyzi_pcd_norm = getResourcePath("cloud/000001_intensity_norm.pcd" + to_string(curCloud));
 
     // Screenshot for getting color from it
-    std::string screenshot_path = getResourcePath("cloud/screenshot.png");
+    std::string screenshot_path = screenshot_comp->pathMakedScreenshot;
 
-    Frame<pcl::PointXYZI> frame(pos->pos, math::vecGlm2Pcl(coll_dots));
-    glm::mat4 v_matrix = math::viewFromEuler(pos->pos, lidar.getYaw(), lidar.getPitch());
-    glm::mat4 p_matrix = program->getMat4(U_PROJECTION_MATRIX);
+    Frame<PointXYZI> frame(pos->pos, math::vecGlm2Pcl(coll_dots));
+    glm::mat4 v_mat = math::viewFromEuler(pos->pos, lidar.getYaw(), lidar.getPitch());
+    glm::mat4 p_mat = program->getMat4(U_PROJECTION_MATRIX);
     Image screenshot(screenshot_path);
 
-    Frame<pcl::PointXYZRGB> complex_cloud =
-        pcltools::projectToImageColor(frame, screenshot, p_matrix, v_matrix);
+    Frame<PointXYZRGB> complex_cloud = projectToImageColor(frame, screenshot, p_mat, v_mat);
 
-    Frame<pcl::PointXYZI> intensity_cloud =
-        pcltools::projectToImageIntensity(frame, screenshot, p_matrix, v_matrix);
+    Frame<PointXYZI> intensity_cloud = projectToImageIntensity(frame, screenshot, p_mat, v_mat);
 
-    Frame<pcl::PointXYZRGB> complex_cloud_norm =
-        pcltools::projectToImageColor(frame, screenshot, p_matrix, v_matrix, true);
+    Frame<PointXYZRGB> complex_cloud_norm =
+        projectToImageColor(frame, screenshot, p_mat, v_mat, true);
 
-    Frame<pcl::PointXYZI> intensity_cloud_norm =
-        pcltools::projectToImageIntensity(frame, screenshot, p_matrix, v_matrix, true);
+    Frame<PointXYZI> intensity_cloud_norm =
+        projectToImageIntensity(frame, screenshot, p_mat, v_mat, true);
 
     pcltools::saveFrame(frame, CloudType::binary, xyz_bin, true);
     pcltools::saveFrame(frame, CloudType::pcd, xyz_pcd, true);

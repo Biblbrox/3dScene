@@ -61,8 +61,8 @@ if (OPENMP_FOUND)
 endif ()
 
 # Add opencv
-find_package(OpenCV 4.2 REQUIRED)
-include_directories ("/usr/include/opencv4/")
+find_package(OpenCV 4.5.5 REQUIRED)
+include_directories ("/usr/local/include/opencv4/" "/usr/local/include/eigen3/")
 target_link_libraries(${GAME_NAME} ${OpenCV_LIBS})
 
 # Add bvh

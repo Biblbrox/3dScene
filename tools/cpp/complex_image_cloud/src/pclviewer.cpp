@@ -1,16 +1,21 @@
+#include <QDoubleValidator>
+#include <QString>
 #include <pcl/point_types.h>
 
 #if VTK_MAJOR_VERSION > 8
 #    include <vtkGenericOpenGLRenderWindow.h>
 #endif
 
+#include "base.hpp"
 #include "cloud/pointcloud.hpp"
 #include "constants.hpp"
+#include "logger/logger.hpp"
 #include "pclviewer.hpp"
 #include "ui_pclviewer.h"
-#include "base.hpp"
 
-PCLViewer::PCLViewer(QMainWindow *parent) : QMainWindow(parent), m_ui(new Ui::PCLViewer)
+PCLViewer::PCLViewer(QMainWindow *parent)
+    : QMainWindow(parent), m_ui(new Ui::PCLViewer), m_detectCircle(false), m_detectSphere(false),
+      m_detectPlane(false), m_threshold(0.1)
 {
     m_ui->setupUi(this);
     this->setWindowTitle("PCL viewer");
@@ -26,62 +31,54 @@ PCLViewer::PCLViewer(QMainWindow *parent) : QMainWindow(parent), m_ui(new Ui::PC
     m_ui->qvtkWidget->update();
 
     // Connect "random" button and the function
-    connect(m_ui->pushButton_random, SIGNAL(clicked()), this, SLOT(filterButtonPressed()));
+    connect(m_ui->ransacButton, SIGNAL(clicked()), this, SLOT(ransacButtonPressed()));
+    connect(m_ui->detectPlane, SIGNAL(detectPlaneToggled()), this, SLOT(toggleDetectPlane()));
+    connect(m_ui->detectSphere, SIGNAL(detectSphereToggled()), this, SLOT(toggleDetectSphere()));
+    connect(m_ui->detectCircles, SIGNAL(detectCircleToggled()), this, SLOT(toggleDetectCircle()));
+    connect(m_ui->thresholdValue, QOverload<const QString &>::of(&QLineEdit::textChanged), this,
+            [=](const QString &val) {
+                logger::Logger::info((boost::format("Thresold = %1%") % val.toStdString()).str());
+                m_threshold = val.toDouble();
+            });
 
-    // Connect R,G,B sliders and their functions
-    connect(m_ui->horizontalSlider_R, SIGNAL(valueChanged(int)), this, SLOT(slopeChanged(int)));
-    connect(m_ui->horizontalSlider_G, SIGNAL(valueChanged(int)), this,
-            SLOT(initialDistanceChanged(float)));
-    connect(m_ui->horizontalSlider_B, SIGNAL(valueChanged(int)), this,
-            SLOT(maxDistanceChanged(float)));
-    connect(m_ui->horizontalSlider_R, SIGNAL(sliderReleased()), this, SLOT(RGBsliderReleased()));
-    connect(m_ui->horizontalSlider_G, SIGNAL(sliderReleased()), this, SLOT(RGBsliderReleased()));
-    connect(m_ui->horizontalSlider_B, SIGNAL(sliderReleased()), this, SLOT(RGBsliderReleased()));
-
-    // Connect point size slider
-    connect(m_ui->horizontalSlider_p, SIGNAL(valueChanged(int)), this,
-            SLOT(windowSizeChanged(int)));
+    // auto dv = new QDoubleValidator(0.0, 50.0, 3);
+    // dv->setNotation(QDoubleValidator::StandardNotation);
+    // m_ui->thresholdValue->setValidator(dv);
 
     m_viewer->addPointCloud<pcl::PointXYZRGB>(to_boost_ptr(m_cloud), "m_cloud");
-    windowSizeChanged(2);
     m_viewer->resetCamera();
     m_ui->qvtkWidget->update();
 }
 
-void PCLViewer::filterButtonPressed()
+void PCLViewer::ransacButtonPressed()
 {
-    printf("Random button was pressed\n");
+    printf("Ransac button was pressed\n");
 
-    //m_cloud->filterGround();
-    //m_viewer->updatePointCloud(m_cloud->getComplexCloud(), "m_cloud");
+    //pcl::Point
+    if (m_detectPlane) {
+        auto inliers =
+            pcltools::ransac<pcl::PointXYZRGB>(to_boost_ptr(m_cloud), pcltools::RansacModel::plane);
+        m_cloud->points.clear();
+        m_cloud->points = inliers->points;
+    }
+
+    m_viewer->updatePointCloud(to_boost_ptr(m_cloud), "m_cloud");
     m_ui->qvtkWidget->update();
 }
 
-void PCLViewer::RGBsliderReleased()
+void PCLViewer::toggleDetectPlane()
 {
-    //m_viewer->updatePointCloud(m_cloud->getComplexCloud(), "m_cloud");
-    m_ui->qvtkWidget->update();
+    m_detectPlane = !m_detectPlane;
 }
 
-void PCLViewer::windowSizeChanged(int value)
+void PCLViewer::toggleDetectSphere()
 {
-    //m_cloud->setWindowSize(value);
-    m_ui->qvtkWidget->update();
+    m_detectSphere = !m_detectSphere;
 }
 
-void PCLViewer::slopeChanged(float value)
+void PCLViewer::toggleDetectCircle()
 {
-    //m_cloud->setSlope(value);
-}
-
-void PCLViewer::initialDistanceChanged(float value)
-{
-    //m_cloud->setInitialDistance(value);
-}
-
-void PCLViewer::maxDistanceChanged(float value)
-{
-    //m_cloud->setMaxDistance(value);
+    m_detectCircle = !m_detectCircle;
 }
 
 PCLViewer::~PCLViewer()

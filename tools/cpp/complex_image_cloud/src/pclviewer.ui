@@ -30,7 +30,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -54,50 +54,16 @@
                  </font>
                 </property>
                 <property name="text">
-                 <string>Filter settings</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="label">
-                <property name="font">
-                 <font>
-                  <pointsize>16</pointsize>
-                  <weight>50</weight>
-                  <italic>false</italic>
-                  <bold>false</bold>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>Window Size</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSlider" name="horizontalSlider_R">
-                <property name="maximum">
-                 <number>255</number>
-                </property>
-                <property name="value">
-                 <number>128</number>
-                </property>
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
+                 <string>Detect circles</string>
                 </property>
                </widget>
               </item>
              </layout>
             </item>
             <item>
-             <widget class="QLCDNumber" name="lcdNumber_R">
-              <property name="digitCount">
-               <number>3</number>
-              </property>
-              <property name="segmentStyle">
-               <enum>QLCDNumber::Flat</enum>
-              </property>
-              <property name="intValue" stdset="0">
-               <number>128</number>
+             <widget class="QCheckBox" name="detectCircles">
+              <property name="text">
+               <string>CheckBox</string>
               </property>
              </widget>
             </item>
@@ -118,35 +84,16 @@
                  </font>
                 </property>
                 <property name="text">
-                 <string>Slope</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSlider" name="horizontalSlider_G">
-                <property name="maximum">
-                 <number>255</number>
-                </property>
-                <property name="value">
-                 <number>128</number>
-                </property>
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
+                 <string>Detect plane</string>
                 </property>
                </widget>
               </item>
              </layout>
             </item>
             <item>
-             <widget class="QLCDNumber" name="lcdNumber_G">
-              <property name="digitCount">
-               <number>3</number>
-              </property>
-              <property name="segmentStyle">
-               <enum>QLCDNumber::Flat</enum>
-              </property>
-              <property name="intValue" stdset="0">
-               <number>128</number>
+             <widget class="QCheckBox" name="detectPlane">
+              <property name="text">
+               <string>CheckBox</string>
               </property>
              </widget>
             </item>
@@ -167,96 +114,35 @@
                  </font>
                 </property>
                 <property name="text">
-                 <string>Initial distance</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSlider" name="horizontalSlider_B">
-                <property name="maximum">
-                 <number>255</number>
-                </property>
-                <property name="value">
-                 <number>128</number>
-                </property>
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
+                 <string>Detect sphere</string>
                 </property>
                </widget>
               </item>
              </layout>
             </item>
             <item>
-             <widget class="QLCDNumber" name="lcdNumber_B">
-              <property name="digitCount">
-               <number>3</number>
-              </property>
-              <property name="segmentStyle">
-               <enum>QLCDNumber::Flat</enum>
-              </property>
-              <property name="intValue" stdset="0">
-               <number>128</number>
+             <widget class="QCheckBox" name="detectSphere">
+              <property name="text">
+               <string>CheckBox</string>
               </property>
              </widget>
             </item>
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_4">
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_4">
-              <item>
-               <widget class="QLabel" name="label_4">
-                <property name="font">
-                 <font>
-                  <pointsize>16</pointsize>
-                  <weight>50</weight>
-                  <italic>false</italic>
-                  <bold>false</bold>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>Max distance</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSlider" name="horizontalSlider_p">
-                <property name="minimum">
-                 <number>1</number>
-                </property>
-                <property name="maximum">
-                 <number>6</number>
-                </property>
-                <property name="value">
-                 <number>2</number>
-                </property>
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <widget class="QLCDNumber" name="lcdNumber_p">
-              <property name="digitCount">
-               <number>1</number>
-              </property>
-              <property name="segmentStyle">
-               <enum>QLCDNumber::Flat</enum>
-              </property>
-              <property name="intValue" stdset="0">
-               <number>2</number>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pushButton_random">
+           <widget class="QLabel" name="label">
             <property name="text">
-             <string>Filter ground</string>
+             <string>Threshold value</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="thresholdValue"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="ransacButton">
+            <property name="text">
+             <string>Run ransac</string>
             </property>
            </widget>
           </item>
@@ -534,7 +420,7 @@
      <x>0</x>
      <y>0</y>
      <width>694</width>
-     <height>30</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>
@@ -547,70 +433,5 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>horizontalSlider_R</sender>
-   <signal>sliderMoved(int)</signal>
-   <receiver>lcdNumber_R</receiver>
-   <slot>display(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>136</x>
-     <y>111</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>222</x>
-     <y>115</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>horizontalSlider_G</sender>
-   <signal>sliderMoved(int)</signal>
-   <receiver>lcdNumber_G</receiver>
-   <slot>display(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>166</x>
-     <y>193</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>235</x>
-     <y>195</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>horizontalSlider_B</sender>
-   <signal>sliderMoved(int)</signal>
-   <receiver>lcdNumber_B</receiver>
-   <slot>display(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>185</x>
-     <y>273</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>224</x>
-     <y>275</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>horizontalSlider_p</sender>
-   <signal>sliderMoved(int)</signal>
-   <receiver>lcdNumber_p</receiver>
-   <slot>display(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>136</x>
-     <y>352</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>253</x>
-     <y>342</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

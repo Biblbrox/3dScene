@@ -11,9 +11,12 @@
 #include <imgui_stdlib.h>
 
 #include "components/bvhcomponent.hpp"
+#include "components/globallightcomponent.hpp"
 #include "components/lidarcomponent.hpp"
+#include "components/screenshotcomponent.hpp"
 #include "components/movablecomponent.hpp"
 #include "components/scenecomponent.hpp"
+#include "components/selectablecomponent.hpp"
 #include "components/spritecomponent.hpp"
 #include "config.hpp"
 #include "game.hpp"
@@ -27,8 +30,6 @@
 #include "utils/texture.hpp"
 #include "view/fpscamera.hpp"
 #include "view/lidar.hpp"
-#include "components/globallightcomponent.hpp"
-#include "components/selectablecomponent.hpp"
 
 using std::string;
 
@@ -373,22 +374,29 @@ void RenderGuiSystem::update_state(size_t delta)
                     ->dirty = true;
 
             Config::getVal<vec2>("ViewportPos") = {pos.x, pos.y};
-            //Config::getVal<vec2i>("ViewportSize") = {size.x, size.y};
+            // Config::getVal<vec2i>("ViewportSize") = {size.x, size.y};
 
             if (getGameState() != GameStates::STOP)
-                ImGui::Image((ImTextureID)sceneComp->texture, ImVec2(size.x, size.y), {0, 1}, {1, 0});
+                ImGui::Image((ImTextureID)sceneComp->texture, ImVec2(size.x, size.y), {0, 1},
+                             {1, 0});
         }
 
-        if (Button(_("Make screenshot")))
-            Config::getVal<bool>("MakeScreenshot") = true;
+        if (Button(_("Make screenshot"))) {
+            auto screenshot_en = *getEntitiesByTag<ScreenshotComponent>().begin()->second;
+            auto screenshot_comp = screenshot_en.getComponent<ScreenshotComponent>();
+
+            screenshot_comp->delayScreenshot();
+        }
 
         std::stringstream status_str;
         bool draw_status = false;
         if (Config::getVal<bool>("ShowCameraPos")) {
             auto pos = FpsCamera::getInstance()->getPos();
+            GLfloat yaw = FpsCamera::getInstance()->getYaw();
+            GLfloat pitch = FpsCamera::getInstance()->getPitch();
             std::string camera_pos = _("Camera position");
-            status_str << (format("%1$s: %2$.2f, %3$.2f, %4$.2f") % camera_pos % pos.x % pos.y %
-                           pos.z)
+            status_str << (format("%1$s: %2$.2f, %3$.2f, %4$.2f, Yaw: %5$.2f, Pitch: %6$.2f") %
+                           camera_pos % pos.x % pos.y % pos.z % yaw % pitch)
                               .str();
             draw_status = true;
         }
@@ -451,52 +459,63 @@ void RenderGuiSystem::laser_settings()
 
     auto lidarEn = getEntitiesByTag<LidarComponent>().begin()->second;
     auto lidarComp = lidarEn->getComponent<LidarComponent>();
-    auto pos = lidarEn->getComponent<PositionComponent>();
+    auto lidarPos = lidarEn->getComponent<PositionComponent>();
 
     Begin(_("Laser settings"), &m_laserSettingsOpen);
     TextUnformatted(_("Laser position"));
-    if (InputFloat3("##laser_pos", glm::value_ptr(pos->pos))) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
+    if (InputFloat3("##laser_pos", glm::value_ptr(lidarPos->pos))) {
+        Lidar lidar(lidarComp->length, lidarPos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw,
+                    lidarComp->pitch);
 
         lidarComp->pattern_points =
-            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density);
+            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density,
+                                 lidarComp->refractive_index);
     }
 
     TextUnformatted(_("Laser yaw"));
     if (InputFloat("##laser_yaw", &lidarComp->yaw)) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
+        Lidar lidar(lidarComp->length, lidarPos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw,
+                    lidarComp->pitch);
 
         lidarComp->pattern_points =
-            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density);
+            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density,
+                                 lidarComp->refractive_index);
     }
 
     TextUnformatted(_("Laser pitch"));
     if (InputFloat("##laser_pitch", &lidarComp->pitch)) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
+        Lidar lidar(lidarComp->length, lidarPos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw,
+                    lidarComp->pitch);
 
         lidarComp->pattern_points =
-            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density);
+            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density,
+                                 lidarComp->refractive_index);
     }
 
     TextUnformatted(_("Prism frequencies"));
     if (InputFloat2("##prism_freq", value_ptr(lidarComp->freq))) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
+        Lidar lidar(lidarComp->length, lidarPos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw,
+                    lidarComp->pitch);
 
         lidarComp->pattern_points =
-            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density);
+            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density,
+                                 lidarComp->refractive_index);
     }
 
     TextUnformatted(_("Prism start angle"));
     if (InputFloat2("##prism_start_angle", glm::value_ptr(lidarComp->start_angle))) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
+        Lidar lidar(lidarComp->length, lidarPos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw,
+                    lidarComp->pitch);
 
         lidarComp->pattern_points =
-            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density);
+            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density,
+                                 lidarComp->refractive_index);
     }
 
     TextUnformatted(_("Refractive index"));
     if (InputFloat2("##prism_refractive_index", &lidarComp->refractive_index)) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
+        Lidar lidar(lidarComp->length, lidarPos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw,
+                    lidarComp->pitch);
 
         lidarComp->pattern_points =
             lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density,
@@ -505,30 +524,52 @@ void RenderGuiSystem::laser_settings()
 
     TextUnformatted(_("Object distance"));
     if (InputFloat("##obj_distance", &lidarComp->obj_distance)) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
+        Lidar lidar(lidarComp->length, lidarPos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw,
+                    lidarComp->pitch);
 
         lidarComp->pattern_points =
-            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density);
+            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density,
+                                 lidarComp->refractive_index);
     }
 
     TextUnformatted(_("Length of rays"));
     if (InputFloat("##ray_length", &lidarComp->length)) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
+        Lidar lidar(lidarComp->length, lidarPos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw,
+                    lidarComp->pitch);
 
         lidarComp->pattern_points =
-            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density);
+            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density,
+                                 lidarComp->refractive_index);
     }
 
     TextUnformatted(_("Dots density"));
     if (InputFloat("##dot_dens", &lidarComp->density)) {
-        Lidar lidar(lidarComp->length, pos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw, lidarComp->pitch);
+        Lidar lidar(lidarComp->length, lidarPos->pos, {0.f, 1.f, 0.f}, lidarComp->yaw,
+                    lidarComp->pitch);
 
         lidarComp->pattern_points =
-            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density);
+            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density,
+                                 lidarComp->refractive_index);
     }
 
     TextUnformatted(_("Draw pattern"));
     Checkbox("##draw_pattern", &Config::getVal<bool>("DrawPattern"));
+
+    if (Button(_("Set camera position"))) {
+        auto camera_pos = FpsCamera::getInstance()->getPos();
+        auto camera_yaw = FpsCamera::getInstance()->getYaw();
+        auto camera_pitch = FpsCamera::getInstance()->getPitch();
+
+        lidarComp->pitch = camera_pitch;
+        lidarComp->yaw = camera_yaw;
+        lidarPos->pos = camera_pos;
+        Lidar lidar(lidarComp->length, camera_pos, {0.f, 1.f, 0.f}, lidarComp->yaw,
+                    lidarComp->pitch);
+
+        lidarComp->pattern_points =
+            lidar.risleyPattern2(lidarComp->freq, lidarComp->start_angle, lidarComp->density,
+                                 lidarComp->refractive_index);
+    }
 
     End();
 }
