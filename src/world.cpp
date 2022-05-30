@@ -57,12 +57,6 @@ using utils::texture::genTexture;
 
 using coll::buildBVH;
 
-size_t genUniqueId()
-{
-    static size_t idx = 0;
-    return idx++;
-}
-
 World::World() : m_wasInit(false), m_initFromFile(false)
 {
     if (!Config::hasKey("SelectedObj"))
@@ -129,13 +123,6 @@ World::World() : m_wasInit(false), m_initFromFile(false)
         Config::addVal("RefractiveIndex", 1.5f, "float");
     if (!Config::hasKey("RealCameraIntrinsic"))
         Config::addVal("RealCameraIntrinsic", false, "bool");
-    if (!Config::hasKey("RealCameraIntrinsicMat")) {
-        // int screen_width = utils::getWindowWidth<int>(*Game::getWindow());
-        // int screen_height = utils::getWindowHeight<int>(*Game::getWindow());
-        // Config::addVal("RealCameraIntrinsicMat",
-        //                math::loadCameraIntrinsic(getResourcePath("intrinsic.txt"), 1.f, 1000.f,
-        //                screen_width, screen_height), "mat4");
-    }
     if (!Config::hasKey("RealScale"))
         Config::addVal("RealScale", glm::vec3(0.1f), "vec3");
     if (!Config::hasKey("DrawAxis"))
@@ -166,18 +153,15 @@ void World::update(size_t delta)
         m_initFromFile = false;
     }
 
-    if (getGameState() == GameStates::STOP && getPrevGameState() != GameStates::STOP) {
+    if (getGameState() == GameStates::STOP && getPrevGameState() != GameStates::STOP)
         setGameState(GameStates::STOP);
-    }
 
-    if (getGameState() == GameStates::PLAY && getPrevGameState() == GameStates::PAUSE) {
+    if (getGameState() == GameStates::PLAY && getPrevGameState() == GameStates::PAUSE)
         setGameState(GameStates::PLAY);
-    }
 
-    if (getGameState() == GameStates::PLAY && getPrevGameState() == GameStates::STOP) {
+    if (getGameState() == GameStates::PLAY && getPrevGameState() == GameStates::STOP)
         setGameState(GameStates::PLAY);
         //        init();
-    }
 
     filter_entities();
 
