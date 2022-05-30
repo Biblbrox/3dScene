@@ -1,3 +1,6 @@
 [submodule "libs/crossguid"]
 	path = libs/crossguid
 	url = https://github.com/graeme-hill/crossguid
+[submodule "libs/bvh"]
+	path = libs/bvh
+	url = https://github.com/madmann91/bvh.git
